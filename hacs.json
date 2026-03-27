@@ -2,7 +2,5 @@
   "name": "EnOcean BLE Switches",
   "render_readme": true,
   "country": ["CH", "DE", "FR", "US"],
-  "homeassistant": "2025.1.0",
-  "domains": ["enocean_ble"],
-  "iot_class": "local_push"
+  "homeassistant": "2025.1.0"
 }
