@@ -1,0 +1,21 @@
+{
+  "domain": "enocean_ble",
+  "name": "EnOcean BLE Switches",
+  "version": "0.1.0",
+  "documentation": "https://github.com/CHANGE_ME/enocean-ble",
+  "issue_tracker": "https://github.com/CHANGE_ME/enocean-ble/issues",
+  "codeowners": [
+    "@CHANGE_ME"
+  ],
+  "config_flow": true,
+  "requirements": [],
+  "iot_class": "local_push",
+  "loggers": [
+    "custom_components.enocean_ble"
+  ],
+  "bluetooth": [
+    {
+      "manufacturer_id": 986
+    }
+  ]
+}

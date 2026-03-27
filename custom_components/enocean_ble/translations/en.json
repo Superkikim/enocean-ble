@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EnOcean BLE setup",
+        "description": "Choose your onboarding method.",
+        "data": {
+          "setup_method": "Setup method"
+        }
+      },
+      "qr": {
+        "title": "QR onboarding",
+        "description": "Paste the raw QR string from your device packaging.",
+        "data": {
+          "qr_raw": "Raw QR payload"
+        }
+      },
+      "nfc": {
+        "title": "NFC onboarding",
+        "description": "Paste the extracted NFC payload.",
+        "data": {
+          "nfc_raw": "Raw NFC payload"
+        }
+      }
+    },
+    "error": {
+      "invalid_qr_data": "Could not parse QR payload.",
+      "invalid_nfc_data": "Could not parse NFC payload.",
+      "device_not_detected": "Device not currently detected by Bluetooth scan. Move closer and press again."
+    }
+  }
+}

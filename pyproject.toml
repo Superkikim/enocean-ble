@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enocean-ble"
+version = "0.1.0"
+description = "Home Assistant custom integration for EnOcean BLE switches"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+show_error_codes = true
+warn_unused_configs = true
+exclude = [
+  "^local_resources/"
+]
+
+[[tool.mypy.overrides]]
+module = [
+  "homeassistant.*",
+  "pytest_homeassistant_custom_component.*",
+  "voluptuous"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+asyncio_mode = "auto"
