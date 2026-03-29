@@ -1,81 +1,81 @@
-# EnOcean BLE Switches
+# EnOcean BLE (PTM215B/PTM216B) for Home Assistant
 
-Home Assistant custom integration for EnOcean BLE energy-harvesting switches, focused on PTM215B/PTM216B.
+`enocean_ble` is a Home Assistant custom integration for EnOcean BLE
+energy-harvesting switches (PTM215B/PTM216B).
 
-## Project Overview
+It provides:
+- Bluetooth discovery + guided commissioning flow
+- Secure telegram parsing (MIC verification)
+- Button events as native Home Assistant `event` entities
 
-This project provides a Home Assistant custom integration (`enocean_ble`) that passively listens for EnOcean BLE telegrams and exposes switch actions as Home Assistant events.
-
-Current status:
-- Repository and CI/test/tooling scaffold is in place.
-- MVP implementation is in progress with AES-128 CCM MIC verification and passive BLE event decoding.
-
-## Supported Hardware
+## Supported Devices
 
 - EnOcean PTM215B
 - EnOcean PTM216B
 
-## Quick Start Install
+## Installation
 
 ### HACS (recommended)
-1. Open HACS in Home Assistant.
-2. Add this repository as a custom repository (type: Integration).
-3. Install `EnOcean BLE Switches`.
-4. Restart Home Assistant.
+1. HACS -> `Integrations` -> `...` -> `Custom repositories`
+2. Add this repository URL, category: `Integration`
+3. Install `EnOcean BLE`
+4. Restart Home Assistant
 
-### Manual custom repository install
-1. Copy `custom_components/enocean_ble` into your Home Assistant `custom_components` directory.
-2. Restart Home Assistant.
-3. Add the integration from Settings > Devices & Services.
+### Manual
+1. Copy [`custom_components/enocean_ble`](custom_components/enocean_ble) to your HA `custom_components` directory
+2. Restart Home Assistant
+3. Settings -> Devices & Services -> `Add Integration` -> `EnOcean BLE`
 
-## Setup Methods
+## Commissioning Flow
 
-### NFC setup (PTM216B)
-- Use the NFC onboarding flow from the integration config flow.
-- Default PIN is `0000` (can be changed on device side).
-- The integration extracts MAC address and security key during onboarding.
-- Live validation checks that the device is currently visible via BLE scan.
+Current flow:
+1. Click `Add` from Bluetooth discovery
+2. Progress screen waits for commissioning telegram (`LEN=26`)
+3. Confirm screen is shown
+4. Submit creates the config entry
 
-### QR setup (PTM215B/PTM216B)
-- Use the QR onboarding flow and paste the raw QR content.
-- The integration parses MAC/security data automatically.
-- Live validation checks that the device is currently visible via BLE scan.
+Notes:
+- If the switch is already in commissioning mode, progress can complete almost immediately.
+- After success, press another button to exit commissioning mode on the switch.
 
-## Event Model (MVP)
+## Events
 
-Event fired on Home Assistant bus:
-- `enocean_ble_button_action`
+The integration creates 4 event entities (Button 1..4).
 
-Event attributes:
-- `button`: `A0`, `A1`, `B0`, `B1`
-- `event_type`: `press`, `release`, `long_press`, `long_release`
-- `rssi`: BLE RSSI from advertisement
-- `sequence_counter`: monotonically increasing telegram counter
-- `mac_address`: source device MAC
+Event type values:
+- `press`
+- `release`
+- `long_press`
+- `long_release`
 
-## Factory Reset Procedure
+Event data includes:
+- `mac_address`
+- `rssi`
+- `sequence_counter`
 
-Exact procedure:
-- Dismount the switch from wall/plate.
-- Hold `A0 + A1 + B0 + B1` while actuating the energy bow.
-- Keep this combination for at least 10 seconds.
+## Troubleshooting
 
-## Casambi Coexistence and Migration Notes
+- Device re-adds immediately after deletion:
+  the switch is likely still in commissioning mode and keeps sending `LEN=26`.
+- No button events:
+  verify BLE reception and that commissioning completed successfully.
+- Intermittent events:
+  check distance/RSSI/interference.
 
-- Devices previously paired with Casambi should be factory reset before onboarding in Home Assistant.
-- During migration, validate event reception in Home Assistant before removing old automations.
-- Avoid running dual automations in both systems during transition.
+To inspect debug logs:
+1. Enable debug logging for `custom_components.enocean_ble`
+2. Reproduce the issue
+3. Review `FLOW_TRACE_V3` lines in Home Assistant logs
 
-## Local Development Setup
+## Development
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements_dev.txt
-pre-commit install
 ```
 
-Run checks:
+Checks:
 
 ```bash
 ruff check .
@@ -83,44 +83,14 @@ mypy custom_components tests
 pytest -q
 ```
 
-## Troubleshooting
+## Security
 
-- No events received: verify BLE adapter availability and distance from switch.
-- Intermittent reception: inspect RSSI and environmental interference.
-- Onboarding fails: re-check NFC PIN/QR payload and perform factory reset if needed.
-- Invalid security verification: ensure the correct per-device key is configured.
+- Device security keys are stored in config entries.
+- Keys must never be logged in clear text.
+- Telegram authentication uses AES-128 CCM MIC verification.
 
-## Security Notes
-
-- Security keys are stored in Home Assistant config entries and must never be logged in clear text.
-- NFC default PIN `0000` should be treated as bootstrap-only and changed where supported.
-- Diagnostic logs should redact cryptographic material.
-- MIC verification uses AES-128 CCM as specified in PTM215B/PTM216B manuals.
-
-## Roadmap
-
-- BLE passive scan and telegram decoding for PTM215B/PTM216B.
-- AES-128 MIC verification.
-- Event entity mapping for A0/A1/B0/B1 with press/release/long variants.
-- Device diagnostics and advanced troubleshooting tools.
-
-## Contributing
-
-1. Create a branch from `dev`.
-2. Add/adjust tests for any behavior change.
-3. Keep CI green (`ruff`, typing, `pytest`, HACS validation).
-4. Open a PR to `dev`.
-
-## CI Status
-
-- CI workflow: lint, typing, tests.
-- HACS validation workflow: custom integration structure checks.
-
-## Specification References
+## References
 
 - [PTM-215B User Manual](https://www.enocean.com/wp-content/uploads/downloads-produkte/en/products/enocean_modules_24ghz_ble/ptm-215b/user-manual-pdf/PTM-215B-User-Manual.pdf)
 - [PTM-216B User Manual](https://www.enocean.com/wp-content/uploads/downloads-produkte/en/products/enocean_modules_24ghz_ble/ptm-216b/user-manual-pdf/PTM-216B-User-Manual-3.pdf)
-
-## Project Documentation
-
-- [Documentation index](docs/README.md)
+- [`docs/README.md`](docs/README.md)
