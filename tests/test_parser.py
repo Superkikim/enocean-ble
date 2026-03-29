@@ -45,7 +45,7 @@ def test_parse_data_telegram_ok_press() -> None:
     parsed = parse_data_telegram(telegram, mac_address=mac, security_key_hex=key_hex)
 
     assert parsed.sequence_counter == 42
-    assert parsed.button == "A1"
+    assert parsed.buttons == ("A1",)
     assert parsed.event_type == "press"
 
 
@@ -60,7 +60,7 @@ def test_parse_data_telegram_rejects_bad_mic() -> None:
         parse_data_telegram(telegram, mac_address=mac, security_key_hex=key_hex)
 
 
-def test_parse_data_telegram_rejects_multiple_buttons() -> None:
+def test_parse_data_telegram_allows_multiple_buttons() -> None:
     key_hex = "00112233445566778899aabbccddeeff"
     mac = "E2:15:AA:BB:CC:DD"
     seq = 3
@@ -68,8 +68,8 @@ def test_parse_data_telegram_rejects_multiple_buttons() -> None:
     mic = calculate_mic(bytes.fromhex(key_hex), bytes.fromhex("DDCCBBAA15E2"), seq, payload)
     telegram = seq.to_bytes(4, byteorder="little") + payload + mic
 
-    with pytest.raises(ValueError, match="exactly one active button"):
-        parse_data_telegram(telegram, mac_address=mac, security_key_hex=key_hex)
+    parsed = parse_data_telegram(telegram, mac_address=mac, security_key_hex=key_hex)
+    assert parsed.buttons == ("A0", "A1")
 
 
 def test_parse_data_telegram_manual_vector() -> None:
@@ -80,7 +80,7 @@ def test_parse_data_telegram_manual_vector() -> None:
 
     parsed = parse_data_telegram(telegram, mac_address=mac, security_key_hex=key_hex)
     assert parsed.sequence_counter == int.from_bytes(bytes.fromhex("5D040000"), "little")
-    assert parsed.button == "B1"
+    assert parsed.buttons == ("B1",)
     assert parsed.event_type == "press"
 
 
