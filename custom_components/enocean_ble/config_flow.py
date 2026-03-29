@@ -28,7 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 FLOW_TAG = "[ENOCEAN_FLOW]"
 CANCEL_TRACE_TAG = "FLOW_CANCEL_TRACE"
 FLOW_TRACE_TAG = "FLOW_TRACE_V3"
-UI_FLOW_PROGRESS_EVENT = "data_entry_flow_progressed"
 
 COMMISSIONING_TIMEOUT = 120.0
 
@@ -59,14 +58,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._flow_created_logged: bool = False
         self._active_stage_id: str | None = None
         self._stage_stats: dict[str, dict[str, Any]] = {}
-        self._unsubscribe_ui_flow_progress: Any | None = None
-        self._ui_progress_seen: bool = False
-        self._ui_abort_explicit_seen: bool = False
-        self._last_ui_progress_monotonic: float | None = None
 
     def async_remove(self) -> None:
         """Cleanup when flow is aborted/cancelled/finished by HA."""
-        self._ensure_ui_progress_listener()
         current_step = None
         cur_step = getattr(self, "cur_step", None)
         if isinstance(cur_step, dict):
@@ -89,13 +83,11 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             self._stage_task is not None and not self._stage_task.done(),
             self._pending_security_key is not None,
         )
-        self._log_terminal_cause_on_remove()
-        self._remove_ui_progress_listener()
+        self._log_terminal_without_entry()
         self._cancel_stage_task(reason="flow_removed")
 
     async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> FlowResult:
-        """Handle Bluetooth discovery and start commissioning immediately."""
-        self._ensure_ui_progress_listener()
+        """Handle Bluetooth discovery and start commissioning."""
         discovered_mac = discovery_info.address.upper()
         manufacturer_data = discovery_info.manufacturer_data.get(ENOCEAN_MANUFACTURER_ID)
         payload_hex = manufacturer_data.hex() if manufacturer_data else ""
@@ -137,17 +129,21 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
 
     async def async_step_commissioning(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Show commissioning instructions and wait for L26 telegram."""
+        # If the commissioning telegram is already known (ex: cached discovery payload),
+        # continue to the explicit user confirmation step.
+        if self._pending_security_key is not None and self._stage_task is None:
+            return await self.async_step_bluetooth_confirm()
         return await self._async_run_stage(
             step_id="commissioning",
             progress_action="waiting_commissioning",
             coro=self._async_stage_wait_commissioning,
-            next_step_id="commissioning_active",
+            next_step_id="bluetooth_confirm",
         )
 
-    async def async_step_commissioning_active(
+    async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Final step: commissioning succeeded, create entry."""
+        """Ask for explicit user confirmation before creating the entry."""
         if self._pending_mac is None or self._pending_security_key is None:
             return self.async_show_form(
                 step_id="commissioning",
@@ -155,6 +151,26 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 description_placeholders={"name": self._pending_title or "EnOcean BLE"},
             )
 
+        if user_input is None:
+            self._trace_event(
+                "FLOW_CONFIRM_SHOWN",
+                step="bluetooth_confirm",
+                note="Commissioning complete; waiting for explicit user confirmation.",
+            )
+            self._set_confirm_only()
+            return self.async_show_form(
+                step_id="bluetooth_confirm",
+                description_placeholders={
+                    "name": self._pending_title or "EnOcean BLE",
+                    "mac": self._pending_mac,
+                },
+            )
+
+        self._trace_event(
+            "FLOW_USER_ADD_CONFIRMED",
+            step="bluetooth_confirm",
+            note="User confirmed final add after commissioning success.",
+        )
         _LOGGER.debug(
             "flow_commissioning_create_entry address=%s title=%s",
             self._pending_mac,
@@ -163,7 +179,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._entry_created = True
         self._trace_event(
             "FLOW_CREATE_ENTRY",
-            step="commissioning_active",
+            step="bluetooth_confirm",
             note="Commissioning succeeded and config entry is being created.",
             title=self._pending_title or "EnOcean BLE Switch",
         )
@@ -622,7 +638,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         stats = self._stage_stats[step_id]
         stats["total_seen"] += 1
         stats["last_payload_ts"] = info_time
-        if decision in {"accepted", "candidate_selected"}:
+        if decision == "accepted":
             stats["accepted"] += 1
         if decision == "duplicate":
             stats["duplicates"] += 1
@@ -669,95 +685,16 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             last_payload_ts=stats["last_payload_ts"],
         )
 
-    def _ensure_ui_progress_listener(self) -> None:
-        """Subscribe once to data_entry_flow_progressed for flow intent correlation."""
-        if self._unsubscribe_ui_flow_progress is not None:
-            return
-        if not hasattr(self, "hass"):
-            return
-
-        def _on_progress(event: Any) -> None:
-            data = getattr(event, "data", None)
-            if isinstance(data, dict):
-                self._handle_ui_flow_progress_event(data)
-
-        self._unsubscribe_ui_flow_progress = self.hass.bus.async_listen(UI_FLOW_PROGRESS_EVENT, _on_progress)
-
-    def _remove_ui_progress_listener(self) -> None:
-        """Unsubscribe from flow progress events."""
-        if self._unsubscribe_ui_flow_progress is None:
-            return
-        self._unsubscribe_ui_flow_progress()
-        self._unsubscribe_ui_flow_progress = None
-
-    def _handle_ui_flow_progress_event(self, data: dict[str, Any]) -> None:
-        """Correlate frontend flow progress events with this flow."""
-        flow_id = data.get("flow_id")
-        if flow_id != getattr(self, "flow_id", None):
-            return
-
-        now = self._monotonic_now()
-        self._ui_progress_seen = True
-        self._last_ui_progress_monotonic = now
-        result = data.get("result")
-        result_type = result.get("type") if isinstance(result, dict) else data.get("type")
-        reason = result.get("reason") if isinstance(result, dict) else data.get("reason")
-        self._trace_event(
-            "UI_FLOW_PROGRESS_OBSERVED",
-            step=data.get("step_id"),
-            note="Observed data_entry_flow_progressed event for this flow.",
-            result_type=result_type,
-            reason=reason,
-        )
-
-        if result_type == "abort":
-            self._ui_abort_explicit_seen = True
-            self._trace_event(
-                "USER_INTENT_ABORT_EXPLICIT",
-                step=data.get("step_id"),
-                note="Explicit abort observed on flow progress channel.",
-                confidence="high",
-                reason=reason,
-            )
-
-    def _log_terminal_cause_on_remove(self) -> None:
-        """Log terminal interpretation when flow is removed without entry creation."""
+    def _log_terminal_without_entry(self) -> None:
+        """Log terminal event when flow is removed without entry creation."""
         if self._terminal_cause_logged:
             return
         self._terminal_cause_logged = True
         if self._entry_created:
             return
-
-        now = self._monotonic_now()
-        if self._ui_abort_explicit_seen:
-            self._trace_event(
-                "FLOW_TERMINATED_WITHOUT_ENTRY",
-                note="Flow terminated without creating an entry after explicit abort.",
-                cause="USER_INTENT_ABORT_EXPLICIT",
-                confidence="high",
-            )
-            return
-
-        if self._ui_progress_seen and self._last_ui_progress_monotonic is not None:
-            silence_ms = round((now - self._last_ui_progress_monotonic) * 1000, 3)
-            if silence_ms >= 1500:
-                self._trace_event(
-                    "USER_INTENT_UI_CLOSE_SUSPECTED",
-                    note="UI progression disappeared before removal, close/navigation suspected.",
-                    confidence="medium",
-                    silence_ms=silence_ms,
-                )
-                self._trace_event(
-                    "FLOW_TERMINATED_WITHOUT_ENTRY",
-                    note="Flow removed with UI-close suspicion and no created entry.",
-                    cause="USER_INTENT_UI_CLOSE_SUSPECTED",
-                    confidence="medium",
-                )
-                return
-
         self._trace_event(
             "FLOW_TERMINATED_WITHOUT_ENTRY",
-            note="Flow removed without entry and without clear user intent signal.",
+            note="Flow removed without entry.",
             cause="UNKNOWN",
             confidence="low",
         )
