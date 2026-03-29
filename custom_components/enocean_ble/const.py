@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DOMAIN = "enocean_ble"
-INTEGRATION_NAME = "EnOcean BLE Switches"
+INTEGRATION_NAME = "PTM215B/PTM216B"
 PLATFORMS = ["event"]
 
 CONF_MAC_ADDRESS = "mac_address"
