@@ -4,20 +4,16 @@ from __future__ import annotations
 
 DOMAIN = "enocean_ble"
 INTEGRATION_NAME = "EnOcean BLE Switches"
+PLATFORMS = ["event"]
 
-CONF_SETUP_METHOD = "setup_method"
-CONF_QR_RAW = "qr_raw"
-CONF_NFC_RAW = "nfc_raw"
 CONF_MAC_ADDRESS = "mac_address"
 CONF_SECURITY_KEY = "security_key"
-
-SETUP_METHOD_QR = "qr"
-SETUP_METHOD_NFC = "nfc"
 
 ENOCEAN_MANUFACTURER_ID = 0x03DA
 ENOCEAN_MAC_PREFIX = "E2:15:"
 
 EVENT_BUTTON_ACTION = "enocean_ble_button_action"
+SIGNAL_BUTTON_EVENT = "enocean_ble_button_event_{entry_id}"
 
 ATTR_BUTTON = "button"
 ATTR_EVENT_TYPE = "event_type"
@@ -43,4 +39,11 @@ BUTTON_BIT_TO_NAME = {
     STATUS_BIT_A1: "A1",
     STATUS_BIT_B0: "B0",
     STATUS_BIT_B1: "B1",
+}
+
+BUTTON_ENTITY_DESCRIPTIONS = {
+    "A0": "Button 1",
+    "A1": "Button 2",
+    "B0": "Button 3",
+    "B1": "Button 4",
 }

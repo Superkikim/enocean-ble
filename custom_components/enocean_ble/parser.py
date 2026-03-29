@@ -30,7 +30,7 @@ class ParsedTelegram:
     """Parsed EnOcean BLE data telegram."""
 
     sequence_counter: int
-    button: str
+    buttons: tuple[str, ...]
     event_type: str
 
 
@@ -97,21 +97,18 @@ def parse_data_telegram(
         raise ValueError("MIC verification failed")
 
     status = payload[0]
-    button_name = _extract_single_button(status)
+    button_names = _extract_active_buttons(status)
     event_type = _extract_event_type(status)
 
     return ParsedTelegram(
         sequence_counter=sequence_counter,
-        button=button_name,
+        buttons=button_names,
         event_type=event_type,
     )
 
 
-def _extract_single_button(status: int) -> str:
-    active = [name for bit, name in BUTTON_BIT_TO_NAME.items() if status & bit]
-    if len(active) != 1:
-        raise ValueError("Telegram must contain exactly one active button")
-    return active[0]
+def _extract_active_buttons(status: int) -> tuple[str, ...]:
+    return tuple(name for bit, name in BUTTON_BIT_TO_NAME.items() if status & bit)
 
 
 def _extract_event_type(status: int) -> str:
