@@ -1,45 +1,20 @@
 {
   "config": {
     "step": {
-      "bluetooth_confirm": {
-        "title": "EnOcean BLE Discovered",
-        "description": "{name} was discovered. Click Submit to start commissioning."
-      },
-      "commissioning_hold_1": {
-        "title": "Auto-Commissioning Step 1",
-        "description": "Hold button 1 for 7 seconds on {name}."
-      },
-      "commissioning_click_short": {
-        "title": "Auto-Commissioning Step 2",
-        "description": "Press button 1 briefly on {name}."
-      },
-      "commissioning_hold_2": {
-        "title": "Auto-Commissioning Step 3",
-        "description": "Hold button 1 again for 7 seconds on {name}."
-      },
-      "commissioning_release_2": {
-        "title": "Auto-Commissioning Step 4",
-        "description": "Click button 1 briefly again on {name}."
-      },
-      "commissioning_exit_mode": {
-        "title": "Auto-Commissioning Step 5",
-        "description": "Commissioning successful. Press button 2 on {name} to turn off auto-commissioning mode."
+      "commissioning": {
+        "title": "EnOcean BLE Auto-Commissioning",
+        "description": "Activate auto-commissioning on {name}:\n\n1. Hold button 1 for 7 seconds\n2. Click button 1 briefly\n3. Hold button 1 again for 7 seconds\n4. Click button 1 briefly again\n\nYou have 2 minutes. Retry if needed."
       }
     },
     "progress": {
-      "hold_button_1_7s": "Hold button 1 for 7 seconds. Waiting for first hold sequence...",
-      "click_button_1_briefly": "Press button 1 briefly. Waiting for A0 press telegram...",
-      "hold_button_1_again_7s": "Hold button 1 again for 7 seconds. Waiting for second hold...",
-      "click_button_1_again_briefly": "Click button 1 briefly again. Waiting for commissioning confirmation telegram (LEN=26)...",
-      "click_another_button_to_exit_commissioning": "Commissioning successful. Press button 2 (A1) to turn off auto-commissioning mode..."
+      "waiting_commissioning": "Waiting for commissioning telegram. Follow the instructions and retry if needed..."
     },
     "abort": {
       "no_bluetooth_discovery": "This setup must start from a discovered Bluetooth device.",
       "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15)."
     },
     "error": {
-      "commissioning_not_detected": "Commissioning mode failed to activate. Try again.",
-      "commissioning_not_active": "Commissioning mode is not active (expected LEN=26 telegram). Try again from the beginning.",
+      "commissioning_not_detected": "No commissioning telegram received within 2 minutes. Try again.",
       "invalid_commissioning": "A commissioning telegram was received but could not be parsed."
     }
   }

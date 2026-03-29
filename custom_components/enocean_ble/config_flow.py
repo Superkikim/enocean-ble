@@ -20,10 +20,6 @@ from .const import (
     DOMAIN,
     ENOCEAN_MAC_PREFIX,
     ENOCEAN_MANUFACTURER_ID,
-    STATUS_BIT_A0,
-    STATUS_BIT_A1,
-    STATUS_BIT_B0,
-    STATUS_BIT_B1,
     STATUS_BIT_ENERGY_BOW,
 )
 from .parser import parse_commissioning_telegram
@@ -34,9 +30,7 @@ CANCEL_TRACE_TAG = "FLOW_CANCEL_TRACE"
 FLOW_TRACE_TAG = "FLOW_TRACE_V3"
 UI_FLOW_PROGRESS_EVENT = "data_entry_flow_progressed"
 
-
-class CommissioningNotActiveError(Exception):
-    """Raised when commissioning mode is not active at the expected step."""
+COMMISSIONING_TIMEOUT = 120.0
 
 
 class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc,call-arg]
@@ -53,14 +47,12 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._stage_started_at: float = 0.0
         self._seen_payloads: set[tuple[float, int, str]] = set()
         self._next_match_not_before: float = 0.0
-        self._commissioning_button_mask: int | None = None
         self._last_filter_signature: tuple[str, str, str] | None = None
 
         self._stage_task: asyncio.Task[None] | None = None
         self._stage_error: str | None = None
         self._last_progress_next_step: str | None = None
         self._last_progress_transition_at: float = 0.0
-        self._commissioning_ready_for_exit: bool = False
         self._stage_started_monotonic: float = 0.0
         self._entry_created: bool = False
         self._terminal_cause_logged: bool = False
@@ -86,10 +78,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             has_entry=self._entry_created,
             next_step=self._last_progress_next_step,
             task_active=self._stage_task is not None and not self._stage_task.done(),
-            ready_for_exit=self._commissioning_ready_for_exit,
         )
         _LOGGER.debug(
-            "%s %s event=FLOW_REMOVED address=%s step=%s next=%s task_active=%s has_key=%s ready_for_exit=%s",
+            "%s %s event=FLOW_REMOVED address=%s step=%s next=%s task_active=%s has_key=%s",
             FLOW_TAG,
             CANCEL_TRACE_TAG,
             self._pending_mac,
@@ -97,14 +88,13 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             self._last_progress_next_step,
             self._stage_task is not None and not self._stage_task.done(),
             self._pending_security_key is not None,
-            self._commissioning_ready_for_exit,
         )
         self._log_terminal_cause_on_remove()
         self._remove_ui_progress_listener()
         self._cancel_stage_task(reason="flow_removed")
 
     async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> FlowResult:
-        """Handle Bluetooth discovery and wait for explicit user confirmation."""
+        """Handle Bluetooth discovery and start commissioning immediately."""
         self._ensure_ui_progress_listener()
         discovered_mac = discovery_info.address.upper()
         manufacturer_data = discovery_info.manufacturer_data.get(ENOCEAN_MANUFACTURER_ID)
@@ -143,128 +133,24 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 rssi=discovery_info.rssi,
             )
 
-        # If device is already in auto-commissioning mode at discovery time,
-        # keep that result, but still wait for explicit user confirmation (Add click).
-        if manufacturer_data is not None and len(manufacturer_data) == 26:
-            _LOGGER.debug(
-                "%s DISCOVERY_COMMISSIONING address=%s payload_len=26 payload_hex=%s",
-                FLOW_TAG,
-                discovered_mac,
-                manufacturer_data.hex(),
-            )
-            try:
-                self._apply_commissioning_payload(manufacturer_data)
-            except ValueError:
-                _LOGGER.debug(
-                    "%s DISCOVERY_COMMISSIONING_INVALID address=%s payload_hex=%s",
-                    FLOW_TAG,
-                    discovered_mac,
-                    manufacturer_data.hex(),
-                )
-            else:
-                self._commissioning_ready_for_exit = True
+        return await self.async_step_commissioning()
 
-        return await self.async_step_bluetooth_confirm()
-
-    async def async_step_bluetooth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Wait for explicit user Add click before starting commissioning stages."""
-        if self._pending_mac is None:
-            return self.async_abort(reason="no_bluetooth_discovery")
-
-        if user_input is None:
-            self._trace_event(
-                "FLOW_CONFIRM_SHOWN",
-                step="bluetooth_confirm",
-                note="Waiting for explicit user Add confirmation.",
-            )
-            return self.async_show_form(
-                step_id="bluetooth_confirm",
-                description_placeholders={"name": self._pending_title or self._pending_mac},
-            )
-
-        _LOGGER.debug(
-            "%s USER_ADD_CONFIRMED address=%s",
-            FLOW_TAG,
-            self._pending_mac,
-        )
-        self._trace_event(
-            "FLOW_USER_ADD_CONFIRMED",
-            step="bluetooth_confirm",
-            note="User confirmed Add in the UI.",
-        )
-        # Treat every explicit "Add" confirmation as a fresh run.
-        # This avoids resuming a previously abandoned mid-flow stage.
-        if self._pending_security_key is not None and self._commissioning_ready_for_exit:
-            self._arm_progress_state_from_now(self._pending_mac)
-            return await self.async_step_commissioning_exit_mode()
-        self._reset_progress_state(self._pending_mac)
-        _LOGGER.debug(
-            "%s USER_ADD_FORCE_RESTART address=%s",
-            FLOW_TAG,
-            self._pending_mac,
-        )
-        return await self.async_step_commissioning_hold_1()
-
-    async def async_step_commissioning_hold_1(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Step 1: hold button 1 for 7 seconds."""
+    async def async_step_commissioning(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Show commissioning instructions and wait for L26 telegram."""
         return await self._async_run_stage(
-            step_id="commissioning_hold_1",
-            progress_action="hold_button_1_7s",
-            coro=self._async_stage_hold_one,
-            next_step_id="commissioning_click_short",
-        )
-
-    async def async_step_commissioning_click_short(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Step 2: click button 1 briefly."""
-        return await self._async_run_stage(
-            step_id="commissioning_click_short",
-            progress_action="click_button_1_briefly",
-            coro=self._async_stage_click_short,
-            next_step_id="commissioning_hold_2",
-        )
-
-    async def async_step_commissioning_hold_2(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Step 3: hold again and wait for commissioning telegram."""
-        return await self._async_run_stage(
-            step_id="commissioning_hold_2",
-            progress_action="hold_button_1_again_7s",
-            coro=self._async_stage_hold_two,
-            next_step_id="commissioning_release_2",
-        )
-
-    async def async_step_commissioning_release_2(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Step 4: click again briefly and confirm commissioning telegram."""
-        return await self._async_run_stage(
-            step_id="commissioning_release_2",
-            progress_action="click_button_1_again_briefly",
-            coro=self._async_stage_release_two_and_commission,
-            next_step_id="commissioning_exit_mode",
-        )
-
-    async def async_step_commissioning_exit_mode(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Step 5: ask user to exit auto-commissioning mode."""
-        return await self._async_run_stage(
-            step_id="commissioning_exit_mode",
-            progress_action="click_another_button_to_exit_commissioning",
-            coro=self._async_stage_exit_commissioning_mode,
+            step_id="commissioning",
+            progress_action="waiting_commissioning",
+            coro=self._async_stage_wait_commissioning,
             next_step_id="commissioning_active",
         )
 
     async def async_step_commissioning_active(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Final step: auto-commissioning active, create entry."""
+        """Final step: commissioning succeeded, create entry."""
         if self._pending_mac is None or self._pending_security_key is None:
             return self.async_show_form(
-                step_id="commissioning_hold_1",
+                step_id="commissioning",
                 errors={"base": "commissioning_not_detected"},
                 description_placeholders={"name": self._pending_title or "EnOcean BLE"},
             )
@@ -300,34 +186,6 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         """Run one monitored stage with automatic progression."""
         if self._pending_mac is None:
             return self.async_abort(reason="no_bluetooth_discovery")
-
-        # If the UI was closed and resumed later, HA can re-enter a mid-flow step.
-        # Force a clean restart so "Add" always restarts from step 1.
-        now = self.hass.loop.time()
-        if (
-            step_id != "commissioning_hold_1"
-            and self._stage_task is None
-            and (
-                self._last_progress_next_step != step_id
-                or (now - self._last_progress_transition_at) > 2.0
-            )
-        ):
-            _LOGGER.debug(
-                "%s STALE_STEP_RESTART from_step=%s expected_next=%s age=%.3fs",
-                FLOW_TAG,
-                step_id,
-                self._last_progress_next_step,
-                now - self._last_progress_transition_at,
-            )
-            self._reset_progress_state(self._pending_mac)
-            _LOGGER.debug(
-                "%s %s event=STALE_FLOW_TO_CONFIRM address=%s from_step=%s",
-                FLOW_TAG,
-                CANCEL_TRACE_TAG,
-                self._pending_mac,
-                step_id,
-            )
-            return await self.async_step_bluetooth_confirm()
 
         if self._stage_task is None:
             self._stage_started_at = max(self._last_adv_time, self._max_adv_time_for_mac(self._pending_mac))
@@ -365,15 +223,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             self._trace_event(
                 "FLOW_STAGE_TIMEOUT",
                 step=step_id,
-                note="Stage timed out waiting for expected telemetry.",
-                error=self._stage_error,
-            )
-        except CommissioningNotActiveError:
-            self._stage_error = "commissioning_not_active"
-            self._trace_event(
-                "FLOW_STAGE_ERROR",
-                step=step_id,
-                note="Stage failed because commissioning mode was not active.",
+                note="Stage timed out waiting for commissioning telegram.",
                 error=self._stage_error,
             )
         except ValueError:
@@ -411,301 +261,25 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             next_step=next_step_id,
         )
         self._log_stage_summary(step_id=step_id)
-        if step_id == "commissioning_hold_2" and self._commissioning_ready_for_exit:
-            self._commissioning_ready_for_exit = False
-            self._last_progress_next_step = "commissioning_exit_mode"
-            self._last_progress_transition_at = self.hass.loop.time()
-            self._active_stage_id = None
-            return self.async_show_progress_done(next_step_id="commissioning_exit_mode")
-
         self._last_progress_next_step = next_step_id
         self._last_progress_transition_at = self.hass.loop.time()
         self._active_stage_id = None
         return self.async_show_progress_done(next_step_id=next_step_id)
 
-    async def _async_stage_hold_one(self) -> None:
-        """Wait for first len=9 telegram then hold duration."""
-        _LOGGER.debug("%s STEP1 start: waiting A0 press (energy bow) then enforcing hold 7s", FLOW_TAG)
-        await self._async_wait_for_payload_len(
-            9,
-            timeout=25.0,
-            stage_label="STEP1",
-            require_press=True,
-            expected_button_mask=STATUS_BIT_A0,
+    async def _async_stage_wait_commissioning(self) -> None:
+        """Wait for L26 commissioning telegram with a generous timeout."""
+        _LOGGER.debug(
+            "%s COMMISSIONING start: waiting LEN=26 telegram timeout=%ss",
+            FLOW_TAG,
+            COMMISSIONING_TIMEOUT,
         )
-        await asyncio.sleep(7.0)
-        # Ignore immediate release telegram right after the long hold.
-        self._next_match_not_before = self.hass.loop.time() + 1.2
-        _LOGGER.debug("%s STEP1 complete", FLOW_TAG)
-
-    async def _async_stage_click_short(self) -> None:
-        """Wait for a short click start telegram (A0 press with energy bow)."""
-        _LOGGER.debug("%s STEP2 start: waiting A0 press (energy bow) for short click", FLOW_TAG)
-        await self._async_wait_for_payload_len(
-            9,
-            timeout=20.0,
-            stage_label="STEP2",
-            require_press=True,
-            expected_button_mask=STATUS_BIT_A0,
+        payload = await self._async_wait_for_payload_len(
+            26,
+            timeout=COMMISSIONING_TIMEOUT,
+            stage_label="COMMISSIONING",
         )
-        # Small guard window before entering step3.
-        self._next_match_not_before = self.hass.loop.time() + 0.6
-        _LOGGER.debug("%s STEP2 complete", FLOW_TAG)
-
-    async def _async_stage_hold_two(self) -> None:
-        """Wait for second hold start (A0 press) or direct commissioning telegram."""
-        _LOGGER.debug("%s STEP3 start: waiting A0 press (energy bow) OR LEN=26 commissioning", FLOW_TAG)
-        first_kind, payload = await self._async_wait_for_len9_or_commissioning(
-            timeout=25.0,
-            stage_label="STEP3",
-            len9_require_press=True,
-            len9_expected_button_mask=STATUS_BIT_A0,
-        )
-        if first_kind == "commissioning":
-            _LOGGER.debug("%s STEP3 commissioning detected directly", FLOW_TAG)
-            self._apply_commissioning_payload(payload)
-            self._commissioning_ready_for_exit = True
-            return
-
-        await asyncio.sleep(7.0)
-        self._next_match_not_before = self.hass.loop.time()
-        _LOGGER.debug("%s STEP3 complete: hold duration reached", FLOW_TAG)
-
-    async def _async_stage_release_two_and_commission(self) -> None:
-        """Wait for brief click confirmation and require commissioning telegram."""
-        _LOGGER.debug("%s STEP4 start: waiting LEN=9 or LEN=26 (confirmation click)", FLOW_TAG)
-        first_kind, payload = await self._async_wait_for_any_or_commissioning(
-            timeout=35.0,
-            stage_label="STEP4",
-        )
-        if first_kind == "commissioning":
-            _LOGGER.debug("%s STEP4 commissioning detected first", FLOW_TAG)
-            self._apply_commissioning_payload(payload)
-            _LOGGER.debug("%s STEP4 complete: commissioning payload accepted", FLOW_TAG)
-            return
-
-        _LOGGER.debug("%s STEP4 len=9 detected first; waiting LEN=26 confirmation", FLOW_TAG)
-        try:
-            payload = await self._async_wait_for_payload_len(26, timeout=20.0, stage_label="STEP4")
-        except TimeoutError as err:
-            _LOGGER.debug(
-                "%s STEP4 FAIL first_kind=%s reason=commissioning_not_active",
-                FLOW_TAG,
-                first_kind,
-            )
-            raise CommissioningNotActiveError from err
-
         self._apply_commissioning_payload(payload)
-        self._commissioning_ready_for_exit = True
-        _LOGGER.debug("%s STEP4 complete: commissioning payload accepted", FLOW_TAG)
-
-    async def _async_wait_for_any_or_commissioning(
-        self,
-        *,
-        timeout: float,
-        stage_label: str,
-    ) -> tuple[str, bytes]:
-        """Wait for first relevant event: any LEN=9 telegram or LEN=26 commissioning telegram."""
-        if self._pending_mac is None:
-            raise TimeoutError("No pending MAC")
-
-        deadline = self.hass.loop.time() + timeout
-        min_time = max(self._last_adv_time, self._stage_started_at, self._next_match_not_before)
-        while self.hass.loop.time() < deadline:
-            candidates: list[tuple[float, str, bytes]] = []
-            for info in async_discovered_service_info(self.hass):
-                if info.address.upper() != self._pending_mac:
-                    continue
-                info_time = float(getattr(info, "time", 0.0) or 0.0)
-                if info_time <= min_time:
-                    continue
-                payload = info.manufacturer_data.get(ENOCEAN_MANUFACTURER_ID)
-                if payload is None:
-                    continue
-                if len(payload) == 9:
-                    candidates.append((info_time, "len9", payload))
-                elif len(payload) == 26:
-                    candidates.append((info_time, "commissioning", payload))
-
-            if not candidates:
-                await asyncio.sleep(0.3)
-                continue
-
-            info_time, kind, payload = min(candidates, key=lambda item: item[0])
-            signature = (info_time, len(payload), payload.hex())
-            if signature in self._seen_payloads:
-                self._record_payload_candidate(
-                    stage_label=stage_label,
-                    payload=payload,
-                    info_time=info_time,
-                    decision="duplicate",
-                    reject_reason="already_seen",
-                )
-                await asyncio.sleep(0.2)
-                continue
-
-            self._seen_payloads.add(signature)
-            self._last_adv_time = info_time
-            self._record_payload_candidate(
-                stage_label=stage_label,
-                payload=payload,
-                info_time=info_time,
-                decision="accepted",
-            )
-            if kind == "len9":
-                status = payload[4]
-                _LOGGER.debug(
-                    "%s %s FIRST kind=%s address=%s payload_len=%s timestamp=%s payload_hex=%s status=0x%02x inferred=%s button_mask=0x%02x",
-                    FLOW_TAG,
-                    stage_label,
-                    kind,
-                    self._pending_mac,
-                    len(payload),
-                    info_time,
-                    payload.hex(),
-                    status,
-                    "press" if _is_press_status(status) else "release",
-                    _button_mask(payload),
-                )
-            else:
-                _LOGGER.debug(
-                    "%s %s FIRST kind=%s address=%s payload_len=%s timestamp=%s payload_hex=%s",
-                    FLOW_TAG,
-                    stage_label,
-                    kind,
-                    self._pending_mac,
-                    len(payload),
-                    info_time,
-                    payload.hex(),
-                )
-            return kind, payload
-
-        recent = self._recent_payload_snapshot(self._pending_mac, max_items=8)
-        _LOGGER.debug(
-            "%s %s TIMEOUT waiting=any_len9_or_commissioning timeout=%ss last_adv_time=%s recent_payloads=%s",
-            FLOW_TAG,
-            stage_label,
-            timeout,
-            self._last_adv_time,
-            recent,
-        )
-        raise TimeoutError("Any len=9 or commissioning telegram not detected")
-
-    async def _async_wait_for_len9_or_commissioning(
-        self,
-        *,
-        timeout: float,
-        stage_label: str,
-        len9_require_press: bool = False,
-        len9_require_release: bool = False,
-        len9_expected_button_mask: int | None = None,
-        len9_forbidden_button_mask: int | None = None,
-    ) -> tuple[str, bytes]:
-        """Wait for first relevant event: LEN=9 telegram or commissioning (LEN=26)."""
-        if self._pending_mac is None:
-            raise TimeoutError("No pending MAC")
-
-        deadline = self.hass.loop.time() + timeout
-        min_time = max(self._last_adv_time, self._stage_started_at, self._next_match_not_before)
-        while self.hass.loop.time() < deadline:
-            len9_payload, len9_time = self._find_latest_payload(
-                self._pending_mac,
-                9,
-                min_time,
-                stage_label=stage_label,
-                require_press=len9_require_press,
-                require_release=len9_require_release,
-                expected_button_mask=len9_expected_button_mask,
-                forbidden_button_mask=len9_forbidden_button_mask,
-            )
-            comm_payload, comm_time = self._find_latest_payload(
-                self._pending_mac,
-                26,
-                min_time,
-                stage_label=stage_label,
-                require_press=False,
-                require_release=False,
-                expected_button_mask=None,
-                forbidden_button_mask=None,
-            )
-
-            candidates: list[tuple[float, str, bytes]] = []
-            if len9_payload is not None and len9_time is not None:
-                candidates.append((len9_time, "len9", len9_payload))
-            if comm_payload is not None and comm_time is not None:
-                candidates.append((comm_time, "commissioning", comm_payload))
-
-            if not candidates:
-                await asyncio.sleep(0.3)
-                continue
-
-            info_time, kind, payload = min(candidates, key=lambda item: item[0])
-            signature = (info_time, len(payload), payload.hex())
-            if signature in self._seen_payloads:
-                self._record_payload_candidate(
-                    stage_label=stage_label,
-                    payload=payload,
-                    info_time=info_time,
-                    decision="duplicate",
-                    reject_reason="already_seen",
-                )
-                await asyncio.sleep(0.2)
-                continue
-
-            self._seen_payloads.add(signature)
-            self._last_adv_time = info_time
-            self._record_payload_candidate(
-                stage_label=stage_label,
-                payload=payload,
-                info_time=info_time,
-                decision="accepted",
-            )
-            _LOGGER.debug(
-                "%s %s FIRST kind=%s address=%s payload_len=%s timestamp=%s payload_hex=%s",
-                FLOW_TAG,
-                stage_label,
-                kind,
-                self._pending_mac,
-                len(payload),
-                info_time,
-                payload.hex(),
-            )
-            return kind, payload
-
-        recent = self._recent_payload_snapshot(self._pending_mac, max_items=8)
-        _LOGGER.debug(
-            "%s %s TIMEOUT waiting=len9_or_commissioning timeout=%ss last_adv_time=%s recent_payloads=%s",
-            FLOW_TAG,
-            stage_label,
-            timeout,
-            self._last_adv_time,
-            recent,
-        )
-        raise TimeoutError("LEN=9 or commissioning telegram not detected")
-
-    async def _async_stage_exit_commissioning_mode(self) -> None:
-        """Require a real press on button 2 (A1) to exit auto-commissioning mode."""
-        _LOGGER.debug("%s STEP5 start: waiting A1 press (energy bow) to confirm exit action", FLOW_TAG)
-        await self._async_wait_for_payload_len(
-            9,
-            timeout=25.0,
-            stage_label="STEP5",
-            require_press=True,
-            expected_button_mask=STATUS_BIT_A1,
-        )
-        _LOGGER.debug("%s STEP5 complete: A1 press detected, exit action confirmed", FLOW_TAG)
-
-    async def _async_wait_for_len9_count(self, *, count: int, timeout: float, stage_label: str) -> None:
-        """Wait for a number of distinct LEN=9 telegrams."""
-        seen = 0
-        while seen < count:
-            await self._async_wait_for_payload_len(
-                9,
-                timeout=timeout,
-                stage_label=f"{stage_label}.{seen + 1}/{count}",
-            )
-            seen += 1
-        _LOGGER.debug("%s %s COUNT_MATCH count=%s", FLOW_TAG, stage_label, count)
+        _LOGGER.debug("%s COMMISSIONING complete", FLOW_TAG)
 
     async def _async_wait_for_payload_len(
         self,
@@ -939,11 +513,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._stage_error = None
         self._seen_payloads.clear()
         self._next_match_not_before = 0.0
-        self._commissioning_button_mask = None
         self._last_filter_signature = None
         self._last_progress_next_step = None
         self._last_progress_transition_at = 0.0
-        self._commissioning_ready_for_exit = False
         self._active_stage_id = None
         self._stage_stats.clear()
         self._stage_started_monotonic = self._monotonic_now()
@@ -951,27 +523,6 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._stage_started_at = self._last_adv_time
         _LOGGER.debug(
             "%s RESET address=%s baseline_adv_time=%s",
-            FLOW_TAG,
-            mac_address,
-            self._last_adv_time,
-        )
-
-    def _arm_progress_state_from_now(self, mac_address: str) -> None:
-        """Re-arm stage matching from user confirmation time without wiping discovered key."""
-        self._cancel_stage_task(reason="arm_from_user_add")
-        self._stage_error = None
-        self._seen_payloads.clear()
-        self._next_match_not_before = 0.0
-        self._last_filter_signature = None
-        self._last_progress_next_step = None
-        self._last_progress_transition_at = 0.0
-        self._active_stage_id = None
-        self._stage_stats.clear()
-        self._stage_started_monotonic = self._monotonic_now()
-        self._last_adv_time = self._max_adv_time_for_mac(mac_address)
-        self._stage_started_at = self._last_adv_time
-        _LOGGER.debug(
-            "%s ARM_FROM_USER_ADD address=%s baseline_adv_time=%s",
             FLOW_TAG,
             mac_address,
             self._last_adv_time,
@@ -1205,39 +756,25 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 return
 
         self._trace_event(
-            "TERMINATION_CAUSE_UNKNOWN",
-            note="Removed without entry and without reliable user-intent proof.",
-            confidence="low",
-        )
-        self._trace_event(
             "FLOW_TERMINATED_WITHOUT_ENTRY",
-            note="Flow removed without entry and cause could not be proven.",
-            cause="TERMINATION_CAUSE_UNKNOWN",
+            note="Flow removed without entry and without clear user intent signal.",
+            cause="UNKNOWN",
             confidence="low",
         )
-
-
-def _reverse_mac_hex(mac_hex: str) -> str:
-    """Reverse byte order of a 12-hex MAC string."""
-    octets = [mac_hex[i : i + 2] for i in range(0, 12, 2)]
-    return "".join(reversed(octets))
-
-
-def _format_mac(mac_hex: str) -> str:
-    """Format a 12-hex MAC string as AA:BB:CC:DD:EE:FF."""
-    return ":".join(mac_hex[i : i + 2] for i in range(0, 12, 2)).upper()
-
-
-BUTTON_MASK = STATUS_BIT_A0 | STATUS_BIT_A1 | STATUS_BIT_B0 | STATUS_BIT_B1
 
 
 def _is_press_status(status: int) -> bool:
-    """Press telegrams have Energy Bow bit set."""
     return bool(status & STATUS_BIT_ENERGY_BOW)
 
 
 def _button_mask(payload: bytes) -> int:
-    """Return button bits from status byte in LEN=9 telegram."""
-    if len(payload) < 5:
-        return 0
-    return payload[4] & BUTTON_MASK
+    return payload[4] & 0x1E
+
+
+def _format_mac(hex6: str) -> str:
+    return ":".join(hex6[i : i + 2].upper() for i in range(0, 12, 2))
+
+
+def _reverse_mac_hex(hex6: str) -> str:
+    pairs = [hex6[i : i + 2] for i in range(0, 12, 2)]
+    return "".join(reversed(pairs))
