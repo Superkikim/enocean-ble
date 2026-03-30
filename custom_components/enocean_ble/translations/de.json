@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "commissioning": {
+        "title": "EnOcean BLE Auto-Kommissionierung",
+        "description": "Auto-Kommissionierung für {name} aktivieren:\n\n1. Taste 1 für 7 Sekunden gedrückt halten\n2. Taste 1 kurz drücken\n3. Taste 1 erneut für 7 Sekunden gedrückt halten\n\nSie haben 2 Minuten. Bei Bedarf erneut versuchen."
+      },
+      "bluetooth_confirm": {
+        "title": "EnOcean BLE-Gerät bestätigen",
+        "description": "EnOcean-Schalter mit Adresse {mac} wurde erfolgreich kommissioniert.\n\n⚠️ Drücken Sie eine andere Taste, um den Kommissionierungsmodus zu beenden, und klicken Sie dann auf Senden."
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Taste 1 für 7 Sekunden halten, dann Taste 1 kurz drücken und erneut 7 Sekunden halten."
+    },
+    "abort": {
+      "no_bluetooth_discovery": "Dieses Setup muss mit einem per Bluetooth gefundenen Gerät gestartet werden.",
+      "not_enocean_prefix": "Dieses gefundene Gerät verwendet nicht den EnOcean BLE MAC-Präfix (E2:15)."
+    },
+    "error": {
+      "commissioning_not_detected": "Innerhalb von 2 Minuten wurde kein Kommissionierungs-Telegramm empfangen. Versuchen Sie es erneut. Wenn es nach mehreren Versuchen weiterhin nicht funktioniert, können Sie einen Werksreset versuchen. Lesen Sie vorher den Reset-Hinweis in der Dokumentation.",
+      "invalid_commissioning": "Ein Kommissionierungs-Telegramm wurde empfangen, konnte aber nicht validiert werden. Versuchen Sie es erneut. Wenn dies weiterhin fehlschlägt, lesen Sie vor einem Reset den Hinweis in der Dokumentation."
+    }
+  }
+}

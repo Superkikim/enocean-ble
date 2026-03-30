@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "commissioning": {
+        "title": "Auto-commissioning EnOcean BLE",
+        "description": "Attiva l'auto-commissioning su {name}:\n\n1. Tieni premuto il pulsante 1 per 7 secondi\n2. Premi brevemente il pulsante 1\n3. Tieni di nuovo premuto il pulsante 1 per 7 secondi\n\nHai 2 minuti. Riprova se necessario."
+      },
+      "bluetooth_confirm": {
+        "title": "Conferma dispositivo EnOcean BLE",
+        "description": "Lo switch EnOcean con indirizzo {mac} è stato commissionato con successo.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Tieni premuto il pulsante 1 per 7 secondi, poi premi brevemente il pulsante 1 e tienilo di nuovo premuto per 7 secondi."
+    },
+    "abort": {
+      "no_bluetooth_discovery": "Questa configurazione deve partire da un dispositivo Bluetooth rilevato.",
+      "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15)."
+    },
+    "error": {
+      "commissioning_not_detected": "Nessun telegramma di commissioning ricevuto entro 2 minuti. Riprova. Se continua a non funzionare dopo più tentativi, puoi provare un reset di fabbrica. Leggi prima il disclaimer sul reset nella documentazione.",
+      "invalid_commissioning": "È stato ricevuto un telegramma di commissioning, ma non è stato possibile validarlo. Riprova. Se continua a fallire, leggi il disclaimer sul reset nella documentazione prima di resettare."
+    }
+  }
+}

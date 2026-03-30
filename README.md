@@ -13,21 +13,98 @@ It provides:
 - EnOcean PTM 215B
 - EnOcean PTM 216B
 
+## Installation
+
+### HACS (recommended)
+1. HACS -> `Integrations` -> `...` -> `Custom repositories`
+2. Add this repository URL, category: `Integration`
+3. Install `EnOcean BLE`
+4. Restart Home Assistant
+
+### Manual
+1. Copy [`custom_components/enocean_ble`](custom_components/enocean_ble) to your HA `custom_components` directory
+2. Restart Home Assistant
+3. Settings -> Devices & Services -> `Add Integration` -> `EnOcean BLE`
+
+## Add Your Device
+
+1. Click `Add` when the switch appears in Bluetooth discovery.
+2. Follow the sequence on button 1:
+   - hold for about 7 seconds,
+   - press briefly,
+   - hold again for about 7 seconds.
+3. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+4. Click `Submit`.
+
+Notes:
+- If the switch is already in commissioning mode, progress can complete almost immediately.
+- After success, press another button to ensure the switch exits commissioning mode.
+
+## Events
+
+The integration creates 4 event entities: `A0`, `A1`, `B0`, `B1`.
+
+Event type values:
+- `press`
+- `release`
+- `long_press`
+- `long_release`
+
+Event data includes:
+- `mac_address`
+- `rssi`
+- `sequence_counter`
+
+## Usage Examples
+
+1. Single click on `A0` (`press`) -> toggle a room light.
+2. Long press on `A0` (`long_press`) -> start dimming up.
+3. Long release on `A0` (`long_release`) -> stop dimming.
+4. `A1` -> activate "Away" scene.
+5. `B0` -> trigger "Movie" scene.
+6. `B1` -> all lights off.
+
+## Troubleshooting
+
+- Device re-adds immediately after deletion:
+  the switch is likely still in commissioning mode and keeps sending `LEN=26`.
+- No button events:
+  verify BLE reception and that commissioning completed successfully.
+- Auto-commissioning sequence never works:
+  device may have commissioning mode disabled by prior configuration; try factory reset.
+- Intermittent events:
+  check distance/RSSI/interference.
+- Occasional missed press:
+  can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
+
+## Migration / Factory Reset
+
+If the switch has been used in another ecosystem, commissioning in Home Assistant can fail if active key/settings no longer match what you expect.
+
+> [!WARNING]
+> Disclaimer (OEM setups): some manufacturers/integrators can customize commissioning and radio behavior via NFC (for example commissioning mode behavior, addressing/security parameters, or other module settings).
+> A factory reset restores EnOcean default module settings.
+> After reset, re-joining the original OEM ecosystem may require re-provisioning, and in some setups it may no longer be possible without OEM tools/process.
+
+> [!WARNING]
+> If auto-commissioning never starts (or never yields a commissioning telegram), the device may have radio commissioning disabled by prior NFC/OEM configuration.
+
+In that case, perform a factory reset on the switch module:
+1. Remove rocker and housing to access module contacts.
+2. Press `A0 + A1 + B0 + B1` together.
+3. While holding those contacts, press the energy bow.
+4. Keep the energy bow pressed for at least 10 seconds.
+5. Release and retry commissioning.
+
+![PTM 21xB contact map and energy bow](assets/docs/ptm21xb_contacts_readme.png)
+
+Practical tip:
+- This is physically tricky. A common trick is to hold the 4 contacts with one hand (or a small non-conductive tool) and press/hold the energy bow with the other hand.
+
 ## Compatibility
 
 Tested with:
 - Feller EDIZIOdue BLE Switch (user-tested in this project)
-
-Verified PTM21x BLE products (manufacturer documentation):
-- PTM 215B module (`S3221-A215`)
-- PTM 216B module (`S3221-A216`)
-- Easyfit Single / Double Rocker Wall Switch for BLE (`EWSSB / EWSDB`)
-- Easyfit Single / Double Rocker Pad for BLE (`ESRPB / EDRPB`)
-
-Regional fit:
-- Europe (55x55 form factor): `EWSSB / EWSDB`
-- US-style rocker pad format: `ESRPB / EDRPB`
-- Switzerland: Feller EDIZIOdue BLE Switch (project-tested)
 
 Compatibility assumption:
 - In general, PTM 215B/PTM 216B-based BLE switches should work with this integration.
@@ -87,99 +164,11 @@ The PTM 216B, announced at Light + Building 2024, delivers **more than double th
 
 The PTM 215B/216B BLE ecosystem is concentrated around **10 confirmed manufacturers** with 12 distinct switch models — far fewer than the hundreds of products using EnOcean's older sub-1 GHz modules. EnOcean itself (via Easyfit), Feller, Eltako, Vimar, and Hytronik are the confirmed PTM 215B incumbents. AIMOTION and Niko represent the first wave of confirmed PTM 216B adopters alongside EnOcean's own updated Easyfit line. Five additional products from Busch-Jaeger, Häfele, Retrotouch, and Tunto show strong technical evidence of PTM 215B/216B use but lack explicit module identification in publicly available documentation. The market is actively transitioning to PTM 216B, and new product announcements using this module should accelerate through 2026.
 
-## Installation
+## Security
 
-### HACS (recommended)
-1. HACS -> `Integrations` -> `...` -> `Custom repositories`
-2. Add this repository URL, category: `Integration`
-3. Install `EnOcean BLE`
-4. Restart Home Assistant
-
-### Manual
-1. Copy [`custom_components/enocean_ble`](custom_components/enocean_ble) to your HA `custom_components` directory
-2. Restart Home Assistant
-3. Settings -> Devices & Services -> `Add Integration` -> `EnOcean BLE`
-
-## Commissioning Flow
-
-Current flow:
-1. Click `Add` when the switch is discovered in Bluetooth.
-2. Follow the switch sequence:
-   - hold button 1 for about 7 seconds,
-   - press button 1 briefly,
-   - hold button 1 again for about 7 seconds.
-3. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
-4. Then click `Submit`.
-
-Notes:
-- If the switch is already in commissioning mode, progress can complete almost immediately.
-- After success, press another button to exit commissioning mode on the switch.
-
-## Migration / Factory Reset
-
-If the switch has been used in another ecosystem (for example Casambi), commissioning in Home Assistant can fail if the active key/settings no longer match what you expect.
-
-> [!WARNING]
-> Disclaimer (OEM setups): some manufacturers/integrators can customize commissioning and radio behavior via NFC (for example commissioning mode behavior, addressing/security parameters, or other module settings).
-> A factory reset restores EnOcean default module settings.
-> After reset, re-joining the original OEM ecosystem may require re-provisioning, and in some setups it may no longer be possible without OEM tools/process.
-
-> [!WARNING]
-> If auto-commissioning never starts (or never yields a commissioning telegram), the device may have radio commissioning disabled by prior NFC/OEM configuration.
-
-In that case, perform a factory reset on the switch module:
-1. Remove rocker and housing to access module contacts.
-2. Press `A0 + A1 + B0 + B1` together.
-3. While holding those contacts, press the energy bow.
-4. Keep the energy bow pressed for at least 10 seconds.
-5. Release and retry commissioning.
-
-![PTM 21xB contact map and energy bow](assets/docs/ptm21xb_contacts.png)
-
-Practical tip:
-- This is physically tricky. A common trick is to hold the 4 contacts with one hand (or a small non-conductive tool) and press/hold the energy bow with the other hand.
-
-## Events
-
-The integration creates 4 event entities: `A0`, `A1`, `B0`, `B1`.
-
-Event type values:
-- `press`
-- `release`
-- `long_press`
-- `long_release`
-
-Event data includes:
-- `mac_address`
-- `rssi`
-- `sequence_counter`
-
-## Usage Examples
-
-1. Single click on `A0` (`press`) -> toggle a room light.
-2. Long press on `A0` (`long_press`) -> start dimming up.
-3. Long release on `A0` (`long_release`) -> stop dimming.
-4. `A1` -> activate "Away" scene.
-5. `B0` -> trigger "Movie" scene.
-6. `B1` -> all lights off.
-
-## Troubleshooting
-
-- Device re-adds immediately after deletion:
-  the switch is likely still in commissioning mode and keeps sending `LEN=26`.
-- No button events:
-  verify BLE reception and that commissioning completed successfully.
-- Auto-commissioning sequence never works:
-  device may have commissioning mode disabled by prior configuration; try factory reset.
-- Intermittent events:
-  check distance/RSSI/interference.
-- Occasional missed press:
-  can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
-
-To inspect debug logs:
-1. Enable debug logging for `custom_components.enocean_ble`
-2. Reproduce the issue
-3. Review `FLOW_TRACE_V3` lines in Home Assistant logs
+- Device security keys are stored in config entries.
+- Keys must never be logged in clear text.
+- Telegram authentication uses AES-128 CCM MIC verification.
 
 ## Development
 
@@ -196,12 +185,6 @@ ruff check .
 mypy custom_components tests
 pytest -q
 ```
-
-## Security
-
-- Device security keys are stored in config entries.
-- Keys must never be logged in clear text.
-- Telegram authentication uses AES-128 CCM MIC verification.
 
 ## References
 

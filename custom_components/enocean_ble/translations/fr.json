@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "commissioning": {
+        "title": "Auto-commissioning EnOcean BLE",
+        "description": "Activez l'auto-commissioning sur {name} :\n\n1. Maintenez le bouton 1 pendant 7 secondes\n2. Appuyez brièvement sur le bouton 1\n3. Maintenez à nouveau le bouton 1 pendant 7 secondes\n\nVous avez 2 minutes. Réessayez si nécessaire."
+      },
+      "bluetooth_confirm": {
+        "title": "Confirmer l'appareil EnOcean BLE",
+        "description": "Le switch EnOcean avec l'adresse {mac} a été commissionné avec succès.\n\n⚠️ Appuyez sur un autre bouton pour désactiver le mode commissioning, puis cliquez sur Soumettre."
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Maintenez le bouton 1 pendant 7 secondes, puis appuyez brièvement sur le bouton 1, puis maintenez à nouveau 7 secondes."
+    },
+    "abort": {
+      "no_bluetooth_discovery": "Cette configuration doit être lancée depuis un appareil Bluetooth détecté.",
+      "not_enocean_prefix": "L'appareil détecté n'utilise pas le préfixe MAC EnOcean BLE (E2:15)."
+    },
+    "error": {
+      "commissioning_not_detected": "Aucune trame de commissioning n'a été reçue dans les 2 minutes. Réessayez. Si cela ne fonctionne toujours pas après plusieurs tentatives, vous pouvez essayer un reset usine. Merci de lire d'abord le disclaimer de reset dans la documentation.",
+      "invalid_commissioning": "Une trame de commissioning a été reçue mais n'a pas pu être validée. Réessayez. Si cela continue d'échouer, consultez le disclaimer de reset dans la documentation avant de réinitialiser."
+    }
+  }
+}

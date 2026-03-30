@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "commissioning": {
+        "title": "Automatické uvedení EnOcean BLE do provozu",
+        "description": "Aktivujte automatické uvedení do provozu pro {name}:\n\n1. Podržte tlačítko 1 po dobu 7 sekund\n2. Krátce stiskněte tlačítko 1\n3. Znovu podržte tlačítko 1 po dobu 7 sekund\n\nMáte 2 minuty. V případě potřeby to zkuste znovu."
+      },
+      "bluetooth_confirm": {
+        "title": "Potvrdit zařízení EnOcean BLE",
+        "description": "Přepínač EnOcean s adresou {mac} byl úspěšně uveden do provozu.\n\n⚠️ Stiskněte jiné tlačítko pro vypnutí režimu commissioning a poté klikněte na Odeslat."
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Podržte tlačítko 1 po dobu 7 sekund, poté jej krátce stiskněte a znovu podržte 7 sekund."
+    },
+    "abort": {
+      "no_bluetooth_discovery": "Toto nastavení musí začít z objeveného Bluetooth zařízení.",
+      "not_enocean_prefix": "Toto objevené zařízení nepoužívá MAC prefix EnOcean BLE (E2:15)."
+    },
+    "error": {
+      "commissioning_not_detected": "Během 2 minut nebyl přijat commissioning telegram. Zkuste to znovu. Pokud to po více pokusech stále nefunguje, můžete zkusit tovární reset. Nejprve si přečtěte upozornění k resetu v dokumentaci.",
+      "invalid_commissioning": "Byl přijat commissioning telegram, ale nepodařilo se jej ověřit. Zkuste to znovu. Pokud to opakovaně selhává, před resetem si přečtěte upozornění v dokumentaci."
+    }
+  }
+}

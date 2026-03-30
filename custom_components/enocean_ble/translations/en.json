@@ -3,23 +3,23 @@
     "step": {
       "commissioning": {
         "title": "EnOcean BLE Auto-Commissioning",
-        "description": "Activate auto-commissioning on {name}:\n\n1. Hold button 1 for 7 seconds\n2. Click button 1 briefly\n3. Hold button 1 again for 7 seconds\n4. Click button 1 briefly again\n\nYou have 2 minutes. Retry if needed."
+        "description": "Activate auto-commissioning on {name}:\n\n1. Hold button 1 for 7 seconds\n2. Press button 1 briefly\n3. Hold button 1 again for 7 seconds\n\nYou have 2 minutes. Retry if needed."
       },
       "bluetooth_confirm": {
         "title": "Confirm EnOcean BLE Device",
-        "description": "EnOcean Switch with address {mac} successfully commissionned.\n\n⚠️ Press another button to disable commissioning mode."
+        "description": "EnOcean switch with address {mac} was commissioned successfully.\n\n⚠️ Press another button to disable commissioning mode, then click Submit."
       }
     },
     "progress": {
-      "waiting_commissioning": "Hold button 1 for 7 seconds, then perss briefly button 1, and hold again for 7 seconds."
+      "waiting_commissioning": "Hold button 1 for 7 seconds, then press button 1 briefly, and hold again for 7 seconds."
     },
     "abort": {
       "no_bluetooth_discovery": "This setup must start from a discovered Bluetooth device.",
       "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15)."
     },
     "error": {
-      "commissioning_not_detected": "No commissioning telegram received within 2 minutes. Try again.",
-      "invalid_commissioning": "A commissioning telegram was received but could not be parsed."
+      "commissioning_not_detected": "No commissioning telegram was received within 2 minutes. Try again. If it still does not work after multiple attempts, you can try a factory reset. Please read the reset disclaimer in the documentation first.",
+      "invalid_commissioning": "A commissioning telegram was received but could not be validated. Try again. If this keeps failing, review the factory reset disclaimer in the documentation before resetting."
     }
   }
 }

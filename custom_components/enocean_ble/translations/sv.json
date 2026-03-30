@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "commissioning": {
+        "title": "EnOcean BLE automatisk provisionering",
+        "description": "Aktivera automatisk provisionering på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
+      },
+      "bluetooth_confirm": {
+        "title": "Bekräfta EnOcean BLE-enhet",
+        "description": "EnOcean-brytaren med adress {mac} har provisionerats.\n\n⚠️ Tryck på en annan knapp för att stänga av commissioning-läget och klicka sedan på Skicka."
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Håll knapp 1 i 7 sekunder, tryck sedan kort på knapp 1 och håll igen i 7 sekunder."
+    },
+    "abort": {
+      "no_bluetooth_discovery": "Denna konfiguration måste startas från en upptäckt Bluetooth-enhet.",
+      "not_enocean_prefix": "Den upptäckta enheten använder inte EnOcean BLE MAC-prefix (E2:15)."
+    },
+    "error": {
+      "commissioning_not_detected": "Ingen commissioning-telegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först reset-varningen i dokumentationen.",
+      "invalid_commissioning": "Ett commissioning-telegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs reset-varningen i dokumentationen innan du återställer."
+    }
+  }
+}

@@ -103,6 +103,15 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             payload_len,
             payload_hex,
         )
+        _LOGGER.info(
+            "%s DISCOVERED flow_id=%s mac=%s name=%s source=%s rssi=%s",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
+            discovered_mac,
+            discovery_info.name,
+            discovery_info.source,
+            discovery_info.rssi,
+        )
 
         if not discovered_mac.startswith(ENOCEAN_MAC_PREFIX):
             return self.async_abort(reason="not_enocean_prefix")
@@ -112,7 +121,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
 
         self._reset_progress_state(discovered_mac)
         self._pending_mac = discovered_mac
-        self._pending_title = discovery_info.name or f"EnOcean BLE {discovered_mac[-8:]}"
+        self._pending_title = discovery_info.name or discovered_mac
         self.context["title_placeholders"] = {"name": self._pending_title}
         if not self._flow_created_logged:
             self._flow_created_logged = True
@@ -148,7 +157,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             return self.async_show_form(
                 step_id="commissioning",
                 errors={"base": "commissioning_not_detected"},
-                description_placeholders={"name": self._pending_title or "EnOcean BLE"},
+                description_placeholders={"name": self._pending_title or self._pending_mac or DOMAIN},
             )
 
         if user_input is None:
@@ -161,7 +170,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             return self.async_show_form(
                 step_id="bluetooth_confirm",
                 description_placeholders={
-                    "name": self._pending_title or "EnOcean BLE",
+                    "name": self._pending_title or self._pending_mac or DOMAIN,
                     "mac": self._pending_mac,
                 },
             )
@@ -176,15 +185,22 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             self._pending_mac,
             self._pending_title,
         )
+        _LOGGER.info(
+            "%s ADD_CONFIRMED_CREATE_ENTRY flow_id=%s mac=%s title=%s",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
+            self._pending_mac,
+            self._pending_title,
+        )
         self._entry_created = True
         self._trace_event(
             "FLOW_CREATE_ENTRY",
             step="bluetooth_confirm",
             note="Commissioning succeeded and config entry is being created.",
-            title=self._pending_title or "EnOcean BLE Switch",
+            title=self._pending_title or self._pending_mac or DOMAIN,
         )
         return self.async_create_entry(
-            title=self._pending_title or "EnOcean BLE Switch",
+            title=self._pending_title or self._pending_mac or DOMAIN,
             data={
                 CONF_MAC_ADDRESS: self._pending_mac,
                 CONF_SECURITY_KEY: self._pending_security_key,
@@ -229,7 +245,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 step_id=step_id,
                 progress_action=progress_action,
                 progress_task=self._stage_task,
-                description_placeholders={"name": self._pending_title or self._pending_mac},
+                description_placeholders={"name": self._pending_title or self._pending_mac or DOMAIN},
             )
 
         try:
@@ -242,13 +258,29 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 note="Stage timed out waiting for commissioning telegram.",
                 error=self._stage_error,
             )
-        except ValueError:
+            _LOGGER.warning(
+                "%s COMMISSIONING_TIMEOUT flow_id=%s mac=%s step=%s timeout_s=%s",
+                FLOW_TAG,
+                getattr(self, "flow_id", "unknown"),
+                self._pending_mac,
+                step_id,
+                COMMISSIONING_TIMEOUT,
+            )
+        except ValueError as err:
             self._stage_error = "invalid_commissioning"
             self._trace_event(
                 "FLOW_STAGE_ERROR",
                 step=step_id,
                 note="Stage failed because commissioning payload was invalid.",
                 error=self._stage_error,
+            )
+            _LOGGER.error(
+                "%s COMMISSIONING_ERROR flow_id=%s mac=%s step=%s error=%s",
+                FLOW_TAG,
+                getattr(self, "flow_id", "unknown"),
+                self._pending_mac,
+                step_id,
+                err,
             )
 
         self._stage_task = None
@@ -267,7 +299,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             return self.async_show_form(
                 step_id=step_id,
                 errors={"base": error},
-                description_placeholders={"name": self._pending_title or self._pending_mac},
+                description_placeholders={"name": self._pending_title or self._pending_mac or DOMAIN},
             )
 
         self._trace_event(
@@ -503,12 +535,27 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 payload_mac,
                 payload_mac_reversed,
             )
+            _LOGGER.warning(
+                "%s COMMISSIONING_MAC_MISMATCH flow_id=%s mac=%s payload_mac=%s payload_mac_reversed=%s",
+                FLOW_TAG,
+                getattr(self, "flow_id", "unknown"),
+                self._pending_mac,
+                payload_mac,
+                payload_mac_reversed,
+            )
             raise ValueError("commissioning_static_source_mismatch")
 
         self._pending_security_key = commissioning.security_key_hex
         _LOGGER.debug(
             "%s COMMISSIONING_OK address=%s sequence_counter=%s",
             FLOW_TAG,
+            self._pending_mac,
+            commissioning.sequence_counter,
+        )
+        _LOGGER.info(
+            "%s COMMISSIONING_READY flow_id=%s mac=%s sequence_counter=%s",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
             self._pending_mac,
             commissioning.sequence_counter,
         )
@@ -697,6 +744,12 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             note="Flow removed without entry.",
             cause="UNKNOWN",
             confidence="low",
+        )
+        _LOGGER.warning(
+            "%s FLOW_TERMINATED_WITHOUT_ENTRY flow_id=%s mac=%s cause=UNKNOWN confidence=low",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
+            self._pending_mac,
         )
 
 

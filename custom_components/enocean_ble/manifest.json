@@ -1,11 +1,11 @@
 {
   "domain": "enocean_ble",
   "name": "EnOcean BLE Switches",
-  "version": "0.1.0",
-  "documentation": "https://github.com/CHANGE_ME/enocean-ble",
-  "issue_tracker": "https://github.com/CHANGE_ME/enocean-ble/issues",
+  "version": "2026.3",
+  "documentation": "https://github.com/Superkikim/enocean-ble",
+  "issue_tracker": "https://github.com/Superkikim/enocean-ble/issues",
   "codeowners": [
-    "@CHANGE_ME"
+    "@Superkikim"
   ],
   "config_flow": true,
   "requirements": [],
