@@ -136,6 +136,9 @@ actions:
 
 If the switch has been used in another ecosystem, commissioning in Home Assistant can fail if active key/settings no longer match what you expect.
 
+For example, with Casambi, the switch may not show up in Home Assistant. In that case, perform a factory reset. You can then remove the switch from the Casambi app by swiping it to the left and pressing Delete.
+You can later add it back to the Casambi network. This was tested during development.
+
 > [!WARNING]
 > Disclaimer (OEM setups): some manufacturers/integrators can customize commissioning and radio behavior via NFC (for example commissioning mode behavior, addressing/security parameters, or other module settings).
 > A factory reset restores EnOcean default module settings.
