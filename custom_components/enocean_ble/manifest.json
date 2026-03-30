@@ -1,9 +1,11 @@
 {
   "domain": "enocean_ble",
   "name": "EnOcean BLE Switches",
-  "version": "2026.3",
-  "documentation": "https://github.com/Superkikim/enocean-ble",
-  "issue_tracker": "https://github.com/Superkikim/enocean-ble/issues",
+  "bluetooth": [
+    {
+      "manufacturer_id": 986
+    }
+  ],
   "codeowners": [
     "@Superkikim"
   ],
@@ -11,14 +13,12 @@
   "dependencies": [
     "bluetooth"
   ],
-  "requirements": [],
+  "documentation": "https://github.com/Superkikim/enocean-ble",
   "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Superkikim/enocean-ble/issues",
   "loggers": [
     "custom_components.enocean_ble"
   ],
-  "bluetooth": [
-    {
-      "manufacturer_id": 986
-    }
-  ]
+  "requirements": [],
+  "version": "2026.3"
 }
