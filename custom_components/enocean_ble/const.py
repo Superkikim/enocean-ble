@@ -42,8 +42,8 @@ BUTTON_BIT_TO_NAME = {
 }
 
 BUTTON_ENTITY_DESCRIPTIONS = {
-    "A0": "Button 1",
-    "A1": "Button 2",
-    "B0": "Button 3",
-    "B1": "Button 4",
+    "A0": "A0",
+    "A1": "A1",
+    "B0": "B0",
+    "B1": "B1",
 }
