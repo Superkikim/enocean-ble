@@ -54,10 +54,13 @@ Important:
 ## Commissioning Flow
 
 Current flow:
-1. Click `Add` from Bluetooth discovery
-2. Progress screen waits for commissioning telegram (`LEN=26`)
-3. Confirm screen is shown
-4. Submit creates the config entry
+1. Click `Add` when the switch is discovered in Bluetooth.
+2. Follow the switch sequence:
+   - hold button 1 for about 7 seconds,
+   - press button 1 briefly,
+   - hold button 1 again for about 7 seconds.
+3. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+4. Then click `Submit`.
 
 Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
