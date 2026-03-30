@@ -57,12 +57,67 @@ Event data includes:
 
 ## Usage Examples
 
-1. Single click on `A0` (`press`) -> toggle a room light.
-2. Long press on `A0` (`long_press`) -> start dimming up.
-3. Long release on `A0` (`long_release`) -> stop dimming.
-4. `A1` -> activate "Away" scene.
-5. `B0` -> trigger "Movie" scene.
-6. `B1` -> all lights off.
+Example 1: Toggle a light on `A0` trigger.
+
+```yaml
+alias: EnOcean A0 - Toggle Living Room
+mode: single
+triggers:
+  - trigger: state
+    entity_id: event.e2_15_00_xx_xx_xx_button_a0
+actions:
+  - action: light.toggle
+    target:
+      entity_id: light.living_room
+```
+
+Example 2: Activate an "Away" scene on `A1` trigger.
+
+```yaml
+alias: EnOcean A1 - Away Scene
+mode: single
+triggers:
+  - trigger: state
+    entity_id: event.e2_15_00_xx_xx_xx_button_a1
+actions:
+  - action: scene.turn_on
+    target:
+      entity_id: scene.away
+```
+
+Example 3: Use `B0` and `B1` for dim up/down.
+
+```yaml
+alias: EnOcean B0/B1 - Dimming
+mode: restart
+triggers:
+  - trigger: state
+    entity_id: event.e2_15_00_xx_xx_xx_button_b0
+    id: b0
+  - trigger: state
+    entity_id: event.e2_15_00_xx_xx_xx_button_b1
+    id: b1
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: b0
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness_step_pct: 20
+      - conditions:
+          - condition: trigger
+            id: b1
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness_step_pct: -20
+```
 
 ## Troubleshooting
 
