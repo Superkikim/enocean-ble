@@ -54,6 +54,12 @@ Event data includes:
 - `mac_address`
 - `rssi`
 - `sequence_counter`
+- `button` (`A0`/`A1`/`B0`/`B1`)
+- `event` (`press`/`release`/`long_press`/`long_release`)
+
+Home Assistant event trigger:
+- `enocean_ble_button_event` (recommended)
+- `enocean_ble_button_action` (legacy, kept for compatibility)
 
 ## Usage Examples
 
@@ -63,8 +69,11 @@ Example 1: Toggle a light on `A0` trigger.
 alias: EnOcean A0 - Toggle Living Room
 mode: single
 triggers:
-  - trigger: state
-    entity_id: event.e2_15_00_xx_xx_xx_button_a0
+  - trigger: event
+    event_type: enocean_ble_button_event
+    event_data:
+      button: A0
+      event: press
 actions:
   - action: light.toggle
     target:
@@ -77,8 +86,11 @@ Example 2: Activate an "Away" scene on `A1` trigger.
 alias: EnOcean A1 - Away Scene
 mode: single
 triggers:
-  - trigger: state
-    entity_id: event.e2_15_00_xx_xx_xx_button_a1
+  - trigger: event
+    event_type: enocean_ble_button_event
+    event_data:
+      button: A1
+      event: press
 actions:
   - action: scene.turn_on
     target:
@@ -91,11 +103,17 @@ Example 3: Use `B0` and `B1` for dim up/down.
 alias: EnOcean B0/B1 - Dimming
 mode: restart
 triggers:
-  - trigger: state
-    entity_id: event.e2_15_00_xx_xx_xx_button_b0
+  - trigger: event
+    event_type: enocean_ble_button_event
+    event_data:
+      button: B0
+      event: long_press
     id: b0
-  - trigger: state
-    entity_id: event.e2_15_00_xx_xx_xx_button_b1
+  - trigger: event
+    event_type: enocean_ble_button_event
+    event_data:
+      button: B1
+      event: long_press
     id: b1
 actions:
   - choose:

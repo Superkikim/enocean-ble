@@ -23,6 +23,7 @@ from .const import (
     ENOCEAN_MAC_PREFIX,
     ENOCEAN_MANUFACTURER_ID,
     EVENT_BUTTON_ACTION,
+    EVENT_BUTTON_EVENT,
     LONG_PRESS_SECONDS,
     PLATFORMS,
     SIGNAL_BUTTON_EVENT,
@@ -378,12 +379,17 @@ def _fire_event(
     def _async_dispatch() -> None:
         async_dispatcher_send(hass, SIGNAL_BUTTON_EVENT.format(entry_id=entry.entry_id), payload)
         hass.bus.async_fire(
+            EVENT_BUTTON_EVENT,
+            payload,
+        )
+        hass.bus.async_fire(
             EVENT_BUTTON_ACTION,
             payload,
         )
 
     payload = {
         ATTR_BUTTON: button,
+        "event": event_type,
         ATTR_EVENT_TYPE: event_type,
         ATTR_RSSI: rssi,
         ATTR_SEQUENCE_COUNTER: sequence_counter,

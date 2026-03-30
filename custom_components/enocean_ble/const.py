@@ -12,6 +12,8 @@ CONF_SECURITY_KEY = "security_key"
 ENOCEAN_MANUFACTURER_ID = 0x03DA
 ENOCEAN_MAC_PREFIX = "E2:15:"
 
+EVENT_BUTTON_EVENT = "enocean_ble_button_event"
+# Backward compatibility with existing automations.
 EVENT_BUTTON_ACTION = "enocean_ble_button_action"
 SIGNAL_BUTTON_EVENT = "enocean_ble_button_event_{entry_id}"
 
