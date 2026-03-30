@@ -129,6 +129,14 @@ In that case, perform a factory reset on the switch module:
 4. Keep the energy bow pressed for at least 10 seconds.
 5. Release and retry commissioning.
 
+Reference diagrams (PTM 216B user manual):
+
+![PTM 216B functional block diagram (energy bow, button contacts, NFC)](assets/docs/ptm216b-functional-diagram.png)
+
+![PTM 216B button contact designation (A0/A1/B0/B1)](assets/docs/ptm216b-button-designation.png)
+
+Source: PTM-216B User Manual (EnOcean), chapter 2.
+
 Practical tip:
 - This is physically tricky. A common trick is to hold the 4 contacts with one hand (or a small non-conductive tool) and press/hold the energy bow with the other hand.
 - Add a photo/diagram in your docs for contact positions, it helps a lot in real life.
