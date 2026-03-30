@@ -11,8 +11,8 @@ expose them as Home Assistant event entities.
 
 ## Supported Devices
 
-- EnOcean PTM215B
-- EnOcean PTM216B
+- EnOcean PTM 215B
+- EnOcean PTM 216B
 
 ## Current Functional Scope
 

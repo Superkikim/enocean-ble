@@ -1,7 +1,7 @@
-# EnOcean BLE (PTM215B/PTM216B) for Home Assistant
+# EnOcean BLE (PTM 215B/PTM 216B) for Home Assistant
 
 `enocean_ble` is a Home Assistant custom integration for EnOcean BLE
-energy-harvesting switches (PTM215B/PTM216B).
+energy-harvesting switches (PTM 215B/PTM 216B).
 
 It provides:
 - Bluetooth discovery + guided commissioning flow
@@ -10,8 +10,8 @@ It provides:
 
 ## Supported Devices
 
-- EnOcean PTM215B
-- EnOcean PTM216B
+- EnOcean PTM 215B
+- EnOcean PTM 216B
 
 ## Compatibility
 
@@ -30,12 +30,12 @@ Regional fit:
 - Switzerland: Feller EDIZIOdue BLE Switch (project-tested)
 
 Compatibility assumption:
-- In general, PTM215B/PTM216B-based BLE switches should work with this integration.
+- In general, PTM 215B/PTM 216B-based BLE switches should work with this integration.
 - However, compatibility is not mathematically guaranteed if product NFC/BLE settings were customized.
 
 Important:
 - Not every product labeled "EnOcean" is BLE.
-- This integration targets BLE telegrams in the 2.4 GHz band from PTM215B/PTM216B family devices.
+- This integration targets BLE telegrams in the 2.4 GHz band from PTM 215B/PTM 216B family devices.
 - Sub-GHz EnOcean products (e.g. 868/902 MHz) are out of scope for this integration.
 
 ## Installation

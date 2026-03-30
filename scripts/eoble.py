@@ -2,6 +2,7 @@
 
 import asyncio
 import platform
+
 from bleak import BleakScanner
 
 TARGET_MAC = "E2:15:00:03:C6:D7"

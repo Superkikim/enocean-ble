@@ -374,7 +374,7 @@ def _fire_event(
 ) -> None:
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    @callback
+    @callback  # type: ignore[misc]
     def _async_dispatch() -> None:
         async_dispatcher_send(hass, SIGNAL_BUTTON_EVENT.format(entry_id=entry.entry_id), payload)
         hass.bus.async_fire(

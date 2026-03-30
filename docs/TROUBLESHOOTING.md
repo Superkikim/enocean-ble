@@ -7,7 +7,7 @@
 
 ## Invalid QR/NFC data
 - Re-scan the code and ensure full raw string is pasted.
-- Confirm device model is PTM215B/PTM216B.
+- Confirm device model is PTM 215B/PTM 216B.
 
 ## Migration from Casambi
 - Perform factory reset before onboarding.

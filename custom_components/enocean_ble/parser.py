@@ -84,7 +84,7 @@ def parse_data_telegram(
         raise ValueError("EnOcean BLE telegram payload missing")
 
     key = bytes.fromhex(security_key_hex)
-    # Source address in nonce must be little-endian as specified by PTM215B/PTM216B manuals.
+    # Source address in nonce must be little-endian as specified by PTM 215B/PTM 216B manuals.
     mac = bytes.fromhex(mac_address.replace(":", ""))[::-1]
 
     if not verify_mic(
