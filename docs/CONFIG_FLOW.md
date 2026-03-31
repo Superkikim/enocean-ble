@@ -2,43 +2,35 @@
 
 ## Purpose
 
-Drive commissioning in a deterministic way and create a config entry with:
+Commission one EnOcean BLE switch from Bluetooth discovery and create one config entry with:
 
 - `mac_address`
 - `security_key`
 
-## Entry Point
+## Current Flow (Implemented)
 
-The integration starts from the Bluetooth discovery step and shows an explicit
-user confirmation (`bluetooth_confirm`) before commissioning stages begin.
+1. `bluetooth` (discovery)
+- Starts from Bluetooth discovery.
+- Stores discovered MAC/title and initializes trace state.
 
-## Commissioning Stages
+2. `commissioning` (progress)
+- Shows progress instructions to the user.
+- Waits for a commissioning telegram (`len=26`) with a `120s` timeout.
+- On success, parses and validates payload MAC and stores `security_key`.
+- On timeout/invalid payload, returns a retry form on the same step.
 
-1. `commissioning_hold_1`
-   - Waits for `A0` press (energy bow), then hold window.
-2. `commissioning_click_short`
-   - Waits for short `A0` press.
-3. `commissioning_hold_2`
-   - Waits for `A0` press or direct commissioning payload (`len=26`).
-4. `commissioning_release_2`
-   - Waits confirmation action and final commissioning payload.
-5. `commissioning_exit_mode`
-   - Waits explicit `A1` press to confirm exit action.
-6. `commissioning_active`
-   - Creates config entry.
-
-## State / Guards
-
-- Flow progress is asynchronous (`show_progress` with progress task).
-- On explicit Add click, flow state is reset and restarted from step 1.
-- Stale mid-step re-entry is guarded and redirected to confirm path.
-- Trace logs include:
-  - `USER_ADD_CONFIRMED`
-  - `USER_ADD_FORCE_RESTART`
-  - `FLOW_CANCEL_TRACE`
+3. `bluetooth_confirm` (explicit submit)
+- Shows final confirmation once commissioning data is ready.
+- User presses `Submit` to create the config entry.
 
 ## Important Behavior
 
-If UI is closed without backend flow removal, progress task may continue.
-Diagnosis must rely on backend logs (not only UI behavior).
+- If a commissioning payload is already available for the active flow context, the flow can move to `bluetooth_confirm` immediately.
+- `async_remove()` always logs flow removal and emits terminal trace if no entry was created.
+- No business logic is done in frontend; state transitions are backend-driven.
 
+## User-Facing Instruction Text
+
+- Progress text comes from translation key `config.progress.waiting_commissioning`.
+- Confirmation text comes from translation key `config.step.bluetooth_confirm.description`.
+- Error texts are in `config.error.*`.

@@ -3,37 +3,48 @@
 ## Runtime Components
 
 - `config_flow.py`
-  - Handles BLE discovery and commissioning flow steps.
-  - Extracts and validates security key from commissioning payload.
+- Bluetooth discovery entrypoint, commissioning progress stage (`len=26`), explicit confirm, config entry creation.
 - `__init__.py`
-  - Registers Bluetooth callback for configured devices.
-  - Parses telegrams and emits integration events.
+- Passive BLE callback registration, telegram parsing, event bus emission, dispatcher signal fan-out.
 - `parser.py`
-  - Decodes EnOcean BLE telegrams and commissioning telegrams.
+- Commissioning and runtime telegram parsing.
 - `crypto.py`
-  - Cryptographic checks (MIC validation path).
+- MIC/integrity validation utilities.
 - `event.py`
-  - Exposes per-button Home Assistant event entities.
+- Four button event entities (`A0`, `A1`, `B0`, `B1`).
+- `sensor.py`
+- Four enum sensors mirroring the latest per-button event (`press`, `release`, `long_press`, `long_release`).
 - `const.py`
-  - Domain constants, button/status masks, protocol constants.
+- Domain constants, event names, protocol constants.
 
 ## Data Path
 
-1. BLE advertisement received by Home Assistant Bluetooth stack.
-2. Integration filters by configured MAC and manufacturer payload.
-3. Parser decodes payload into semantic button events.
-4. Runtime emits integration signal/event payload.
-5. Per-button event entities filter and publish final event state.
+1. BLE advertisement is received by Home Assistant Bluetooth.
+2. Integration filters by configured MAC and EnOcean manufacturer data.
+3. Payload is parsed.
+4. Integration fires bus events:
+- `enocean_ble_button_event` (canonical)
+- `enocean_ble_button_action` (legacy compatibility)
+5. Integration dispatches internal signal per entry.
+6. Event entities and sensor entities update from the same parsed payload.
 
-## Security Path
+## Commissioning Path
 
-1. Commissioning telegram provides per-device key material.
-2. Key is stored in config entry data.
-3. Runtime parser uses key for telegram integrity checks.
+1. Discovery starts config flow.
+2. Progress step waits for commissioning telegram (`len=26`, timeout `120s`).
+3. Payload is validated and security key stored in flow state.
+4. Confirm step waits for explicit `Submit`.
+5. Entry is created with `mac_address` and `security_key`.
 
-## Logging Strategy
+## Device Model in HA
 
-- Prefix: `[ENOCEAN_FLOW]` for config flow lifecycle logs.
-- Flow cancellation trace marker: `FLOW_CANCEL_TRACE`.
-- Runtime parser and entity logs are namespaced by module logger.
+Device registry metadata currently uses:
 
+- `manufacturer = "EnOcean"`
+- `model = "PTM 215B/PTM 216B"`
+
+## Logging
+
+- Config flow trace marker: `FLOW_TRACE_V3`.
+- Flow logger prefix: `[ENOCEAN_FLOW]`.
+- Runtime logs include parse/filter decisions and emitted event payload context.

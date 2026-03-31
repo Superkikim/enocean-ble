@@ -1,23 +1,19 @@
 # Roadmap
 
-## Phase A
-- Repository scaffold ✅
-- CI and quality gates ✅
-- HACS validation ✅
+## Completed
 
-## Phase B
-- Standalone BLE payload parser proof-of-concept ✅
-- Test vectors for PTM payload decoding and MIC ✅
+- HACS validation and hassfest checks.
+- Commissioning flow simplified to:
+1. progress (`commissioning`)
+2. confirm (`bluetooth_confirm`)
+3. create entry
+- Canonical bus event: `enocean_ble_button_event`.
+- Legacy bus event compatibility kept: `enocean_ble_button_action`.
+- Per-button event sensors added for UX-friendly state automations.
+- Local branding assets integrated for HA 2026.3+ behavior.
 
-## Phase C
-- Home Assistant config flow (NFC + QR) with live BLE detection ✅
-- Passive BLE scanner wiring ✅
-- Event publishing for A0/A1/B0/B1 + long press/release derivation ✅
+## Next
 
-## Phase D
-- Documentation polish
-- Troubleshooting guide enrichment
-- HACS release readiness
-
-## Phase E
-- Release 0.1.0 from `main`
+- Release `2026.3.1` (docs alignment + sensor UX updates).
+- Collect user feedback after release.
+- Optional: richer diagnostics tooling if needed by field feedback.
