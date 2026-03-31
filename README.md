@@ -42,7 +42,9 @@ Notes:
 
 ## Events
 
-The integration creates 4 event entities: `A0`, `A1`, `B0`, `B1`.
+The integration creates:
+- 4 event entities: `A0`, `A1`, `B0`, `B1`
+- 4 sensor entities: `A0 event`, `A1 event`, `B0 event`, `B1 event`
 
 Event type values:
 - `press`
@@ -69,11 +71,9 @@ Example 1: Toggle a light on `A0` trigger.
 alias: EnOcean A0 - Toggle Living Room
 mode: single
 triggers:
-  - trigger: event
-    event_type: enocean_ble_button_event
-    event_data:
-      button: A0
-      event: press
+  - trigger: state
+    entity_id: sensor.nord_top_a0_event
+    to: press
 actions:
   - action: light.toggle
     target:
@@ -86,11 +86,9 @@ Example 2: Activate an "Away" scene on `A1` trigger.
 alias: EnOcean A1 - Away Scene
 mode: single
 triggers:
-  - trigger: event
-    event_type: enocean_ble_button_event
-    event_data:
-      button: A1
-      event: press
+  - trigger: state
+    entity_id: sensor.nord_top_a1_event
+    to: press
 actions:
   - action: scene.turn_on
     target:
@@ -103,17 +101,13 @@ Example 3: Use `B0` and `B1` for dim up/down.
 alias: EnOcean B0/B1 - Dimming
 mode: restart
 triggers:
-  - trigger: event
-    event_type: enocean_ble_button_event
-    event_data:
-      button: B0
-      event: long_press
+  - trigger: state
+    entity_id: sensor.nord_top_b0_event
+    to: long_press
     id: b0
-  - trigger: event
-    event_type: enocean_ble_button_event
-    event_data:
-      button: B1
-      event: long_press
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: long_press
     id: b1
 actions:
   - choose:

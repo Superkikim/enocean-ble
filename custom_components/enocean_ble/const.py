@@ -4,7 +4,7 @@ from __future__ import annotations
 
 DOMAIN = "enocean_ble"
 INTEGRATION_NAME = "PTM 215B/PTM 216B"
-PLATFORMS = ["event"]
+PLATFORMS = ["event", "sensor"]
 
 CONF_MAC_ADDRESS = "mac_address"
 CONF_SECURITY_KEY = "security_key"
