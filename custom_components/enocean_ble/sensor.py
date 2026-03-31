@@ -65,6 +65,7 @@ class EnOceanBleButtonEventSensor(SensorEntity):  # type: ignore[misc]
     _attr_has_entity_name = True
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = sorted(SUPPORTED_EVENT_TYPES)
+    _attr_native_value: str | None = None
 
     def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
         """Initialize the sensor entity."""
@@ -72,7 +73,6 @@ class EnOceanBleButtonEventSensor(SensorEntity):  # type: ignore[misc]
         self._button_code = button.code
         self._attr_name = f"{button.name} event"
         self._attr_unique_id = f"{entry.unique_id}_{button.code.lower()}_event"
-        self._attr_native_value = None
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
     @property
