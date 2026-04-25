@@ -98,16 +98,16 @@ def _fire_pending(
 # ---------------------------------------------------------------------------
 
 class TestShortPress:
-    def test_press_then_release_emits_press_single_release(self) -> None:
+    def test_press_then_release_emits_press_release_single(self) -> None:
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
-        assert events == ["press", "single_press"]
+        assert events == ["press"]
         assert len(pending) == 2  # long_press + release_timeout timers scheduled
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
-        assert events == ["press", "single_press", "release"]
+        assert events == ["press", "release", "single_press"]
         assert len(pending) == 0  # both timers cancelled
 
     def test_release_without_prior_press_emits_orphan_only(self) -> None:
@@ -134,23 +134,25 @@ class TestLongPressNormal:
 
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "single_press", "long_press"]
+        assert events == ["press", "long_press"]
         assert len(pending) == 1  # only release_timeout remains
         delay, _, _ = next(iter(pending.values()))
         assert delay == RELEASE_TIMEOUT_SECONDS
 
-    def test_release_after_long_press_emits_release_and_long_release(self) -> None:
+    def test_release_after_long_press_emits_release_and_long_release_no_single(self) -> None:
+        """Long press cycle must NOT emit single_press."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "single_press", "long_press"]
+        assert events == ["press", "long_press"]
         assert len(pending) == 1  # release_timeout pending
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
 
-        assert events == ["press", "single_press", "long_press", "release", "long_release"]
+        assert events == ["press", "long_press", "release", "long_release"]
+        assert "single_press" not in events
         assert len(pending) == 0  # release_timeout cancelled
 
 
@@ -165,12 +167,13 @@ class TestReleaseTimeout:
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "single_press", "long_press"]
+        assert events == ["press", "long_press"]
         assert len(pending) == 1  # release_timeout pending
 
         _fire_pending(pending, RELEASE_TIMEOUT_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "single_press", "long_press", "release_timeout"]
+        assert events == ["press", "long_press", "release_timeout"]
+        assert "single_press" not in events
         assert len(pending) == 0
 
     def test_new_press_cancels_pending_timeout(self) -> None:
@@ -184,7 +187,7 @@ class TestReleaseTimeout:
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=3)
 
-        assert events[-2:] == ["press", "single_press"]
+        assert events[-1] == "press"
         assert len(pending) == 2  # new long_press + release_timeout; old timeout was cancelled
 
     def test_timeout_is_noop_if_release_already_processed(self) -> None:
@@ -196,7 +199,7 @@ class TestReleaseTimeout:
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
-        assert events == ["press", "single_press", "long_press", "release", "long_release"]
+        assert events == ["press", "long_press", "release", "long_release"]
 
         state = entry_data["buttons"]["A0"]
         assert state["pressed_at"] is None
@@ -208,28 +211,28 @@ class TestReleaseTimeout:
 # ---------------------------------------------------------------------------
 
 class TestSinglePress:
-    def test_single_press_fires_only_once_per_cycle(self) -> None:
-        """single_press emits on press; release does NOT emit another single_press."""
+    def test_single_press_fires_on_short_release_only(self) -> None:
+        """single_press fires on release when long_fired=False; NOT on press."""
         hass, entry, entry_data, _pending, fake_call_later = _make_env()
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        assert "single_press" not in events  # not fired on press
+
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+        assert events.count("single_press") == 1
+        assert events == ["press", "release", "single_press"]
+
+    def test_long_press_does_not_emit_single_press(self) -> None:
+        """Long press cycle must never emit single_press."""
+        hass, entry, entry_data, pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
 
-        assert events.count("single_press") == 1
-        assert events == ["press", "single_press", "release"]
-
-    def test_single_press_dedup_same_seq(self) -> None:
-        """Retransmitted press at same seq counter must not emit a second single_press."""
-        hass, entry, entry_data, _pending, fake_call_later = _make_env()
-        events: list[str] = []
-
-        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
-        # Simulate retransmission at same seq — would be blocked by global dedup in production,
-        # but test the per-button guard directly.
-        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
-
-        assert events.count("single_press") == 1
+        assert "single_press" not in events
 
 
 # ---------------------------------------------------------------------------

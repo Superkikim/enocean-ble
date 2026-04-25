@@ -305,12 +305,6 @@ def _emit_button_event(
             hass=hass, entry=entry, button=button, event_type="press",
             sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
         )
-        if sequence_counter != state.get("last_single_press_seq"):
-            state["last_single_press_seq"] = sequence_counter
-            _fire_event(
-                hass=hass, entry=entry, button=button, event_type="single_press",
-                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
-            )
 
         def _long_press_timer(_now: object) -> None:
             if state.get("pressed_at") is None:
@@ -363,6 +357,13 @@ def _emit_button_event(
                     hass=hass, entry=entry, button=button, event_type="long_release",
                     sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
                 )
+            else:
+                if sequence_counter != state.get("last_single_press_seq"):
+                    state["last_single_press_seq"] = sequence_counter
+                    _fire_event(
+                        hass=hass, entry=entry, button=button, event_type="single_press",
+                        sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+                    )
         else:
             old_seq = state.get("last_received_seq")
             state["last_received_seq"] = sequence_counter

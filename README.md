@@ -64,7 +64,7 @@ The integration exposes three layers of events:
 - `release_timeout` — no release received within 8 seconds of a press. Technical fallback, not a real release.
 - `long_press` — press held for more than 1.2 s without a release (best-effort).
 - `long_release` — release received after a `long_press` (best-effort).
-- `single_press` — first valid event of a cycle (fires on `press`, or on coherent `orphan_release`). One per interaction. Use this for simple toggles and scenes.
+- `single_press` — fires on `release` when it was a short press (no `long_press` fired), or on a coherent `orphan_release`. One per interaction. Does **not** fire on long press cycles. Use this for simple toggles and scenes.
 
 **Implicit cycle end rule:** any new event received for a button cancels the pending `release_timeout` timer and resets that button's state. In practice, starting a new press while the previous one is still "open" (release was lost) is handled automatically.
 
