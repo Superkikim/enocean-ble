@@ -25,9 +25,9 @@ from .const import (
     DOMAIN,
     INTEGRATION_NAME,
     SIGNAL_BUTTON_EVENT,
+    SUPPORTED_EVENT_TYPES,
 )
 
-EVENT_TYPES = ["press", "release", "long_press", "long_release"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -64,7 +64,7 @@ class EnOceanBleButtonEventEntity(EventEntity):  # type: ignore[misc]
 
     _attr_has_entity_name = True
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = EVENT_TYPES
+    _attr_event_types = sorted(SUPPORTED_EVENT_TYPES)
 
     def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
         """Initialize the event entity."""

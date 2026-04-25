@@ -25,15 +25,15 @@ from .const import (
     EVENT_BUTTON_ACTION,
     EVENT_BUTTON_EVENT,
     LONG_PRESS_SECONDS,
-    LONG_PRESS_WATCHDOG_SECONDS,
     PLATFORMS,
+    RELEASE_TIMEOUT_SECONDS,
     SIGNAL_BUTTON_EVENT,
 )
 from .parser import parse_commissioning_telegram, parse_data_telegram
 
 _LOGGER = logging.getLogger(__name__)
 
-ButtonState = dict[str, float | bool | Callable[[], None] | None]
+ButtonState = dict[str, float | int | bool | Callable[[], None] | None]
 
 
 async def async_setup(hass: Any, config: dict[str, Any]) -> bool:
@@ -276,99 +276,114 @@ def _emit_button_event(
 
     state_any = buttons.setdefault(
         button,
-        {"pressed_at": None, "long_fired": False, "cancel_long_cb": None, "cancel_watchdog_cb": None},
+        {
+            "pressed_at": None,
+            "long_fired": False,
+            "last_single_press_seq": None,
+            "last_received_seq": None,
+            "cancel_long_cb": None,
+            "cancel_timeout_cb": None,
+        },
     )
     if not isinstance(state_any, dict):
         return
     state: ButtonState = state_any
 
     if event_type == "press":
-        _cancel_long_timer(state)
+        _cancel_all_timers(state)
         state["pressed_at"] = monotonic()
+        state["last_received_seq"] = sequence_counter
         state["long_fired"] = False
         _LOGGER.debug(
-            "event_press entry_id=%s mac=%s button=%s sequence_counter=%s scheduling_long_press_delay=%s",
+            "event_press entry_id=%s mac=%s button=%s sequence_counter=%s",
             entry.entry_id,
             mac_address,
             button,
             sequence_counter,
-            LONG_PRESS_SECONDS,
         )
+        _fire_event(
+            hass=hass, entry=entry, button=button, event_type="press",
+            sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+        )
+        if sequence_counter != state.get("last_single_press_seq"):
+            state["last_single_press_seq"] = sequence_counter
+            _fire_event(
+                hass=hass, entry=entry, button=button, event_type="single_press",
+                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+            )
 
         def _long_press_timer(_now: object) -> None:
             if state.get("pressed_at") is None:
                 return
             state["long_fired"] = True
             state["cancel_long_cb"] = None
+            _LOGGER.debug(
+                "event_long_press entry_id=%s mac=%s button=%s", entry.entry_id, mac_address, button,
+            )
             _fire_event(
-                hass=hass,
-                entry=entry,
-                button=button,
-                event_type="long_press",
-                sequence_counter=sequence_counter,
-                rssi=rssi,
-                mac_address=mac_address,
+                hass=hass, entry=entry, button=button, event_type="long_press",
+                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
             )
 
-            def _watchdog_timer(_now: object) -> None:
-                if not state.get("long_fired") or state.get("pressed_at") is None:
-                    return
-                state["pressed_at"] = None
-                state["long_fired"] = False
-                state["cancel_watchdog_cb"] = None
-                _LOGGER.debug(
-                    "event_watchdog_long_release entry_id=%s mac=%s button=%s",
-                    entry.entry_id,
-                    mac_address,
-                    button,
-                )
-                _fire_event(
-                    hass=hass,
-                    entry=entry,
-                    button=button,
-                    event_type="long_release",
-                    sequence_counter=sequence_counter,
-                    rssi=rssi,
-                    mac_address=mac_address,
-                )
-
-            state["cancel_watchdog_cb"] = async_call_later(hass, LONG_PRESS_WATCHDOG_SECONDS, _watchdog_timer)
+        def _release_timeout_timer(_now: object) -> None:
+            if state.get("pressed_at") is None:
+                return
+            state["pressed_at"] = None
+            state["long_fired"] = False
+            state["cancel_timeout_cb"] = None
+            _LOGGER.debug(
+                "event_release_timeout entry_id=%s mac=%s button=%s", entry.entry_id, mac_address, button,
+            )
+            _fire_event(
+                hass=hass, entry=entry, button=button, event_type="release_timeout",
+                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+            )
 
         state["cancel_long_cb"] = async_call_later(hass, LONG_PRESS_SECONDS, _long_press_timer)
-        _fire_event(
-            hass=hass,
-            entry=entry,
-            button=button,
-            event_type="press",
-            sequence_counter=sequence_counter,
-            rssi=rssi,
-            mac_address=mac_address,
-        )
+        state["cancel_timeout_cb"] = async_call_later(hass, RELEASE_TIMEOUT_SECONDS, _release_timeout_timer)
         return
 
     if event_type == "release":
-        _cancel_long_timer(state)
-        long_fired = bool(state.get("long_fired"))
-        state["pressed_at"] = None
-        state["long_fired"] = False
-        _LOGGER.debug(
-            "event_release entry_id=%s mac=%s button=%s sequence_counter=%s mapped_event=%s",
-            entry.entry_id,
-            mac_address,
-            button,
-            sequence_counter,
-            "long_release" if long_fired else "release",
-        )
-
-        _fire_event(
-            hass=hass,
-            entry=entry,
-            button=button,
-            event_type="long_release" if long_fired else "release",
-            sequence_counter=sequence_counter,
-            rssi=rssi,
-            mac_address=mac_address,
-        )
+        if state.get("pressed_at") is not None:
+            _cancel_all_timers(state)
+            long_fired = bool(state.get("long_fired"))
+            state["pressed_at"] = None
+            state["long_fired"] = False
+            state["last_received_seq"] = sequence_counter
+            _LOGGER.debug(
+                "event_release entry_id=%s mac=%s button=%s sequence_counter=%s long_fired=%s",
+                entry.entry_id, mac_address, button, sequence_counter, long_fired,
+            )
+            _fire_event(
+                hass=hass, entry=entry, button=button, event_type="release",
+                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+            )
+            if long_fired:
+                _fire_event(
+                    hass=hass, entry=entry, button=button, event_type="long_release",
+                    sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+                )
+        else:
+            old_seq = state.get("last_received_seq")
+            state["last_received_seq"] = sequence_counter
+            _LOGGER.debug(
+                "event_orphan_release entry_id=%s mac=%s button=%s sequence_counter=%s old_seq=%s",
+                entry.entry_id, mac_address, button, sequence_counter, old_seq,
+            )
+            _fire_event(
+                hass=hass, entry=entry, button=button, event_type="orphan_release",
+                sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+            )
+            is_coherent = (
+                isinstance(old_seq, int)
+                and sequence_counter - old_seq == 2
+            )
+            if is_coherent and sequence_counter != state.get("last_single_press_seq"):
+                state["last_single_press_seq"] = sequence_counter
+                _fire_event(
+                    hass=hass, entry=entry, button=button, event_type="single_press",
+                    sequence_counter=sequence_counter, rssi=rssi, mac_address=mac_address,
+                )
         return
 
     _fire_event(
@@ -382,8 +397,8 @@ def _emit_button_event(
     )
 
 
-def _cancel_long_timer(state: ButtonState) -> None:
-    for key in ("cancel_long_cb", "cancel_watchdog_cb"):
+def _cancel_all_timers(state: ButtonState) -> None:
+    for key in ("cancel_long_cb", "cancel_timeout_cb"):
         cancel = state.get(key)
         if callable(cancel):
             cancel()

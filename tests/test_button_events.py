@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 from custom_components.enocean_ble import _emit_button_event
 from custom_components.enocean_ble.const import (
     LONG_PRESS_SECONDS,
-    LONG_PRESS_WATCHDOG_SECONDS,
+    RELEASE_TIMEOUT_SECONDS,
 )
 
 # ---------------------------------------------------------------------------
@@ -98,108 +98,176 @@ def _fire_pending(
 # ---------------------------------------------------------------------------
 
 class TestShortPress:
-    def test_press_then_release_emits_press_release(self) -> None:
+    def test_press_then_release_emits_press_single_release(self) -> None:
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
-        assert events == ["press"]
-        assert len(pending) == 1  # long_press timer scheduled
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        assert events == ["press", "single_press"]
+        assert len(pending) == 2  # long_press + release_timeout timers scheduled
 
-        _emit(hass, entry, entry_data, "release", events, fake_call_later)
-        assert events == ["press", "release"]
-        assert len(pending) == 0  # long_press timer cancelled
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+        assert events == ["press", "single_press", "release"]
+        assert len(pending) == 0  # both timers cancelled
 
-    def test_release_without_prior_press_is_harmless(self) -> None:
+    def test_release_without_prior_press_emits_orphan_only(self) -> None:
+        """First-ever release for a button with no prior press history → orphan, no single_press."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "release", events, fake_call_later)
-        assert events == ["release"]
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=5)
+        assert events == ["orphan_release"]
         assert len(pending) == 0
 
 
 # ---------------------------------------------------------------------------
-# Long press — normal (release arrives before watchdog)
+# Long press — normal (release arrives before timeout)
 # ---------------------------------------------------------------------------
 
 class TestLongPressNormal:
-    def test_long_press_fires_long_press_and_schedules_watchdog(self) -> None:
+    def test_long_press_fires_and_schedules_timeout(self) -> None:
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
-        assert len(pending) == 1
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        assert len(pending) == 2  # long_press + release_timeout
 
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "long_press"]
-        assert len(pending) == 1  # watchdog timer scheduled
+        assert events == ["press", "single_press", "long_press"]
+        assert len(pending) == 1  # only release_timeout remains
         delay, _, _ = next(iter(pending.values()))
-        assert delay == LONG_PRESS_WATCHDOG_SECONDS
+        assert delay == RELEASE_TIMEOUT_SECONDS
 
-    def test_release_after_long_press_emits_long_release_cancels_watchdog(self) -> None:
+    def test_release_after_long_press_emits_release_and_long_release(self) -> None:
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "long_press"]
-        assert len(pending) == 1  # watchdog pending
+        assert events == ["press", "single_press", "long_press"]
+        assert len(pending) == 1  # release_timeout pending
 
-        _emit(hass, entry, entry_data, "release", events, fake_call_later)
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
 
-        assert events == ["press", "long_press", "long_release"]
-        assert len(pending) == 0  # watchdog cancelled
+        assert events == ["press", "single_press", "long_press", "release", "long_release"]
+        assert len(pending) == 0  # release_timeout cancelled
 
 
 # ---------------------------------------------------------------------------
-# Long press — lost release (watchdog fires)
+# Release timeout — lost release
 # ---------------------------------------------------------------------------
 
-class TestLongPressWatchdog:
-    def test_watchdog_fires_synthetic_long_release_when_release_lost(self) -> None:
+class TestReleaseTimeout:
+    def test_timeout_fires_release_timeout_when_release_lost(self) -> None:
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "long_press"]
-        assert len(pending) == 1  # watchdog pending
+        assert events == ["press", "single_press", "long_press"]
+        assert len(pending) == 1  # release_timeout pending
 
-        # Release never arrives — watchdog fires
-        _fire_pending(pending, LONG_PRESS_WATCHDOG_SECONDS, events, fake_call_later)
+        _fire_pending(pending, RELEASE_TIMEOUT_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "long_press", "long_release"]
+        assert events == ["press", "single_press", "long_press", "release_timeout"]
         assert len(pending) == 0
 
-    def test_new_press_after_lost_release_cancels_watchdog(self) -> None:
+    def test_new_press_cancels_pending_timeout(self) -> None:
+        """Rule 3: a new press implicitly ends the previous open cycle."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert len(pending) == 1  # watchdog pending
+        assert len(pending) == 1  # release_timeout pending
 
-        # New press arrives while watchdog is pending (release still lost)
-        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=2)
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=3)
 
-        assert events[-1] == "press"
-        assert len(pending) == 1  # only new long_press timer; watchdog was cancelled
+        assert events[-2:] == ["press", "single_press"]
+        assert len(pending) == 2  # new long_press + release_timeout; old timeout was cancelled
 
-    def test_watchdog_is_noop_if_release_already_processed(self) -> None:
-        """If watchdog fires after release was already received, it must do nothing."""
+    def test_timeout_is_noop_if_release_already_processed(self) -> None:
+        """If timeout fires after release was already received, it must do nothing."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        _emit(hass, entry, entry_data, "press", events, fake_call_later)
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
-        # Release arrives and cancels watchdog
-        _emit(hass, entry, entry_data, "release", events, fake_call_later)
-        assert events == ["press", "long_press", "long_release"]
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+        assert events == ["press", "single_press", "long_press", "release", "long_release"]
 
-        # State must be fully reset — pressed_at=None, long_fired=False
         state = entry_data["buttons"]["A0"]
         assert state["pressed_at"] is None
         assert not state["long_fired"]
+
+
+# ---------------------------------------------------------------------------
+# single_press dedup
+# ---------------------------------------------------------------------------
+
+class TestSinglePress:
+    def test_single_press_fires_only_once_per_cycle(self) -> None:
+        """single_press emits on press; release does NOT emit another single_press."""
+        hass, entry, entry_data, _pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+
+        assert events.count("single_press") == 1
+        assert events == ["press", "single_press", "release"]
+
+    def test_single_press_dedup_same_seq(self) -> None:
+        """Retransmitted press at same seq counter must not emit a second single_press."""
+        hass, entry, entry_data, _pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        # Simulate retransmission at same seq — would be blocked by global dedup in production,
+        # but test the per-button guard directly.
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+
+        assert events.count("single_press") == 1
+
+
+# ---------------------------------------------------------------------------
+# orphan_release coherence
+# ---------------------------------------------------------------------------
+
+class TestOrphanRelease:
+    def test_orphan_coherent_fires_single_press(self) -> None:
+        """Gap == 2 between last received seq and orphan release → coherent → single_press."""
+        hass, entry, entry_data, _pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        # Complete a normal cycle to set last_received_seq = 2
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+        events.clear()
+
+        # Press at seq=3 is lost; orphan release at seq=4 (gap = 4 - 2 = 2)
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=4)
+        assert events == ["orphan_release", "single_press"]
+
+    def test_orphan_no_history_does_not_fire_single_press(self) -> None:
+        """First event ever for this button is a release → old_seq is None → no single_press."""
+        hass, entry, entry_data, _pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=5)
+        assert events == ["orphan_release"]
+
+    def test_orphan_nonconsecutive_does_not_fire_single_press(self) -> None:
+        """Gap != 2 → stale orphan release → single_press not emitted."""
+        hass, entry, entry_data, _pending, fake_call_later = _make_env()
+        events: list[str] = []
+
+        _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
+        events.clear()
+
+        # Gap = 7 - 2 = 5 ≠ 2 → stale
+        _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=7)
+        assert events == ["orphan_release"]

@@ -46,18 +46,34 @@ The integration creates:
 - 4 event entities: `A0`, `A1`, `B0`, `B1`
 - 4 sensor entities: `A0 event`, `A1 event`, `B0 event`, `B1 event`
 
-Event type values:
-- `press`
-- `release`
-- `long_press`
-- `long_release`
+### Event types
+
+The integration exposes three layers of events:
+
+| Layer | Events | When to use |
+|---|---|---|
+| **RAW** | `press`, `release`, `orphan_release`, `release_timeout` | Advanced automations requiring full control |
+| **CALCULÉS** (best-effort) | `long_press`, `long_release` | Dimming and hold-to-act patterns |
+| **UX** | `single_press` | Simple on/off — most reliable |
+
+**Definitions:**
+
+- `press` — press telegram received from the device.
+- `release` — release telegram received after a known `press`.
+- `orphan_release` — release telegram received without a prior `press` (press lost in BLE). Fires `single_press` too if the gap is consistent with one lost telegram (reliable for single-button use without counter wrap).
+- `release_timeout` — no release received within 8 seconds of a press. Technical fallback, not a real release.
+- `long_press` — press held for more than 1.2 s without a release (best-effort).
+- `long_release` — release received after a `long_press` (best-effort).
+- `single_press` — first valid event of a cycle (fires on `press`, or on coherent `orphan_release`). One per interaction. Use this for simple toggles and scenes.
+
+**Implicit cycle end rule:** any new event received for a button cancels the pending `release_timeout` timer and resets that button's state. In practice, starting a new press while the previous one is still "open" (release was lost) is handled automatically.
 
 Event data includes:
 - `mac_address`
 - `rssi`
 - `sequence_counter`
 - `button` (`A0`/`A1`/`B0`/`B1`)
-- `event` (`press`/`release`/`long_press`/`long_release`)
+- `event_type` (the event name)
 
 Home Assistant event trigger:
 - `enocean_ble_button_event` (recommended)
@@ -65,7 +81,9 @@ Home Assistant event trigger:
 
 ## Usage Examples
 
-Example 1: Toggle a light on `A0` trigger.
+### Example 1 — Toggle a light
+
+Use `single_press` on `A0`. Unlike `press`, it also fires when the press telegram was lost but the matching release was received, making it more reliable in weak radio conditions.
 
 ```yaml
 alias: EnOcean A0 - Toggle Living Room
@@ -73,14 +91,14 @@ mode: single
 triggers:
   - trigger: state
     entity_id: sensor.nord_top_a0_event
-    to: press
+    to: single_press
 actions:
   - action: light.toggle
     target:
       entity_id: light.living_room
 ```
 
-Example 2: Activate an "Away" scene on `A1` trigger.
+### Example 2 — Activate a scene
 
 ```yaml
 alias: EnOcean A1 - Away Scene
@@ -88,16 +106,16 @@ mode: single
 triggers:
   - trigger: state
     entity_id: sensor.nord_top_a1_event
-    to: press
+    to: single_press
 actions:
   - action: scene.turn_on
     target:
       entity_id: scene.away
 ```
 
-Example 3: Use `B0` and `B1` for smooth dim up/down — hold to dim, release to stop.
+### Example 3 — Smooth dimming (hold to dim, release to stop)
 
-`long_press` starts a slow transition toward max or min brightness. `long_release` freezes the light at its current level.
+`long_press` starts a slow transition toward max or min brightness. `long_release` stops at the current level. `release_timeout` acts as a safety stop if the release telegram is lost — without it, dimming would continue for the full transition duration.
 
 ```yaml
 alias: EnOcean B0/B1 - Dimming
@@ -112,12 +130,20 @@ triggers:
     to: long_release
     id: b0_stop
   - trigger: state
+    entity_id: sensor.nord_top_b0_event
+    to: release_timeout
+    id: b0_stop
+  - trigger: state
     entity_id: sensor.nord_top_b1_event
     to: long_press
     id: b1_down
   - trigger: state
     entity_id: sensor.nord_top_b1_event
     to: long_release
+    id: b1_stop
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: release_timeout
     id: b1_stop
 actions:
   - choose:
@@ -163,7 +189,7 @@ actions:
               transition: 0
 ```
 
-> The 8-second transition matches the integration's watchdog — `long_release` is guaranteed to fire within that window. The "freeze at current brightness" approach works with most Zigbee/Z-Wave/Hue integrations. Behavior during transition depends on whether the light driver reports current or target brightness; if in doubt, test with your specific light.
+> `long_press` and `long_release` are best-effort: they depend on the BLE release telegram being received. If the release is lost, `release_timeout` fires after 8 seconds instead of `long_release`. The "freeze at current brightness" approach works with most Zigbee/Z-Wave/Hue integrations; behavior during transition depends on whether the light driver reports current or target brightness.
 
 ## Troubleshooting
 

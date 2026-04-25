@@ -24,12 +24,16 @@ ATTR_SEQUENCE_COUNTER = "sequence_counter"
 ATTR_MAC_ADDRESS = "mac_address"
 
 SUPPORTED_BUTTONS = {"A0", "A1", "B0", "B1"}
-SUPPORTED_EVENT_TYPES = {"press", "release", "long_press", "long_release"}
+SUPPORTED_EVENT_TYPES = {
+    "press", "release", "orphan_release", "release_timeout",  # RAW
+    "long_press", "long_release",                              # CALCULÉS (best-effort)
+    "single_press",                                            # UX (robust)
+}
 
 DATA_TELEGRAM_MIN_LENGTH = 9
 MIC_LENGTH = 4
 LONG_PRESS_SECONDS = 1.2
-LONG_PRESS_WATCHDOG_SECONDS = 8.0
+RELEASE_TIMEOUT_SECONDS = 8.0
 
 STATUS_BIT_ENERGY_BOW = 0x01
 STATUS_BIT_A0 = 0x02
