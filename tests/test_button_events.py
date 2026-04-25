@@ -103,11 +103,11 @@ class TestShortPress:
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
-        assert events == ["press"]
+        assert events == ["press", "single_press"]
         assert len(pending) == 2  # long_press + release_timeout timers scheduled
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
-        assert events == ["press", "release", "single_press"]
+        assert events == ["press", "single_press", "release"]
         assert len(pending) == 0  # both timers cancelled
 
     def test_release_without_prior_press_emits_orphan_only(self) -> None:
@@ -134,25 +134,25 @@ class TestLongPressNormal:
 
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "long_press"]
+        assert events == ["press", "single_press", "long_press"]
         assert len(pending) == 1  # only release_timeout remains
         delay, _, _ = next(iter(pending.values()))
         assert delay == RELEASE_TIMEOUT_SECONDS
 
-    def test_release_after_long_press_emits_release_and_long_release_no_single(self) -> None:
-        """Long press cycle must NOT emit single_press."""
+    def test_release_after_long_press_emits_release_and_long_release_no_second_single(self) -> None:
+        """Long press cycle must NOT emit a second single_press on release."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "long_press"]
+        assert events == ["press", "single_press", "long_press"]
         assert len(pending) == 1  # release_timeout pending
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
 
-        assert events == ["press", "long_press", "release", "long_release"]
-        assert "single_press" not in events
+        assert events == ["press", "single_press", "long_press", "release", "long_release"]
+        assert events.count("single_press") == 1  # fired on press, not again on release
         assert len(pending) == 0  # release_timeout cancelled
 
 
@@ -167,13 +167,12 @@ class TestReleaseTimeout:
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
-        assert events == ["press", "long_press"]
+        assert events == ["press", "single_press", "long_press"]
         assert len(pending) == 1  # release_timeout pending
 
         _fire_pending(pending, RELEASE_TIMEOUT_SECONDS, events, fake_call_later)
 
-        assert events == ["press", "long_press", "release_timeout"]
-        assert "single_press" not in events
+        assert events == ["press", "single_press", "long_press", "release_timeout"]
         assert len(pending) == 0
 
     def test_new_press_cancels_pending_timeout(self) -> None:
@@ -187,7 +186,8 @@ class TestReleaseTimeout:
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=3)
 
-        assert events[-1] == "press"
+        assert events[-2] == "press"
+        assert events[-1] == "single_press"
         assert len(pending) == 2  # new long_press + release_timeout; old timeout was cancelled
 
     def test_timeout_is_noop_if_release_already_processed(self) -> None:
@@ -199,7 +199,7 @@ class TestReleaseTimeout:
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
-        assert events == ["press", "long_press", "release", "long_release"]
+        assert events == ["press", "single_press", "long_press", "release", "long_release"]
 
         state = entry_data["buttons"]["A0"]
         assert state["pressed_at"] is None
@@ -211,20 +211,21 @@ class TestReleaseTimeout:
 # ---------------------------------------------------------------------------
 
 class TestSinglePress:
-    def test_single_press_fires_on_short_release_only(self) -> None:
-        """single_press fires on release when long_fired=False; NOT on press."""
+    def test_single_press_fires_on_press_immediately(self) -> None:
+        """single_press fires on press, before press duration is known."""
         hass, entry, entry_data, _pending, fake_call_later = _make_env()
         events: list[str] = []
 
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
-        assert "single_press" not in events  # not fired on press
+        assert events.count("single_press") == 1
+        assert events == ["press", "single_press"]
 
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
-        assert events.count("single_press") == 1
-        assert events == ["press", "release", "single_press"]
+        assert events.count("single_press") == 1  # no second single_press on release
+        assert events == ["press", "single_press", "release"]
 
-    def test_long_press_does_not_emit_single_press(self) -> None:
-        """Long press cycle must never emit single_press."""
+    def test_single_press_fires_once_per_press_not_again_on_long_release(self) -> None:
+        """single_press fires on press; must not fire a second time on long press release."""
         hass, entry, entry_data, pending, fake_call_later = _make_env()
         events: list[str] = []
 
@@ -232,7 +233,7 @@ class TestSinglePress:
         _fire_pending(pending, LONG_PRESS_SECONDS, events, fake_call_later)
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
 
-        assert "single_press" not in events
+        assert events.count("single_press") == 1  # fired on press, never again
 
 
 # ---------------------------------------------------------------------------
