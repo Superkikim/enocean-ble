@@ -6,8 +6,10 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from custom_components.enocean_ble import _emit_button_event
-from custom_components.enocean_ble.const import LONG_PRESS_SECONDS, LONG_PRESS_WATCHDOG_SECONDS
-
+from custom_components.enocean_ble.const import (
+    LONG_PRESS_SECONDS,
+    LONG_PRESS_WATCHDOG_SECONDS,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -109,7 +111,7 @@ class TestLongPressNormal:
 
         assert events == ["press", "long_press"]
         assert len(pending) == 1  # watchdog timer scheduled
-        delay, _, _ = list(pending.values())[0]
+        delay, _, _ = next(iter(pending.values()))
         assert delay == LONG_PRESS_WATCHDOG_SECONDS
 
     def test_release_after_long_press_emits_long_release_cancels_watchdog(self):
