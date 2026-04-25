@@ -25,6 +25,7 @@ from .const import (
     EVENT_BUTTON_ACTION,
     EVENT_BUTTON_EVENT,
     LONG_PRESS_SECONDS,
+    LONG_PRESS_WATCHDOG_SECONDS,
     PLATFORMS,
     SIGNAL_BUTTON_EVENT,
 )
@@ -275,7 +276,7 @@ def _emit_button_event(
 
     state_any = buttons.setdefault(
         button,
-        {"pressed_at": None, "long_fired": False, "cancel_long_cb": None},
+        {"pressed_at": None, "long_fired": False, "cancel_long_cb": None, "cancel_watchdog_cb": None},
     )
     if not isinstance(state_any, dict):
         return
@@ -298,6 +299,7 @@ def _emit_button_event(
             if state.get("pressed_at") is None:
                 return
             state["long_fired"] = True
+            state["cancel_long_cb"] = None
             _fire_event(
                 hass=hass,
                 entry=entry,
@@ -307,6 +309,30 @@ def _emit_button_event(
                 rssi=rssi,
                 mac_address=mac_address,
             )
+
+            def _watchdog_timer(_now: object) -> None:
+                if not state.get("long_fired") or state.get("pressed_at") is None:
+                    return
+                state["pressed_at"] = None
+                state["long_fired"] = False
+                state["cancel_watchdog_cb"] = None
+                _LOGGER.debug(
+                    "event_watchdog_long_release entry_id=%s mac=%s button=%s",
+                    entry.entry_id,
+                    mac_address,
+                    button,
+                )
+                _fire_event(
+                    hass=hass,
+                    entry=entry,
+                    button=button,
+                    event_type="long_release",
+                    sequence_counter=sequence_counter,
+                    rssi=rssi,
+                    mac_address=mac_address,
+                )
+
+            state["cancel_watchdog_cb"] = async_call_later(hass, LONG_PRESS_WATCHDOG_SECONDS, _watchdog_timer)
 
         state["cancel_long_cb"] = async_call_later(hass, LONG_PRESS_SECONDS, _long_press_timer)
         _fire_event(
@@ -357,10 +383,11 @@ def _emit_button_event(
 
 
 def _cancel_long_timer(state: ButtonState) -> None:
-    cancel = state.get("cancel_long_cb")
-    if callable(cancel):
-        cancel()
-    state["cancel_long_cb"] = None
+    for key in ("cancel_long_cb", "cancel_watchdog_cb"):
+        cancel = state.get(key)
+        if callable(cancel):
+            cancel()
+        state[key] = None
 
 
 def _fire_event(
