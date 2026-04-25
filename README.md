@@ -64,7 +64,11 @@ The integration exposes three layers of events:
 - `release_timeout` — no release received within 8 seconds of a press. Technical fallback, not a real release.
 - `long_press` — press held for more than 1.2 s without a release (best-effort).
 - `long_release` — release received after a `long_press` (best-effort).
-- `single_press` — fires immediately on every `press` telegram, before the press duration is known. Also fires on a coherent `orphan_release` (press was lost, gap == 2). Fires on every press, including long press cycles — use in simple mode only (see Usage rules below). One per press.
+- `single_press` — fires immediately on the first valid signal of an interaction:
+  - on `press`, or
+  - on a coherent `orphan_release` (press lost, sequence gap == 2)
+
+  Fires once per interaction, including long press cycles — use in simple mode only (see Usage rules below).
 
 **Implicit cycle end rule:** any new event received for a button cancels the pending `release_timeout` timer and resets that button's state. In practice, starting a new press while the previous one is still "open" (release was lost) is handled automatically.
 
