@@ -95,7 +95,9 @@ actions:
       entity_id: scene.away
 ```
 
-Example 3: Use `B0` and `B1` for dim up/down.
+Example 3: Use `B0` and `B1` for smooth dim up/down — hold to dim, release to stop.
+
+`long_press` starts a slow transition toward max or min brightness. `long_release` freezes the light at its current level.
 
 ```yaml
 alias: EnOcean B0/B1 - Dimming
@@ -104,32 +106,64 @@ triggers:
   - trigger: state
     entity_id: sensor.nord_top_b0_event
     to: long_press
-    id: b0
+    id: b0_up
+  - trigger: state
+    entity_id: sensor.nord_top_b0_event
+    to: long_release
+    id: b0_stop
   - trigger: state
     entity_id: sensor.nord_top_b1_event
     to: long_press
-    id: b1
+    id: b1_down
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: long_release
+    id: b1_stop
 actions:
   - choose:
       - conditions:
           - condition: trigger
-            id: b0
+            id: b0_up
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.living_room
             data:
-              brightness_step_pct: 20
+              brightness_pct: 100
+              transition: 8
       - conditions:
           - condition: trigger
-            id: b1
+            id: b0_stop
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.living_room
             data:
-              brightness_step_pct: -20
+              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
+              transition: 0
+      - conditions:
+          - condition: trigger
+            id: b1_down
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness_pct: 1
+              transition: 8
+      - conditions:
+          - condition: trigger
+            id: b1_stop
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
+              transition: 0
 ```
+
+> The 8-second transition matches the integration's watchdog — `long_release` is guaranteed to fire within that window. The "freeze at current brightness" approach works with most Zigbee/Z-Wave/Hue integrations. Behavior during transition depends on whether the light driver reports current or target brightness; if in doubt, test with your specific light.
 
 ## Troubleshooting
 
