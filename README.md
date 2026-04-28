@@ -28,13 +28,14 @@ It provides:
 
 ## Add Your Device
 
-1. Click `Add` when the switch appears in Bluetooth discovery.
-2. Follow the sequence on button 1:
+1. Press any button on the switch — it will appear as a discovered device in Home Assistant.
+2. Click `Add` when it appears.
+3. Follow the sequence on button 1:
    - hold for about 7 seconds,
    - press briefly,
    - hold again for about 7 seconds.
-3. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
-4. Click `Submit`.
+4. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+5. Click `Submit`.
 
 Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
