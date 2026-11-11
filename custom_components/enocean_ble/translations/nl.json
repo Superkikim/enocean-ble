@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "user": {
+        "title": "EnOcean BLE-schakelaar toevoegen via QR-code",
+        "description": "Plak de tekst van de QR-code op het label van de PTM 215B/216B-module. Die ziet eruit als 30SE215…+Z…+30P… en bevat het adres en de beveiligingssleutel van de schakelaar.\n\nWil je liever met de camera scannen, open dan de EnOcean BLE-pagina in de zijbalk.",
+        "data": {
+          "qr_code": "Tekst van de QR-code"
+        }
+      },
       "commissioning": {
         "title": "EnOcean BLE auto-commissioning",
         "description": "Activeer auto-commissioning op {name}:\n\n1. Houd knop 1 7 seconden ingedrukt\n2. Druk kort op knop 1\n3. Houd knop 1 opnieuw 7 seconden ingedrukt\n\nJe hebt 2 minuten. Probeer opnieuw indien nodig."
@@ -14,10 +21,12 @@
       "waiting_commissioning": "Houd knop 1 7 seconden ingedrukt, druk dan kort op knop 1 en houd opnieuw 7 seconden ingedrukt."
     },
     "abort": {
+      "already_configured": "Deze schakelaar is al geconfigureerd.",
       "no_bluetooth_discovery": "Deze configuratie moet gestart worden vanaf een ontdekt Bluetooth-apparaat.",
       "not_enocean_prefix": "Dit ontdekte apparaat gebruikt niet de EnOcean BLE MAC-prefix (E2:15)."
     },
     "error": {
+      "invalid_qr": "In deze tekst is geen EnOcean-schakelaaradres (30SE215…) en beveiligingssleutel van 32 tekens (+Z…) gevonden.",
       "commissioning_not_detected": "Binnen 2 minuten is geen commissioning-telegram ontvangen. Probeer opnieuw. Als het na meerdere pogingen nog steeds niet werkt, kun je een fabrieksreset proberen. Lees eerst de resetdisclaimer in de documentatie.",
       "invalid_commissioning": "Er is een commissioning-telegram ontvangen, maar dit kon niet worden gevalideerd. Probeer opnieuw. Als dit blijft mislukken, lees dan eerst de resetdisclaimer in de documentatie."
     }

@@ -15,6 +15,11 @@ from .crypto import verify_mic
 
 MAC_RE = re.compile(r"([0-9A-Fa-f]{2}(?::[0-9A-Fa-f]{2}){5})")
 KEY_RE = re.compile(r"\b([0-9A-Fa-f]{32})\b")
+# Module label QR code (ANSI MH10.8.2 data identifiers), e.g.
+# "30SE215000019B8+Z3DDA31AD44767AE3CE56DCE2B3CE2ABB+30PS3221-A215+2PDD07+S01..."
+# 30S = static source address (MAC), Z = AES-128 security key.
+QR_MAC_RE = re.compile(r"30S([0-9A-Fa-f]{12})")
+QR_KEY_RE = re.compile(r"\+Z([0-9A-Fa-f]{32})")
 
 
 @dataclass(slots=True, frozen=True)
@@ -54,6 +59,26 @@ def parse_onboarding_blob(raw: str) -> OnboardingData:
         raise ValueError("No 128-bit security key found in onboarding payload")
 
     mac_address = mac_match.group(1).upper()
+    if not mac_address.startswith(ENOCEAN_MAC_PREFIX):
+        raise ValueError("MAC prefix is not EnOcean E2:15")
+
+    return OnboardingData(mac_address=mac_address, security_key_hex=key_match.group(1).lower())
+
+
+def parse_qr_code(raw: str) -> OnboardingData:
+    """Extract MAC and AES-128 key from the QR code on a PTM 215B/216B module label.
+
+    The label QR code uses data identifiers: ``30S<MAC, 12 hex>+Z<key, 32 hex>+30P...``.
+    Free-form text (``E2:15:...`` plus a 32-hex key) is accepted as a fallback.
+    """
+    text = raw.strip()
+    mac_match = QR_MAC_RE.search(text)
+    key_match = QR_KEY_RE.search(text)
+    if mac_match is None or key_match is None:
+        return parse_onboarding_blob(text)
+
+    mac_hex = mac_match.group(1).upper()
+    mac_address = ":".join(mac_hex[i : i + 2] for i in range(0, 12, 2))
     if not mac_address.startswith(ENOCEAN_MAC_PREFIX):
         raise ValueError("MAC prefix is not EnOcean E2:15")
 

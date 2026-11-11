@@ -41,6 +41,26 @@ Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
 - After success, press another button to ensure the switch exits commissioning mode.
 
+### Add a switch from its QR code
+
+Some OEM switches (for example Busch-Jaeger 6716 UBT and Jung BLE switches) ship with radio
+commissioning disabled, so the sequence above never yields a commissioning telegram. The QR code
+on the PTM 215B/216B module label already contains the switch address and security key
+(`30SE215…+Z<key>+30P…`), so these switches can be added from it instead:
+
+- **Scan with the camera:** open **EnOcean BLE** in the Home Assistant sidebar (admins only) and
+  tap **Scan QR code**. In the Home Assistant Companion app this uses the app's native scanner;
+  in browsers that support the BarcodeDetector API (e.g. Chrome on Android/macOS) it uses the
+  browser camera. You can also scan from a photo or paste the text.
+- **Paste the text:** **Settings → Devices & services → Add integration → EnOcean BLE Switches**
+  and paste the QR code text (for example read with your phone's camera app).
+
+Treat the QR code like a password: anyone with the key can create valid button telegrams for
+that switch.
+
+The sidebar page is available once the integration is loaded, i.e. after at least one switch has
+been added. Before that, use the paste option.
+
 ## Events
 
 The integration creates:
