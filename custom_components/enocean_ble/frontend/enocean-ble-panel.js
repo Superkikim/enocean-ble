@@ -138,6 +138,7 @@ class EnOceanBlePanel extends HTMLElement {
           <textarea id="text" autocomplete="off" autocapitalize="off" spellcheck="false"
             placeholder="30SE2150000…+Z…"></textarea>
           <button id="add">Add switch</button>
+          <div id="pasteStatus" class="status"></div>
         </div>
         <div class="card">
           <h2>Configured switches</h2>
@@ -159,15 +160,29 @@ class EnOceanBlePanel extends HTMLElement {
     }
 
     this._el = (id) => root.getElementById(id);
-    this._el("scan").addEventListener("click", () => this._scan());
-    this._el("photo").addEventListener("click", () => this._el("file").click());
+    this._statusTarget = "scan";
+    this._el("scan").addEventListener("click", () => {
+      this._statusTarget = "scan";
+      this._scan();
+    });
+    this._el("photo").addEventListener("click", () => {
+      this._statusTarget = "scan";
+      this._el("file").click();
+    });
     this._el("file").addEventListener("change", (ev) => this._scanPhoto(ev));
-    this._el("add").addEventListener("click", () => this._addFromQr(this._el("text").value));
+    this._el("add").addEventListener("click", () => {
+      this._statusTarget = "paste";
+      this._addFromQr(this._el("text").value);
+    });
     this._el("cancel").addEventListener("click", () => this._stopCamera());
   }
 
   _setStatus(kind, message) {
-    const el = this._el("status");
+    // Show the result next to whichever control the user used last.
+    const active = this._statusTarget === "paste" ? "pasteStatus" : "status";
+    const idle = active === "status" ? "pasteStatus" : "status";
+    this._el(idle).className = "status";
+    const el = this._el(active);
     el.className = `status ${kind}`;
     el.textContent = message;
   }
@@ -388,13 +403,21 @@ class EnOceanBlePanel extends HTMLElement {
         list.appendChild(li);
         return;
       }
+      const devices = Object.values(this._hass.devices || {});
       for (const entry of entries) {
+        const device = devices.find((dev) => (dev.config_entries || []).includes(entry.entry_id));
+        const connection =
+          device && (device.connections || []).find((conn) => conn[0] === "bluetooth");
         const li = document.createElement("li");
-        const name = document.createElement("span");
+        const name = document.createElement(device ? "a" : "span");
         name.textContent = entry.title;
+        if (device) {
+          name.href = `/config/devices/device/${device.id}`;
+          name.style.color = "var(--primary-color)";
+        }
         const mac = document.createElement("span");
         mac.className = "mac";
-        mac.textContent = entry.state === "loaded" ? entry.unique_id || "" : entry.state;
+        mac.textContent = entry.state === "loaded" ? (connection ? connection[1] : "") : entry.state;
         li.append(name, mac);
         list.appendChild(li);
       }
