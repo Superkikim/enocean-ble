@@ -29,6 +29,7 @@ from .const import (
     RELEASE_TIMEOUT_SECONDS,
     SIGNAL_BUTTON_EVENT,
 )
+from .panel import async_register_panel
 from .parser import parse_commissioning_telegram, parse_data_telegram
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ ButtonState = dict[str, float | int | bool | Callable[[], None] | None]
 async def async_setup(hass: Any, config: dict[str, Any]) -> bool:
     """Set up EnOcean BLE integration."""
     hass.data.setdefault(DOMAIN, {})
+    await async_register_panel(hass)
     return True
 
 

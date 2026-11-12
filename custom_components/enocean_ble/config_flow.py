@@ -7,6 +7,7 @@ import logging
 from collections import defaultdict
 from typing import Any
 
+import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -22,7 +23,7 @@ from .const import (
     ENOCEAN_MANUFACTURER_ID,
     STATUS_BIT_ENERGY_BOW,
 )
-from .parser import parse_commissioning_telegram
+from .parser import parse_commissioning_telegram, parse_qr_code
 
 _LOGGER = logging.getLogger(__name__)
 FLOW_TAG = "[ENOCEAN_FLOW]"
@@ -30,6 +31,7 @@ CANCEL_TRACE_TAG = "FLOW_CANCEL_TRACE"
 FLOW_TRACE_TAG = "FLOW_TRACE_V3"
 
 COMMISSIONING_TIMEOUT = 120.0
+CONF_QR_CODE = "qr_code"
 
 
 class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc,call-arg]
@@ -85,6 +87,45 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         )
         self._log_terminal_without_entry()
         self._cancel_stage_task(reason="flow_removed")
+
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Add a switch from the QR code printed on its module label.
+
+        Needed for OEM switches whose radio commissioning is disabled (e.g. Busch-Jaeger,
+        Jung): the label QR code already contains the MAC address and security key.
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                onboarding = parse_qr_code(str(user_input.get(CONF_QR_CODE, "")))
+            except ValueError:
+                errors["base"] = "invalid_qr"
+            else:
+                await self.async_set_unique_id(onboarding.mac_address)
+                self._abort_if_unique_id_configured()
+                self._pending_mac = onboarding.mac_address
+                self._pending_title = onboarding.mac_address
+                self._pending_security_key = onboarding.security_key_hex
+                self._entry_created = True
+                _LOGGER.info(
+                    "%s QR_CREATE_ENTRY flow_id=%s mac=%s",
+                    FLOW_TAG,
+                    getattr(self, "flow_id", "unknown"),
+                    onboarding.mac_address,
+                )
+                return self.async_create_entry(
+                    title=onboarding.mac_address,
+                    data={
+                        CONF_MAC_ADDRESS: onboarding.mac_address,
+                        CONF_SECURITY_KEY: onboarding.security_key_hex,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_QR_CODE): str}),
+            errors=errors,
+        )
 
     async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> FlowResult:
         """Handle Bluetooth discovery and start commissioning."""
