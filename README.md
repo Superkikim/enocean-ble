@@ -416,6 +416,17 @@ mypy custom_components tests
 pytest -q
 ```
 
+## Credits
+
+- [@DOABrain](https://github.com/DOABrain): onboarding from the module label QR code
+  ([#4](https://github.com/Superkikim/enocean-ble/pull/4)). This covers the QR code format
+  parsing and the work on OEM switches whose radio commissioning is disabled
+  (Busch-Jaeger, Jung), tested on real devices.
+- [hass-pronote](https://github.com/delphiki/hass-pronote) by [@delphiki](https://github.com/delphiki):
+  the approach of scanning a QR code with the phone camera from a config flow through an external
+  step and a page served by the integration
+  ([delphiki/hass-pronote#229](https://github.com/delphiki/hass-pronote/pull/229)).
+
 ## References
 
 - [PTM-215B User Manual](https://www.enocean.com/wp-content/uploads/downloads-produkte/en/products/enocean_modules_24ghz_ble/ptm-215b/user-manual-pdf/PTM-215B-User-Manual.pdf)
