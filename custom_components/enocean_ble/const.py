@@ -12,6 +12,14 @@ CONF_SECURITY_KEY = "security_key"
 ENOCEAN_MANUFACTURER_ID = 0x03DA
 ENOCEAN_MAC_PREFIX = "E2:15:"
 
+# Sidebar page to add switches by scanning their label QR code.
+PANEL_URL_PATH = "enocean-ble"
+PANEL_ELEMENT = "enocean-ble-panel"
+PANEL_FILENAME = "enocean-ble-panel.js"
+PANEL_STATIC_URL = "/enocean_ble_static"
+PANEL_TITLE = "EnOcean BLE"
+PANEL_ICON = "mdi:qrcode-scan"
+
 EVENT_BUTTON_EVENT = "enocean_ble_button_event"
 # Backward compatibility with existing automations.
 EVENT_BUTTON_ACTION = "enocean_ble_button_action"
