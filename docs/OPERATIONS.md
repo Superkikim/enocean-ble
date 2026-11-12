@@ -47,6 +47,6 @@ ssh 172.30.46.1 "sudo docker logs --tail 200 home_assistant 2>&1 | grep -i -E 'e
 1. All local checks pass.
 2. `manifest.json` version bumped.
 3. `README.md` and `docs/` aligned with current behavior.
-4. Commit and push on `dev`, merge/update `main`.
+4. Merge to `main` (via PR, or push for maintainer fixes).
 5. Create git tag (HA-style: `YYYY.M` or `YYYY.M.patch`).
 6. Publish GitHub release from tag.
