@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -138,6 +139,43 @@ async def test_qr_scan_external_step_then_entry(hass: Any) -> None:
     result = await flow.async_step_qr_scan_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_MAC_ADDRESS: MAC, CONF_SECURITY_KEY: KEY}
+
+
+async def test_qr_scan_keeps_notifying_until_the_flow_moves_on(hass: Any) -> None:
+    """A phone app in the background misses the first notification; repeat it."""
+    flow, _ = await _discovered_flow(hass, [_service_info()])
+    events: list[Any] = []
+    hass.bus.async_listen("data_entry_flow_progressed", events.append)
+    with (
+        patch.object(config_flow_module, "SCAN_NOTIFY_INTERVAL", 0.01),
+        patch.object(config_flow_module, "async_discovered_service_info", return_value=[_service_info()]),
+    ):
+        flow.cur_step = await flow.async_step_qr_scan({"qr_code": QR})
+        await asyncio.sleep(0.05)
+        await hass.async_block_till_done()
+        assert events
+        assert all(event.data["flow_id"] == "test-flow" for event in events)
+
+        # The frontend reloaded the flow: the notifications stop.
+        flow.cur_step = await flow.async_step_qr_scan_done()
+        await asyncio.sleep(0.03)
+        await hass.async_block_till_done()
+        count = len(events)
+        await asyncio.sleep(0.03)
+        await hass.async_block_till_done()
+        assert len(events) == count
+    assert flow._scan_notify_task is not None and flow._scan_notify_task.done()
+
+
+async def test_flow_removal_stops_scan_notifications(hass: Any) -> None:
+    flow, _ = await _discovered_flow(hass, [_service_info()])
+    with patch.object(config_flow_module, "async_discovered_service_info", return_value=[_service_info()]):
+        flow.cur_step = await flow.async_step_qr_scan({"qr_code": QR})
+    task = flow._scan_notify_task
+    assert task is not None
+    flow.async_remove()
+    await asyncio.sleep(0)
+    assert task.cancelled()
 
 
 async def test_qr_scan_invalid_result_falls_back_on_text(hass: Any) -> None:

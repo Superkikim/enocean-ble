@@ -14,6 +14,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.data_entry_flow import EVENT_DATA_ENTRY_FLOW_PROGRESSED, FlowResultType
 
 from .const import (
     CONF_MAC_ADDRESS,
@@ -36,6 +37,9 @@ COMMISSIONING_TIMEOUT = 120.0
 METHOD_MENU_STEP_ID = "bluetooth_method"
 METHOD_MENU_OPTIONS = ["qr_scan", "qr_text", "commissioning"]
 ERROR_SCAN_HTTPS_REQUIRED = "scan_https_required"
+# After a scan, how often and how long to repeat the "flow changed" notification.
+SCAN_NOTIFY_INTERVAL = 3.0
+SCAN_NOTIFY_DURATION = 120.0
 
 
 class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,6 +72,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_payload: bytes | None = None
         # Error to show on the QR text form when it is opened after a failed scan.
         self._qr_error: str | None = None
+        self._scan_notify_task: asyncio.Task[None] | None = None
 
     def async_remove(self) -> None:
         """Cleanup when flow is aborted/cancelled/finished by HA."""
@@ -95,6 +100,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._log_terminal_without_entry()
         self._cancel_stage_task(reason="flow_removed")
+        if self._scan_notify_task is not None:
+            self._scan_notify_task.cancel()
+            self._scan_notify_task = None
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manual start is not supported: a switch is added from its discovery.
@@ -199,8 +207,10 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # telegram cache changed): fall back on the text form with the error.
                 self._qr_error = err.code
                 self._log_qr_rejected(step="qr_scan", code=err.code)
+                self._start_scan_notify()
                 return self.async_external_step_done(next_step_id="qr_text")
             self._pending_security_key = onboarding.security_key_hex
+            self._start_scan_notify()
             return self.async_external_step_done(next_step_id="qr_scan_done")
 
         await async_setup_scan(self.hass)
@@ -227,6 +237,32 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             method="scan",
         )
+
+    def _start_scan_notify(self) -> None:
+        """Keep notifying the frontend until it moves the flow on after a scan.
+
+        Home Assistant notifies the frontend once when the external step ends. The
+        scan page opens in the browser, so the phone app is in the background at that
+        moment, its connection is closed and it misses the notification: the dialog
+        stays on the scan step. Repeating it lets the app reload the flow once back.
+        """
+        if self._scan_notify_task is None or self._scan_notify_task.done():
+            self._scan_notify_task = self.hass.async_create_background_task(
+                self._async_scan_notify(), name=f"{DOMAIN} scan notify {self.flow_id}"
+            )
+
+    async def _async_scan_notify(self) -> None:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + SCAN_NOTIFY_DURATION
+        while loop.time() < deadline:
+            await asyncio.sleep(SCAN_NOTIFY_INTERVAL)
+            cur_step = self.cur_step
+            if cur_step is None or cur_step["type"] != FlowResultType.EXTERNAL_STEP_DONE:
+                return
+            self.hass.bus.async_fire(
+                EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+                {"handler": self.handler, "flow_id": self.flow_id, "refresh": True},
+            )
 
     def _validate_qr(self, raw: str) -> OnboardingData:
         """Check the QR code against the discovered switch (address and key)."""
