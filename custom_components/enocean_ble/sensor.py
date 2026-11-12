@@ -59,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(EnOceanBleButtonEventSensor(entry, button) for button in BUTTONS)
 
 
-class EnOceanBleButtonEventSensor(SensorEntity):  # type: ignore[misc]
+class EnOceanBleButtonEventSensor(SensorEntity):
     """Sensor entity exposing the latest event for one physical button."""
 
     _attr_has_entity_name = True
@@ -99,7 +99,7 @@ class EnOceanBleButtonEventSensor(SensorEntity):  # type: ignore[misc]
         )
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, self._async_handle_button_event))
 
-    @callback  # type: ignore[misc]
+    @callback
     def _async_handle_button_event(self, payload: dict[str, Any]) -> None:
         """Update the sensor state when a button event is received."""
         if payload.get(ATTR_BUTTON) != self._button_code:
