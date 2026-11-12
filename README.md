@@ -28,13 +28,14 @@ It provides:
 
 ## Add Your Device
 
-1. Click `Add` when the switch appears in Bluetooth discovery.
-2. Follow the sequence on button 1:
+1. Press any button on the switch — it will appear as a discovered device in Home Assistant.
+2. Click `Add` when it appears.
+3. Follow the sequence on button 1:
    - hold for about 7 seconds,
    - press briefly,
    - hold again for about 7 seconds.
-3. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
-4. Click `Submit`.
+4. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+5. Click `Submit`.
 
 Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
@@ -46,18 +47,58 @@ The integration creates:
 - 4 event entities: `A0`, `A1`, `B0`, `B1`
 - 4 sensor entities: `A0 event`, `A1 event`, `B0 event`, `B1 event`
 
-Event type values:
-- `press`
-- `release`
-- `long_press`
-- `long_release`
+### Event types
+
+The integration exposes three layers of events:
+
+| Layer | Events | When to use |
+|---|---|---|
+| **RAW** | `press`, `release`, `orphan_release`, `release_timeout` | Advanced automations requiring full control |
+| **CALCULÉS** (best-effort) | `long_press`, `long_release` | Dimming and hold-to-act patterns |
+| **UX** | `single_press` | Simple on/off — most reliable |
+
+**Definitions:**
+
+- `press` — press telegram received from the device.
+- `release` — release telegram received after a known `press`.
+- `orphan_release` — release telegram received without a prior `press` (press lost in BLE). Fires `single_press` too if the gap is consistent with one lost telegram (reliable for single-button use without counter wrap).
+- `release_timeout` — no release received within 8 seconds of a press. Technical fallback, not a real release.
+- `long_press` — press held for more than 1.2 s without a release (best-effort).
+- `long_release` — release received after a `long_press` (best-effort).
+- `single_press` — fires immediately on the first valid signal of an interaction:
+  - on `press`, or
+  - on a coherent `orphan_release` (press lost, sequence gap == 2)
+
+  Fires once per interaction, including long press cycles — use in simple mode only (see Usage rules below).
+
+**Implicit cycle end rule:** any new event received for a button cancels the pending `release_timeout` timer and resets that button's state. In practice, starting a new press while the previous one is still "open" (release was lost) is handled automatically.
+
+### Usage rules
+
+Choose **one mode per button** — do not mix `single_press` with advanced events on the same button.
+
+| Mode | Triggers to use | Reliability | Typical use |
+|---|---|---|---|
+| **Simple** | `single_press` only | Guaranteed | Toggle, scene, one-shot |
+| **Advanced** | `press`, `release`, `long_press`, `long_release`, `release_timeout` | Best-effort | On/off by gesture, dimming |
+
+> **Do not** use `single_press` on a button that also uses advanced events.
+>
+> **Why:** `single_press` fires immediately on press, before the press duration is known.
+> If the button also uses advanced event triggers (`long_press`, `long_release`, etc.),
+> `single_press` fires on **every** press — including long ones — creating unintended triggers
+> alongside `long_press`.
+>
+> **Reliability:** `single_press` is robust to both telegram losses:
+> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2)
+> - **Lost release** → already fired on press; the lost release has no effect
 
 Event data includes:
 - `mac_address`
 - `rssi`
 - `sequence_counter`
 - `button` (`A0`/`A1`/`B0`/`B1`)
-- `event` (`press`/`release`/`long_press`/`long_release`)
+- `event_type` (the event name)
 
 Home Assistant event trigger:
 - `enocean_ble_button_event` (recommended)
@@ -65,37 +106,88 @@ Home Assistant event trigger:
 
 ## Usage Examples
 
-Example 1: Toggle a light on `A0` trigger.
+### Example 1 — Simple toggle (guaranteed)
+
+`single_press` fires immediately on the press telegram — robust to a lost release.
+If the press is lost, it fires on a coherent orphan release (sequence gap == 2).
+It fires on every press, including long ones — use in simple mode only
+(do not combine with advanced events on the same button).
 
 ```yaml
-alias: EnOcean A0 - Toggle Living Room
+alias: EnOcean A0 - Toggle light
 mode: single
 triggers:
   - trigger: state
     entity_id: sensor.nord_top_a0_event
-    to: press
+    to: single_press
 actions:
   - action: light.toggle
     target:
       entity_id: light.living_room
 ```
 
-Example 2: Activate an "Away" scene on `A1` trigger.
+### Example 2 — Advanced on/off by gesture (not guaranteed)
+
+Trigger on `press`, then wait for the next meaningful signal — first one wins.
+Short press (`release` arrives first) turns the light on.
+Long press (`long_press` arrives first, after 1.2 s) turns it off.
+A new press while waiting cancels and restarts (`mode: restart` — Rule 3).
+`release_timeout` terminates the automation cleanly if the release is lost.
+
+> **Not guaranteed:** if the press telegram is lost, the automation never starts.
+> If the release is lost on a short press, `long_press` fires at 1.2 s and the light
+> turns off instead — accepted limitation in advanced mode.
 
 ```yaml
-alias: EnOcean A1 - Away Scene
-mode: single
+alias: EnOcean A1 - On/Off (advanced)
+mode: restart
 triggers:
   - trigger: state
     entity_id: sensor.nord_top_a1_event
     to: press
 actions:
-  - action: scene.turn_on
-    target:
-      entity_id: scene.away
+  - wait_for_trigger:
+      - trigger: state
+        entity_id: sensor.nord_top_a1_event
+        to: release
+        id: short
+      - trigger: state
+        entity_id: sensor.nord_top_a1_event
+        to: long_press
+        id: long
+      - trigger: state
+        entity_id: sensor.nord_top_a1_event
+        to: release_timeout
+        id: timeout
+    timeout: "00:00:15"
+    continue_on_timeout: false
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is not none and wait.trigger.id == 'short' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+      - conditions:
+          - condition: template
+            value_template: "{{ wait.trigger is not none and wait.trigger.id == 'long' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: light.living_room
 ```
 
-Example 3: Use `B0` and `B1` for dim up/down.
+### Example 3 — Dimming (hold to dim, release to stop, not guaranteed)
+
+Hold B0 to dim up, hold B1 to dim down. Three events can stop the transition:
+- `long_release` — normal release received
+- `release_timeout` — release lost in BLE (fires after 8 s)
+- `press` — any new press on the same button immediately stops the current transition
+  (new interaction starts, `mode: restart` cancels the running sequence)
+
+> **Not guaranteed:** `long_press` requires holding for 1.2 s and receiving the BLE release.
+> `release_timeout` covers the lost-release case but fires after 8 s.
 
 ```yaml
 alias: EnOcean B0/B1 - Dimming
@@ -103,33 +195,81 @@ mode: restart
 triggers:
   - trigger: state
     entity_id: sensor.nord_top_b0_event
+    to: press
+    id: b0_stop
+  - trigger: state
+    entity_id: sensor.nord_top_b0_event
     to: long_press
-    id: b0
+    id: b0_up
+  - trigger: state
+    entity_id: sensor.nord_top_b0_event
+    to: long_release
+    id: b0_stop
+  - trigger: state
+    entity_id: sensor.nord_top_b0_event
+    to: release_timeout
+    id: b0_stop
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: press
+    id: b1_stop
   - trigger: state
     entity_id: sensor.nord_top_b1_event
     to: long_press
-    id: b1
+    id: b1_down
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: long_release
+    id: b1_stop
+  - trigger: state
+    entity_id: sensor.nord_top_b1_event
+    to: release_timeout
+    id: b1_stop
 actions:
   - choose:
       - conditions:
           - condition: trigger
-            id: b0
+            id: b0_up
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.living_room
             data:
-              brightness_step_pct: 20
+              brightness_pct: 100
+              transition: 8
       - conditions:
           - condition: trigger
-            id: b1
+            id: b0_stop
         sequence:
           - action: light.turn_on
             target:
               entity_id: light.living_room
             data:
-              brightness_step_pct: -20
+              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
+              transition: 0
+      - conditions:
+          - condition: trigger
+            id: b1_down
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness_pct: 1
+              transition: 8
+      - conditions:
+          - condition: trigger
+            id: b1_stop
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: light.living_room
+            data:
+              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
+              transition: 0
 ```
+
+> `long_press` and `long_release` are best-effort: they depend on the BLE release telegram being received. If the release is lost, `release_timeout` fires after 8 seconds instead of `long_release`. The "freeze at current brightness" approach works with most Zigbee/Z-Wave/Hue integrations; behavior during transition depends on whether the light driver reports current or target brightness.
 
 ## Troubleshooting
 

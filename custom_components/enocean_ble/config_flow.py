@@ -745,12 +745,19 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
             cause="UNKNOWN",
             confidence="low",
         )
-        _LOGGER.warning(
-            "%s FLOW_TERMINATED_WITHOUT_ENTRY flow_id=%s mac=%s cause=UNKNOWN confidence=low",
-            FLOW_TAG,
-            getattr(self, "flow_id", "unknown"),
-            self._pending_mac,
-        )
+        if self._pending_mac is None:
+            _LOGGER.debug(
+                "%s FLOW_TERMINATED_WITHOUT_ENTRY flow_id=%s mac=None (flow never started)",
+                FLOW_TAG,
+                getattr(self, "flow_id", "unknown"),
+            )
+        else:
+            _LOGGER.warning(
+                "%s FLOW_TERMINATED_WITHOUT_ENTRY flow_id=%s mac=%s cause=UNKNOWN confidence=low",
+                FLOW_TAG,
+                getattr(self, "flow_id", "unknown"),
+                self._pending_mac,
+            )
 
 
 def _is_press_status(status: int) -> bool:
