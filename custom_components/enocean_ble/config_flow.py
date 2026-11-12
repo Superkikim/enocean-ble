@@ -13,7 +13,7 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 
 from .const import (
     CONF_MAC_ADDRESS,
@@ -23,7 +23,9 @@ from .const import (
     ENOCEAN_MANUFACTURER_ID,
     STATUS_BIT_ENERGY_BOW,
 )
-from .parser import parse_commissioning_telegram, parse_qr_code
+from .parser import OnboardingData, parse_commissioning_telegram
+from .qr_onboarding import ERROR_NO_TELEGRAM, QrValidationError, validate_qr_for_device
+from .qr_scan import CONF_QR_CODE, async_scan_url, async_setup_scan, device_payloads
 
 _LOGGER = logging.getLogger(__name__)
 FLOW_TAG = "[ENOCEAN_FLOW]"
@@ -31,10 +33,12 @@ CANCEL_TRACE_TAG = "FLOW_CANCEL_TRACE"
 FLOW_TRACE_TAG = "FLOW_TRACE_V3"
 
 COMMISSIONING_TIMEOUT = 120.0
-CONF_QR_CODE = "qr_code"
+METHOD_MENU_STEP_ID = "bluetooth_method"
+METHOD_MENU_OPTIONS = ["qr_scan", "qr_text", "commissioning"]
+ERROR_SCAN_HTTPS_REQUIRED = "scan_https_required"
 
 
-class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[misc,call-arg]
+class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EnOcean BLE."""
 
     VERSION = 1
@@ -60,6 +64,10 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._flow_created_logged: bool = False
         self._active_stage_id: str | None = None
         self._stage_stats: dict[str, dict[str, Any]] = {}
+        # Payload that triggered the discovery, kept to validate a QR code key.
+        self._discovery_payload: bytes | None = None
+        # Error to show on the QR text form when it is opened after a failed scan.
+        self._qr_error: str | None = None
 
     def async_remove(self) -> None:
         """Cleanup when flow is aborted/cancelled/finished by HA."""
@@ -88,46 +96,16 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._log_terminal_without_entry()
         self._cancel_stage_task(reason="flow_removed")
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Add a switch from the QR code printed on its module label.
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Manual start is not supported: a switch is added from its discovery.
 
-        Needed for OEM switches whose radio commissioning is disabled (e.g. Busch-Jaeger,
-        Jung): the label QR code already contains the MAC address and security key.
+        Pressing any button makes the switch appear as a discovered device. Starting
+        from the discovery guarantees the switch is present and lets the QR code key
+        be checked against a telegram really received from it.
         """
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            try:
-                onboarding = parse_qr_code(str(user_input.get(CONF_QR_CODE, "")))
-            except ValueError:
-                errors["base"] = "invalid_qr"
-            else:
-                await self.async_set_unique_id(onboarding.mac_address)
-                self._abort_if_unique_id_configured()
-                self._pending_mac = onboarding.mac_address
-                self._pending_title = onboarding.mac_address
-                self._pending_security_key = onboarding.security_key_hex
-                self._entry_created = True
-                _LOGGER.info(
-                    "%s QR_CREATE_ENTRY flow_id=%s mac=%s",
-                    FLOW_TAG,
-                    getattr(self, "flow_id", "unknown"),
-                    onboarding.mac_address,
-                )
-                return self.async_create_entry(
-                    title=onboarding.mac_address,
-                    data={
-                        CONF_MAC_ADDRESS: onboarding.mac_address,
-                        CONF_SECURITY_KEY: onboarding.security_key_hex,
-                    },
-                )
+        return self.async_abort(reason="discovery_required")
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_QR_CODE): str}),
-            errors=errors,
-        )
-
-    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> FlowResult:
+    async def async_step_bluetooth(self, discovery_info: BluetoothServiceInfoBleak) -> ConfigFlowResult:
         """Handle Bluetooth discovery and start commissioning."""
         discovered_mac = discovery_info.address.upper()
         manufacturer_data = discovery_info.manufacturer_data.get(ENOCEAN_MANUFACTURER_ID)
@@ -163,6 +141,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         self._reset_progress_state(discovered_mac)
         self._pending_mac = discovered_mac
         self._pending_title = discovery_info.name or discovered_mac
+        self._discovery_payload = bytes(manufacturer_data) if manufacturer_data else None
         self.context["title_placeholders"] = {"name": self._pending_title}
         if not self._flow_created_logged:
             self._flow_created_logged = True
@@ -175,9 +154,131 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
                 rssi=discovery_info.rssi,
             )
 
-        return await self.async_step_commissioning()
+        return await self.async_step_bluetooth_method()
 
-    async def async_step_commissioning(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_bluetooth_method(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick how to add the discovered switch."""
+        return self.async_show_menu(
+            step_id=METHOD_MENU_STEP_ID,
+            menu_options=METHOD_MENU_OPTIONS,
+            description_placeholders=self._name_placeholders(),
+        )
+
+    async def async_step_qr_text(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Add the switch from the QR code text, typed or pasted."""
+        errors: dict[str, str] = {}
+        if self._qr_error is not None:
+            errors["base"] = self._qr_error
+            self._qr_error = None
+        if user_input is not None:
+            try:
+                onboarding = self._validate_qr(str(user_input.get(CONF_QR_CODE, "")))
+            except QrValidationError as err:
+                errors["base"] = err.code
+                self._log_qr_rejected(step="qr_text", code=err.code)
+            else:
+                return self._create_entry_from_qr(onboarding, method="text")
+
+        return self.async_show_form(
+            step_id="qr_text",
+            # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
+            data_schema=vol.Schema({vol.Required(CONF_QR_CODE): str}),  # type: ignore[arg-type,unused-ignore]
+            errors=errors,
+            description_placeholders=self._name_placeholders(),
+        )
+
+    async def async_step_qr_scan(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Open the scan page (external step); it posts the QR code back here."""
+        if user_input is not None:
+            try:
+                onboarding = self._validate_qr(str(user_input.get(CONF_QR_CODE, "")))
+            except QrValidationError as err:
+                # The page validates before posting, so this is a race (e.g. the
+                # telegram cache changed): fall back on the text form with the error.
+                self._qr_error = err.code
+                self._log_qr_rejected(step="qr_scan", code=err.code)
+                return self.async_external_step_done(next_step_id="qr_text")
+            self._pending_security_key = onboarding.security_key_hex
+            return self.async_external_step_done(next_step_id="qr_scan_done")
+
+        await async_setup_scan(self.hass)
+        url = async_scan_url(self.hass, self.flow_id)
+        if url is None:
+            self._qr_error = ERROR_SCAN_HTTPS_REQUIRED
+            return await self.async_step_qr_text()
+        return self.async_external_step(
+            step_id="qr_scan",
+            url=url,
+            description_placeholders={**self._name_placeholders(), "url": url},
+        )
+
+    async def async_step_qr_scan_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the entry once the scanned QR code has been validated."""
+        if self._pending_mac is None or self._pending_security_key is None:
+            return self.async_abort(reason="no_bluetooth_discovery")
+        return self._create_entry_from_qr(
+            OnboardingData(
+                mac_address=self._pending_mac,
+                security_key_hex=self._pending_security_key,
+            ),
+            method="scan",
+        )
+
+    def _validate_qr(self, raw: str) -> OnboardingData:
+        """Check the QR code against the discovered switch (address and key)."""
+        if self._pending_mac is None:
+            raise QrValidationError(ERROR_NO_TELEGRAM)
+        payloads = device_payloads(async_discovered_service_info(self.hass), self._pending_mac)
+        if self._discovery_payload is not None:
+            payloads.append(self._discovery_payload)
+        return validate_qr_for_device(raw, mac_address=self._pending_mac, payloads=payloads)
+
+    def _create_entry_from_qr(self, onboarding: OnboardingData, *, method: str) -> ConfigFlowResult:
+        """Create the config entry from a validated QR code."""
+        self._pending_security_key = onboarding.security_key_hex
+        self._entry_created = True
+        title = self._pending_title or onboarding.mac_address
+        self._trace_event(
+            "FLOW_CREATE_ENTRY",
+            step=f"qr_{method}",
+            note="QR code validated against the discovered switch; entry is being created.",
+            title=title,
+        )
+        _LOGGER.info(
+            "%s QR_CREATE_ENTRY flow_id=%s mac=%s method=%s",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
+            onboarding.mac_address,
+            method,
+        )
+        return self.async_create_entry(
+            title=title,
+            data={
+                CONF_MAC_ADDRESS: onboarding.mac_address,
+                CONF_SECURITY_KEY: onboarding.security_key_hex,
+            },
+        )
+
+    def _log_qr_rejected(self, *, step: str, code: str) -> None:
+        """Log a rejected QR code (never the key)."""
+        _LOGGER.info(
+            "%s QR_REJECTED flow_id=%s mac=%s step=%s reason=%s",
+            FLOW_TAG,
+            getattr(self, "flow_id", "unknown"),
+            self._pending_mac,
+            step,
+            code,
+        )
+
+    def _name_placeholders(self) -> dict[str, str]:
+        mac = self._pending_mac or ""
+        return {"name": self._pending_title or mac or DOMAIN, "mac": mac}
+
+    async def async_step_commissioning(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Show commissioning instructions and wait for L26 telegram."""
         # If the commissioning telegram is already known (ex: cached discovery payload),
         # continue to the explicit user confirmation step.
@@ -192,7 +293,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Ask for explicit user confirmation before creating the entry."""
         if self._pending_mac is None or self._pending_security_key is None:
             return self.async_show_form(
@@ -255,7 +356,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: i
         progress_action: str,
         coro: Any,
         next_step_id: str,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Run one monitored stage with automatic progression."""
         if self._pending_mac is None:
             return self.async_abort(reason="no_bluetooth_discovery")

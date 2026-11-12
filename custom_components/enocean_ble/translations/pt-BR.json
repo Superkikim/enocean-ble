@@ -1,6 +1,29 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Adicionar interruptor EnOcean BLE",
+        "description": "O interruptor {name} ({mac}) foi descoberto. Como você quer adicioná-lo?\n\nO código QR está na etiqueta do módulo EnOcean, atrás da tecla.",
+        "menu_options": {
+          "qr_scan": "Escanear o código QR com a câmera",
+          "qr_text": "Digitar o texto do código QR",
+          "commissioning": "Commissioning manual (sequência de botões)"
+        }
+      },
+      "qr_text": {
+        "title": "Digitar o texto do código QR",
+        "description": "Digite ou cole o texto do código QR da etiqueta do módulo de {name}. Ele tem o formato 30SE215…+Z…+30P… e o endereço deve ser {mac}.",
+        "data": {
+          "qr_code": "Texto do código QR"
+        },
+        "data_description": {
+          "qr_code": "Exemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+        }
+      },
+      "qr_scan": {
+        "title": "Escanear o código QR",
+        "description": "Abra a página de escaneamento e aponte para o código QR da etiqueta do módulo de {name}. Em um computador, a página mostra um código QR para abri-la no celular. Esta janela continua sozinha assim que o código é aceito."
+      },
       "commissioning": {
         "title": "Auto-comissionamento EnOcean BLE",
         "description": "Ative o auto-comissionamento em {name}:\n\n1. Mantenha o botão 1 pressionado por 7 segundos\n2. Pressione o botão 1 brevemente\n3. Mantenha o botão 1 pressionado novamente por 7 segundos\n\nVocê tem 2 minutos. Tente novamente se necessário."
@@ -15,11 +38,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Esta configuração deve ser iniciada a partir de um dispositivo Bluetooth descoberto.",
-      "not_enocean_prefix": "Este dispositivo descoberto não usa o prefixo MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "Este dispositivo descoberto não usa o prefixo MAC EnOcean BLE (E2:15).",
+      "already_configured": "Este interruptor já está configurado.",
+      "discovery_required": "Pressione qualquer botão do interruptor: ele aparecerá como dispositivo descoberto em Configurações → Dispositivos e serviços, onde você pode adicioná-lo."
     },
     "error": {
       "commissioning_not_detected": "Nenhum telegrama de comissionamento foi recebido em 2 minutos. Tente novamente. Se continuar sem funcionar após várias tentativas, você pode tentar um reset de fábrica. Leia primeiro o aviso de reset na documentação.",
-      "invalid_commissioning": "Um telegrama de comissionamento foi recebido, mas não pôde ser validado. Tente novamente. Se isso continuar falhando, revise o aviso de reset na documentação antes de resetar."
+      "invalid_commissioning": "Um telegrama de comissionamento foi recebido, mas não pôde ser validado. Tente novamente. Se isso continuar falhando, revise o aviso de reset na documentação antes de resetar.",
+      "invalid_qr": "Nenhum endereço de interruptor EnOcean (30SE215…) e chave de segurança de 32 caracteres (+Z…) foram encontrados neste texto.",
+      "qr_mac_mismatch": "Este código QR pertence a outro interruptor, diferente do descoberto.",
+      "qr_key_invalid": "A chave deste código QR não corresponde aos telegramas recebidos deste interruptor. Ele pode ter sido reconfigurado (por exemplo, por outro sistema).",
+      "qr_no_telegram": "Nenhum telegrama foi recebido deste interruptor ainda. Pressione um dos botões e tente novamente.",
+      "scan_https_required": "O escaneamento com a câmera exige que o Home Assistant esteja acessível por HTTPS. Digite o texto do código QR em vez disso."
     }
   }
 }

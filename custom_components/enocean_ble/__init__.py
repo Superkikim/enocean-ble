@@ -29,7 +29,6 @@ from .const import (
     RELEASE_TIMEOUT_SECONDS,
     SIGNAL_BUTTON_EVENT,
 )
-from .panel import async_register_panel
 from .parser import parse_commissioning_telegram, parse_data_telegram
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +39,6 @@ ButtonState = dict[str, float | int | bool | Callable[[], None] | None]
 async def async_setup(hass: Any, config: dict[str, Any]) -> bool:
     """Set up EnOcean BLE integration."""
     hass.data.setdefault(DOMAIN, {})
-    await async_register_panel(hass)
     return True
 
 
@@ -70,7 +68,7 @@ async def async_setup_entry(hass: Any, entry: Any) -> bool:
         _fingerprint_key(security_key),
     )
 
-    def _async_handle_advertisement(service_info: Any, _change: int) -> None:
+    def _async_handle_advertisement(service_info: Any, _change: Any) -> None:
         _process_advertisement(hass, entry, service_info)
 
     entry.async_on_unload(
@@ -419,7 +417,7 @@ def _fire_event(
 ) -> None:
     from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-    @callback  # type: ignore[misc]
+    @callback
     def _async_dispatch() -> None:
         async_dispatcher_send(hass, SIGNAL_BUTTON_EVENT.format(entry_id=entry.entry_id), payload)
         hass.bus.async_fire(

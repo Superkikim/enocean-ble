@@ -1,12 +1,28 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "Add EnOcean BLE switch from QR code",
-        "description": "Paste the text of the QR code on the PTM 215B/216B module label. It looks like 30SE215…+Z…+30P… and contains the switch address and security key.\n\nTo scan it with your camera instead, open the EnOcean BLE page in the sidebar.",
+      "bluetooth_method": {
+        "title": "Add EnOcean BLE switch",
+        "description": "Switch {name} ({mac}) was discovered. How do you want to add it?\n\nThe QR code is on the label of the EnOcean module, behind the rocker.",
+        "menu_options": {
+          "qr_scan": "Scan the QR code with the camera",
+          "qr_text": "Enter the QR code text",
+          "commissioning": "Manual commissioning (button sequence)"
+        }
+      },
+      "qr_text": {
+        "title": "Enter the QR code text",
+        "description": "Type or paste the text of the QR code on the module label of {name}. It looks like 30SE215…+Z…+30P… and its address must be {mac}.",
         "data": {
           "qr_code": "QR code text"
+        },
+        "data_description": {
+          "qr_code": "Example: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
         }
+      },
+      "qr_scan": {
+        "title": "Scan the QR code",
+        "description": "Open the scan page and aim at the QR code on the module label of {name}. On a computer, the page shows a QR code to open it on your phone. This dialog continues by itself once the code is accepted."
       },
       "commissioning": {
         "title": "EnOcean BLE Auto-Commissioning",
@@ -23,12 +39,17 @@
     "abort": {
       "already_configured": "This switch is already configured.",
       "no_bluetooth_discovery": "This setup must start from a discovered Bluetooth device.",
-      "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15)."
+      "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15).",
+      "discovery_required": "Press any button on the switch: it then appears as a discovered device in Settings → Devices & services, where you can add it."
     },
     "error": {
       "invalid_qr": "No EnOcean switch address (30SE215…) and 32-character security key (+Z…) were found in this text.",
       "commissioning_not_detected": "No commissioning telegram was received within 2 minutes. Try again. If it still does not work after multiple attempts, you can try a factory reset. Please read the reset disclaimer in the documentation first.",
-      "invalid_commissioning": "A commissioning telegram was received but could not be validated. Try again. If this keeps failing, review the factory reset disclaimer in the documentation before resetting."
+      "invalid_commissioning": "A commissioning telegram was received but could not be validated. Try again. If this keeps failing, review the factory reset disclaimer in the documentation before resetting.",
+      "qr_mac_mismatch": "This QR code belongs to another switch than the one that was discovered.",
+      "qr_key_invalid": "The key in this QR code does not match the telegrams received from this switch. It may have been reconfigured (for example by another system).",
+      "qr_no_telegram": "No telegram has been received from this switch yet. Press one of its buttons, then try again.",
+      "scan_https_required": "Scanning with the camera needs Home Assistant to be reachable over HTTPS. Enter the QR code text instead."
     }
   }
 }

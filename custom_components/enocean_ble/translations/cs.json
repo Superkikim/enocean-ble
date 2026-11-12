@@ -1,6 +1,29 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Přidat spínač EnOcean BLE",
+        "description": "Byl nalezen spínač {name} ({mac}). Jak ho chcete přidat?\n\nQR kód je na štítku modulu EnOcean, pod kolébkou.",
+        "menu_options": {
+          "qr_scan": "Naskenovat QR kód kamerou",
+          "qr_text": "Zadat text QR kódu",
+          "commissioning": "Ruční commissioning (sekvence tlačítek)"
+        }
+      },
+      "qr_text": {
+        "title": "Zadat text QR kódu",
+        "description": "Napište nebo vložte text QR kódu ze štítku modulu {name}. Vypadá jako 30SE215…+Z…+30P… a jeho adresa musí být {mac}.",
+        "data": {
+          "qr_code": "Text QR kódu"
+        },
+        "data_description": {
+          "qr_code": "Příklad: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+        }
+      },
+      "qr_scan": {
+        "title": "Naskenovat QR kód",
+        "description": "Otevřete stránku pro skenování a namiřte na QR kód na štítku modulu {name}. Na počítači stránka zobrazí QR kód, abyste ji otevřeli v telefonu. Toto okno pokračuje samo, jakmile je kód přijat."
+      },
       "commissioning": {
         "title": "Automatické uvedení EnOcean BLE do provozu",
         "description": "Aktivujte automatické uvedení do provozu pro {name}:\n\n1. Podržte tlačítko 1 po dobu 7 sekund\n2. Krátce stiskněte tlačítko 1\n3. Znovu podržte tlačítko 1 po dobu 7 sekund\n\nMáte 2 minuty. V případě potřeby to zkuste znovu."
@@ -15,11 +38,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Toto nastavení musí začít z objeveného Bluetooth zařízení.",
-      "not_enocean_prefix": "Toto objevené zařízení nepoužívá MAC prefix EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "Toto objevené zařízení nepoužívá MAC prefix EnOcean BLE (E2:15).",
+      "already_configured": "Tento spínač je již nastaven.",
+      "discovery_required": "Stiskněte libovolné tlačítko spínače: objeví se jako nalezené zařízení v Nastavení → Zařízení a služby, odkud ho můžete přidat."
     },
     "error": {
       "commissioning_not_detected": "Během 2 minut nebyl přijat commissioning telegram. Zkuste to znovu. Pokud to po více pokusech stále nefunguje, můžete zkusit tovární reset. Nejprve si přečtěte upozornění k resetu v dokumentaci.",
-      "invalid_commissioning": "Byl přijat commissioning telegram, ale nepodařilo se jej ověřit. Zkuste to znovu. Pokud to opakovaně selhává, před resetem si přečtěte upozornění v dokumentaci."
+      "invalid_commissioning": "Byl přijat commissioning telegram, ale nepodařilo se jej ověřit. Zkuste to znovu. Pokud to opakovaně selhává, před resetem si přečtěte upozornění v dokumentaci.",
+      "invalid_qr": "V tomto textu nebyla nalezena adresa spínače EnOcean (30SE215…) ani 32znakový bezpečnostní klíč (+Z…).",
+      "qr_mac_mismatch": "Tento QR kód patří jinému spínači, než který byl nalezen.",
+      "qr_key_invalid": "Klíč v tomto QR kódu neodpovídá telegramům přijatým z tohoto spínače. Mohl být překonfigurován (například jiným systémem).",
+      "qr_no_telegram": "Z tohoto spínače zatím nebyl přijat žádný telegram. Stiskněte některé z jeho tlačítek a zkuste to znovu.",
+      "scan_https_required": "Skenování kamerou vyžaduje, aby byl Home Assistant dostupný přes HTTPS. Zadejte místo toho text QR kódu."
     }
   }
 }
