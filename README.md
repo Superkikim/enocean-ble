@@ -130,12 +130,14 @@ Choose **one mode per button** — do not mix `single_press` with advanced event
 > alongside `long_press`.
 >
 > **Reliability:** `single_press` is robust to both telegram losses:
-> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2)
+> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2, on the switch-wide
+>   sequence counter, so it also works after using another button)
 > - **Lost release** → already fired on press; the lost release has no effect
 
 Event data includes:
 - `mac_address`
 - `rssi`
+- `receiver` (the Bluetooth adapter or proxy that received the telegram)
 - `sequence_counter`
 - `button` (`A0`/`A1`/`B0`/`B1`)
 - `event_type` (the event name)
@@ -320,7 +322,9 @@ actions:
 - Auto-commissioning sequence never works:
   device may have commissioning mode disabled by prior configuration; try factory reset.
 - Intermittent events:
-  check distance/RSSI/interference.
+  check distance/RSSI/interference. The `receiver` and `rssi` attributes of each event show which
+  Bluetooth adapter or proxy received it and how strong the signal was. Proxies in passive mode are
+  supported.
 - Occasional missed press:
   can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
 
@@ -446,6 +450,11 @@ pytest -q
   the QR code scan is inspired by its approach: scanning with the phone camera from a config flow
   through an external step and a page served by the integration
   ([delphiki/hass-pronote#229](https://github.com/delphiki/hass-pronote/pull/229)).
+- [@lafriks](https://github.com/lafriks): reliability fixes from
+  [#2](https://github.com/Superkikim/enocean-ble/pull/2): passive Bluetooth scanners, lost-press
+  recovery on the switch-wide sequence counter, replay protection kept across restarts, per-switch
+  and per-button event routing, cleanup on unload and constant-time MIC check. His own continuation
+  of this integration is [lafriks/enocean_ble](https://github.com/lafriks/enocean_ble).
 
 ## References
 

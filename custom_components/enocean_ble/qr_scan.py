@@ -125,7 +125,7 @@ class QrScanView(HomeAssistantView):
             validate_qr_for_device(
                 qr_code,
                 mac_address=mac_address,
-                payloads=device_payloads(async_discovered_service_info(hass), mac_address),
+                payloads=device_payloads(async_discovered_service_info(hass, connectable=False), mac_address),
             )
         except QrValidationError as err:
             error = err.code

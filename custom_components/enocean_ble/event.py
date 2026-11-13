@@ -15,9 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_BUTTON,
     ATTR_EVENT_TYPE,
     ATTR_MAC_ADDRESS,
+    ATTR_RECEIVER,
     ATTR_RSSI,
     ATTR_SEQUENCE_COUNTER,
     BUTTON_ENTITY_DESCRIPTIONS,
@@ -87,7 +87,7 @@ class EnOceanBleButtonEventEntity(EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to parsed telegram events for this config entry."""
-        signal = SIGNAL_BUTTON_EVENT.format(entry_id=self._entry.entry_id)
+        signal = SIGNAL_BUTTON_EVENT.format(entry_id=self._entry.entry_id, button=self._button_code)
         _LOGGER.debug(
             "event_entity_attached entry_id=%s unique_id=%s button=%s signal=%s",
             self._entry.entry_id,
@@ -100,24 +100,13 @@ class EnOceanBleButtonEventEntity(EventEntity):
     @callback
     def _async_handle_button_event(self, payload: dict[str, Any]) -> None:
         """Forward event updates to this button entity."""
-        payload_button = payload.get(ATTR_BUTTON)
         _LOGGER.debug(
-            "event_entity_payload_received entry_id=%s unique_id=%s button=%s payload_button=%s payload=%s",
+            "event_entity_payload_received entry_id=%s unique_id=%s button=%s payload=%s",
             self._entry.entry_id,
             self.unique_id,
             self._button_code,
-            payload_button,
             payload,
         )
-        if payload_button != self._button_code:
-            _LOGGER.debug(
-                "event_entity_payload_ignored entry_id=%s unique_id=%s button=%s reason=button_mismatch payload_button=%s",
-                self._entry.entry_id,
-                self.unique_id,
-                self._button_code,
-                payload_button,
-            )
-            return
 
         event_type = payload.get(ATTR_EVENT_TYPE)
         if not isinstance(event_type, str):
@@ -134,6 +123,7 @@ class EnOceanBleButtonEventEntity(EventEntity):
             ATTR_RSSI: payload.get(ATTR_RSSI),
             ATTR_SEQUENCE_COUNTER: payload.get(ATTR_SEQUENCE_COUNTER),
             ATTR_MAC_ADDRESS: payload.get(ATTR_MAC_ADDRESS),
+            ATTR_RECEIVER: payload.get(ATTR_RECEIVER),
         }
         _LOGGER.debug(
             "event_entity_trigger entry_id=%s unique_id=%s button=%s event_type=%s event_data=%s",

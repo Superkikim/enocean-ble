@@ -15,9 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_BUTTON,
     ATTR_EVENT_TYPE,
     ATTR_MAC_ADDRESS,
+    ATTR_RECEIVER,
     ATTR_RSSI,
     ATTR_SEQUENCE_COUNTER,
     BUTTON_ENTITY_DESCRIPTIONS,
@@ -89,7 +89,7 @@ class EnOceanBleButtonEventSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to parsed telegram events for this config entry."""
-        signal = SIGNAL_BUTTON_EVENT.format(entry_id=self._entry.entry_id)
+        signal = SIGNAL_BUTTON_EVENT.format(entry_id=self._entry.entry_id, button=self._button_code)
         _LOGGER.debug(
             "sensor_entity_attached entry_id=%s unique_id=%s button=%s signal=%s",
             self._entry.entry_id,
@@ -102,9 +102,6 @@ class EnOceanBleButtonEventSensor(SensorEntity):
     @callback
     def _async_handle_button_event(self, payload: dict[str, Any]) -> None:
         """Update the sensor state when a button event is received."""
-        if payload.get(ATTR_BUTTON) != self._button_code:
-            return
-
         event_type = payload.get(ATTR_EVENT_TYPE)
         if not isinstance(event_type, str) or event_type not in SUPPORTED_EVENT_TYPES:
             return
@@ -114,5 +111,6 @@ class EnOceanBleButtonEventSensor(SensorEntity):
             ATTR_RSSI: payload.get(ATTR_RSSI),
             ATTR_SEQUENCE_COUNTER: payload.get(ATTR_SEQUENCE_COUNTER),
             ATTR_MAC_ADDRESS: payload.get(ATTR_MAC_ADDRESS),
+            ATTR_RECEIVER: payload.get(ATTR_RECEIVER),
         }
         self.async_write_ha_state()
