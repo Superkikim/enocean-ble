@@ -11,6 +11,7 @@ import pytest
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from custom_components.enocean_ble import config_flow as config_flow_module
+from custom_components.enocean_ble import qr_scan as qr_scan_module
 from custom_components.enocean_ble.config_flow import EnOceanBleConfigFlow
 from custom_components.enocean_ble.const import (
     CONF_MAC_ADDRESS,
@@ -18,7 +19,7 @@ from custom_components.enocean_ble.const import (
     DOMAIN,
     ENOCEAN_MANUFACTURER_ID,
 )
-from custom_components.enocean_ble.qr_scan import _waiting_flow_mac, device_payloads
+from custom_components.enocean_ble.qr_scan import _waiting_flow_mac, async_scan_url, device_payloads
 
 # PTM 215B User Manual v2.2, Appendix C.3.1: address, key and a real data telegram.
 MAC = "E2:15:00:00:19:B8"
@@ -230,3 +231,14 @@ def test_scan_page_only_serves_a_flow_waiting_on_the_scan_step() -> None:
     assert _waiting_flow_mac(_hass_with_flow(None), "f") is None
     assert _waiting_flow_mac(_hass_with_flow({**waiting, "step_id": "qr_text"}), "f") is None
     assert _waiting_flow_mac(_hass_with_flow({**waiting, "handler": "other"}), "f") is None
+
+
+def test_scan_url_is_unique_on_each_opening() -> None:
+    """Opening the scan again must load a new page, not the tab of the last scan."""
+    with patch.object(qr_scan_module, "get_url", return_value="https://ha.example"):
+        first = async_scan_url(object(), "abc")
+        second = async_scan_url(object(), "abc")
+    assert first is not None and second is not None
+    assert first.startswith("https://ha.example/api/enocean_ble/qr_scan/abc?v=")
+    assert second.startswith("https://ha.example/api/enocean_ble/qr_scan/abc?v=")
+    assert first != second

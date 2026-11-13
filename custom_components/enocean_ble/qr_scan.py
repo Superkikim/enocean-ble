@@ -12,6 +12,7 @@ Copyright (c) 2023 delphiki, MIT License.
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -63,13 +64,16 @@ async def async_setup_scan(hass: Any) -> None:
 def async_scan_url(hass: Any, flow_id: str) -> str | None:
     """Absolute HTTPS URL of the scan page, None without an HTTPS URL.
 
-    Browsers only give camera access to secure (HTTPS) pages.
+    Browsers only give camera access to secure (HTTPS) pages. The URL is unique on
+    each call: a browser asked to open a URL it already has open (Safari from the
+    phone app) shows that tab again, with the result of the previous scan, instead
+    of a new scan page.
     """
     try:
         base = get_url(hass, require_ssl=True, prefer_external=True)
     except NoURLAvailableError:
         return None
-    return base + URL_PATH.format(flow_id=flow_id)
+    return f"{base}{URL_PATH.format(flow_id=flow_id)}?v={secrets.token_hex(4)}"
 
 
 def _waiting_flow_mac(hass: Any, flow_id: str) -> str | None:
@@ -100,7 +104,9 @@ class QrScanView(HomeAssistantView):
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         if _waiting_flow_mac(request.app[KEY_HASS], flow_id) is None:
             return web.Response(status=404)
-        return web.Response(text=self._page, content_type="text/html")
+        return web.Response(
+            text=self._page, content_type="text/html", headers={"Cache-Control": "no-store"}
+        )
 
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         hass = request.app[KEY_HASS]
