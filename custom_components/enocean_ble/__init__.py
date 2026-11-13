@@ -47,10 +47,7 @@ async def async_setup(hass: Any, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: Any, entry: Any) -> bool:
     """Set up EnOcean BLE from a config entry."""
-    from homeassistant.components.bluetooth import (
-        BluetoothScanningMode,
-        async_register_callback,
-    )
+    from homeassistant.components import bluetooth
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -79,23 +76,41 @@ async def async_setup_entry(hass: Any, entry: Any) -> bool:
         _fingerprint_key(security_key),
     )
 
-    def _async_handle_advertisement(service_info: Any, _change: Any) -> None:
-        _process_advertisement(hass, entry, service_info)
+    address = str(mac_address).upper()
+    register_every_advertisement = getattr(bluetooth, "async_register_advertisement_callback", None)
+    if register_every_advertisement is not None:
+        # Home Assistant 2026.10+: every advertisement from every Bluetooth adapter and
+        # proxy, including the copies the Bluetooth manager discards because another
+        # receiver "owns" the switch. A telegram is then only lost if every receiver
+        # missed it. The sequence counter drops the duplicates.
+        def _async_handle_every_advertisement(service_info: Any) -> None:
+            _process_advertisement(hass, entry, service_info)
 
-    entry.async_on_unload(
-        async_register_callback(
-            hass,
-            _async_handle_advertisement,
-            # Only this switch's advertisements. Switches only broadcast, so also accept
-            # advertisements from passive (non-connectable) scanners and proxies.
-            {
-                "address": str(mac_address).upper(),
-                "manufacturer_id": ENOCEAN_MANUFACTURER_ID,
-                "connectable": False,
-            },
-            BluetoothScanningMode.PASSIVE,
+        entry.async_on_unload(
+            register_every_advertisement(hass, _async_handle_every_advertisement, address)
         )
-    )
+        receive_mode = "every_receiver"
+    else:
+
+        def _async_handle_advertisement(service_info: Any, _change: Any) -> None:
+            _process_advertisement(hass, entry, service_info)
+
+        entry.async_on_unload(
+            bluetooth.async_register_callback(
+                hass,
+                _async_handle_advertisement,
+                # Only this switch's advertisements. Switches only broadcast, so also
+                # accept advertisements from passive (non-connectable) scanners.
+                {
+                    "address": address,
+                    "manufacturer_id": ENOCEAN_MANUFACTURER_ID,
+                    "connectable": False,
+                },
+                bluetooth.BluetoothScanningMode.PASSIVE,
+            )
+        )
+        receive_mode = "owner_receiver"
+    _LOGGER.debug("setup_entry entry_id=%s receive_mode=%s", entry.entry_id, receive_mode)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.info("EnOcean BLE device configured: %s", mac_address)
@@ -242,6 +257,20 @@ def _process_advertisement(
             entry.entry_id,
             configured_mac,
             len(manufacturer_data),
+        )
+        return
+
+    # Each telegram arrives several times (repeated by the switch, and once per
+    # receiver): drop the copies before the AES check. The sequence counter is the
+    # first 4 bytes, little-endian, in clear.
+    last_sequence = int(entry_data["last_sequence_counter"])
+    if int.from_bytes(manufacturer_data[0:4], byteorder="little") <= last_sequence:
+        _LOGGER.debug(
+            "telegram_deduplicated entry_id=%s mac=%s last_sequence=%s receiver_source=%s",
+            entry.entry_id,
+            configured_mac,
+            last_sequence,
+            getattr(service_info, "source", None),
         )
         return
 

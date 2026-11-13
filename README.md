@@ -324,7 +324,10 @@ actions:
 - Intermittent events:
   check distance/RSSI/interference. The `receiver` and `rssi` attributes of each event show which
   Bluetooth adapter or proxy received it and how strong the signal was. Proxies in passive mode are
-  supported.
+  supported. With Home Assistant 2026.10 or newer, the integration listens to every Bluetooth
+  adapter and proxy: a telegram is only lost if all of them missed it, so adding a proxy near the
+  switches improves reliability. Before 2026.10, Home Assistant only delivers the advertisements of
+  the receiver it selected for the switch (the others are discarded unless much stronger).
 - Occasional missed press:
   can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
 

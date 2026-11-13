@@ -22,5 +22,5 @@
     "custom_components.enocean_ble"
   ],
   "requirements": [],
-  "version": "2026.11.0b9"
+  "version": "2026.11.0b10"
 }

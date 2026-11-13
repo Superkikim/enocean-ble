@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import sys
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import homeassistant.components
 
 import custom_components.enocean_ble as integration
 from custom_components.enocean_ble.const import (
@@ -114,3 +117,51 @@ async def test_removing_the_entry_removes_its_stored_counter() -> None:
     with patch.object(integration, "_sequence_store", return_value=store):
         await integration.async_remove_entry(MagicMock(), SimpleNamespace(entry_id="entry"))
     store.async_remove.assert_awaited_once()
+
+
+def test_duplicate_telegram_is_dropped_before_the_aes_check() -> None:
+    """Each telegram arrives once per repetition and per receiver: copies skip the MIC check."""
+    hass, entry, _ = _env(last_sequence_counter=TELEGRAM_SEQ)
+    with patch.object(integration, "parse_data_telegram") as parse:
+        assert _process(hass, entry) == []
+    parse.assert_not_called()
+
+
+async def _setup(register_every: Any) -> tuple[Any, Any]:
+    hass = MagicMock()
+    hass.data = {}
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+    entry = MagicMock()
+    entry.entry_id = "entry"
+    entry.data = {CONF_MAC_ADDRESS: MAC.lower(), CONF_SECURITY_KEY: KEY}
+    store = MagicMock()
+    store.async_load = AsyncMock(return_value={"last_sequence_counter": 7})
+    bluetooth = MagicMock()
+    if register_every is None:
+        del bluetooth.async_register_advertisement_callback
+    else:
+        bluetooth.async_register_advertisement_callback = register_every
+    with (
+        patch.object(integration, "_sequence_store", return_value=store),
+        patch.dict(sys.modules, {"homeassistant.components.bluetooth": bluetooth}),
+        patch.object(homeassistant.components, "bluetooth", bluetooth, create=True),
+    ):
+        assert await integration.async_setup_entry(hass, entry) is True
+    assert hass.data[DOMAIN]["entry"]["last_sequence_counter"] == 7
+    return bluetooth, hass
+
+
+async def test_setup_listens_to_every_receiver_when_available() -> None:
+    register_every = MagicMock()
+    bluetooth, hass = await _setup(register_every)
+    register_every.assert_called_once()
+    assert register_every.call_args.args[0] is hass
+    assert register_every.call_args.args[2] == MAC
+    bluetooth.async_register_callback.assert_not_called()
+
+
+async def test_setup_falls_back_on_the_owner_receiver_before_2026_10() -> None:
+    bluetooth, _ = await _setup(None)
+    bluetooth.async_register_callback.assert_called_once()
+    matcher = bluetooth.async_register_callback.call_args.args[2]
+    assert matcher == {"address": MAC, "manufacturer_id": ENOCEAN_MANUFACTURER_ID, "connectable": False}
