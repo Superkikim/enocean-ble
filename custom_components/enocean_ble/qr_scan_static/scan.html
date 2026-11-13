@@ -12,7 +12,12 @@
 <style>
   body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #111; color: #eee; text-align: center; }
   h1 { font-size: 1.2em; font-weight: 600; margin: 8px 0 16px; }
-  video { width: 100%; max-width: 480px; border-radius: 12px; background: #000; }
+  #viewport { max-width: 480px; margin: 0 auto; overflow: hidden; border-radius: 12px; background: #000; }
+  video { display: block; width: 100%; transform-origin: center; }
+  #controls { margin: 12px auto 0; max-width: 480px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #zoom-wrap { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; }
+  #zoom { flex: 1; }
+  button[aria-pressed="true"] { background: #8ab4f8; color: #111; }
   #status { margin: 16px auto; font-size: 1.05em; max-width: 480px; line-height: 1.4; }
   .ok { color: #7ddc7d; } .err { color: #ff8a80; }
   button { font: inherit; border: 1px solid #8ab4f8; color: #8ab4f8; background: transparent; border-radius: 8px; padding: 10px 16px; margin: 6px; cursor: pointer; }
@@ -28,11 +33,15 @@
   <div id="qr"></div>
   <p><button id="use-here" type="button"></button></p>
 </div>
-<video id="video" playsinline muted hidden></video>
+<div id="viewport"><video id="video" playsinline muted hidden></video></div>
+<div id="controls" hidden>
+  <button id="torch" type="button" aria-pressed="false" hidden>🔦</button>
+  <label id="zoom-wrap" hidden><span aria-hidden="true">🔍</span><input id="zoom" type="range"></label>
+</div>
 <div id="status"></div>
 <div>
   <button id="photo" type="button" hidden></button>
-  <input id="file" type="file" accept="image/*" hidden>
+  <input id="file" type="file" accept="image/*" capture="environment" hidden>
 </div>
 <canvas id="canvas" hidden></canvas>
 <script>
@@ -45,7 +54,9 @@ const I18N = {
     aim: "Aim at the QR code on the switch module label (remove the rocker).",
     handoff: "Scan this QR code with your phone to open the scan page.",
     useHere: "Use this device's camera",
-    photo: "Scan from a photo",
+    photo: "Take a photo of the QR code",
+    torch: "Light",
+    zoom: "Zoom",
     checking: "Checking with Home Assistant…",
     added: "✅ QR code accepted. Go back to Home Assistant and confirm to add the switch.",
     goBack: "Go back to Home Assistant to start again.",
@@ -67,7 +78,9 @@ const I18N = {
     aim: "Visez le QR code sur l'étiquette du module (retirez la bascule).",
     handoff: "Scannez ce QR code avec votre téléphone pour ouvrir la page de scan.",
     useHere: "Utiliser la caméra de cet appareil",
-    photo: "Scanner depuis une photo",
+    photo: "Prendre une photo du QR code",
+    torch: "Lampe",
+    zoom: "Zoom",
     checking: "Vérification avec Home Assistant…",
     added: "✅ QR code accepté. Revenez dans Home Assistant et confirmez pour ajouter le switch.",
     goBack: "Revenez dans Home Assistant pour recommencer.",
@@ -89,7 +102,9 @@ const I18N = {
     aim: "Richte die Kamera auf den QR-Code auf dem Modul-Etikett (Wippe abnehmen).",
     handoff: "Scanne diesen QR-Code mit deinem Smartphone, um die Scan-Seite zu öffnen.",
     useHere: "Kamera dieses Geräts verwenden",
-    photo: "Aus einem Foto scannen",
+    photo: "Foto vom QR-Code aufnehmen",
+    torch: "Licht",
+    zoom: "Zoom",
     checking: "Prüfung mit Home Assistant…",
     added: "✅ QR-Code akzeptiert. Kehre zu Home Assistant zurück und bestätige, um den Schalter hinzuzufügen.",
     goBack: "Kehre zu Home Assistant zurück, um neu zu beginnen.",
@@ -111,7 +126,9 @@ const I18N = {
     aim: "Apunta al código QR de la etiqueta del módulo (retira la tecla).",
     handoff: "Escanea este código QR con tu teléfono para abrir la página de escaneo.",
     useHere: "Usar la cámara de este dispositivo",
-    photo: "Escanear desde una foto",
+    photo: "Hacer una foto del código QR",
+    torch: "Linterna",
+    zoom: "Zoom",
     checking: "Comprobando con Home Assistant…",
     added: "✅ Código QR aceptado. Vuelve a Home Assistant y confirma para añadir el interruptor.",
     goBack: "Vuelve a Home Assistant para empezar de nuevo.",
@@ -133,7 +150,9 @@ const I18N = {
     aim: "Inquadra il codice QR sull'etichetta del modulo (rimuovi il bilanciere).",
     handoff: "Scansiona questo codice QR con il telefono per aprire la pagina di scansione.",
     useHere: "Usa la fotocamera di questo dispositivo",
-    photo: "Scansiona da una foto",
+    photo: "Scatta una foto del codice QR",
+    torch: "Torcia",
+    zoom: "Zoom",
     checking: "Verifica con Home Assistant…",
     added: "✅ Codice QR accettato. Torna a Home Assistant e conferma per aggiungere l'interruttore.",
     goBack: "Torna a Home Assistant per ricominciare.",
@@ -155,7 +174,9 @@ const I18N = {
     aim: "Richt op de QR-code op het label van de module (verwijder de wip).",
     handoff: "Scan deze QR-code met je telefoon om de scanpagina te openen.",
     useHere: "De camera van dit apparaat gebruiken",
-    photo: "Scannen vanaf een foto",
+    photo: "Maak een foto van de QR-code",
+    torch: "Lamp",
+    zoom: "Zoom",
     checking: "Controleren met Home Assistant…",
     added: "✅ QR-code geaccepteerd. Ga terug naar Home Assistant en bevestig om de schakelaar toe te voegen.",
     goBack: "Ga terug naar Home Assistant om opnieuw te beginnen.",
@@ -177,7 +198,9 @@ const I18N = {
     aim: "Skieruj aparat na kod QR na etykiecie modułu (zdejmij klawisz).",
     handoff: "Zeskanuj ten kod QR telefonem, aby otworzyć stronę skanowania.",
     useHere: "Użyj aparatu tego urządzenia",
-    photo: "Skanuj ze zdjęcia",
+    photo: "Zrób zdjęcie kodu QR",
+    torch: "Latarka",
+    zoom: "Powiększenie",
     checking: "Sprawdzanie w Home Assistant…",
     added: "✅ Kod QR zaakceptowany. Wróć do Home Assistant i potwierdź, aby dodać przełącznik.",
     goBack: "Wróć do Home Assistant, aby zacząć od nowa.",
@@ -199,7 +222,9 @@ const I18N = {
     aim: "Aponte para o código QR na etiqueta do módulo (remova a tecla).",
     handoff: "Escaneie este código QR com o celular para abrir a página de escaneamento.",
     useHere: "Usar a câmera deste dispositivo",
-    photo: "Escanear de uma foto",
+    photo: "Tirar uma foto do código QR",
+    torch: "Lanterna",
+    zoom: "Zoom",
     checking: "Verificando com o Home Assistant…",
     added: "✅ Código QR aceito. Volte ao Home Assistant e confirme para adicionar o interruptor.",
     goBack: "Volte ao Home Assistant para começar de novo.",
@@ -221,7 +246,9 @@ const I18N = {
     aim: "Namiřte na QR kód na štítku modulu (sejměte kolébku).",
     handoff: "Naskenujte tento QR kód telefonem a otevřete stránku pro skenování.",
     useHere: "Použít kameru tohoto zařízení",
-    photo: "Naskenovat z fotografie",
+    photo: "Vyfotit QR kód",
+    torch: "Svítilna",
+    zoom: "Přiblížení",
     checking: "Ověřování v Home Assistant…",
     added: "✅ QR kód přijat. Vraťte se do Home Assistant a potvrďte přidání spínače.",
     goBack: "Vraťte se do Home Assistant a začněte znovu.",
@@ -243,7 +270,9 @@ const I18N = {
     aim: "Rikta kameran mot QR-koden på modulens etikett (ta bort vippan).",
     handoff: "Skanna den här QR-koden med telefonen för att öppna skanningssidan.",
     useHere: "Använd den här enhetens kamera",
-    photo: "Skanna från ett foto",
+    photo: "Ta ett foto av QR-koden",
+    torch: "Lampa",
+    zoom: "Zoom",
     checking: "Kontrollerar med Home Assistant…",
     added: "✅ QR-koden godkänd. Gå tillbaka till Home Assistant och bekräfta för att lägga till brytaren.",
     goBack: "Gå tillbaka till Home Assistant för att börja om.",
@@ -279,11 +308,18 @@ const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const status = document.getElementById("status");
 const photoButton = document.getElementById("photo");
+const controls = document.getElementById("controls");
+const torchButton = document.getElementById("torch");
+const zoomWrap = document.getElementById("zoom-wrap");
+const zoomInput = document.getElementById("zoom");
 const fileInput = document.getElementById("file");
 document.getElementById("title").textContent = T.title;
 document.getElementById("handoff-text").textContent = T.handoff;
 document.getElementById("use-here").textContent = T.useHere;
 photoButton.textContent = T.photo;
+torchButton.setAttribute("aria-label", T.torch);
+torchButton.title = T.torch;
+zoomInput.setAttribute("aria-label", T.zoom);
 
 const say = (text, cls) => { status.textContent = text; status.className = cls || ""; };
 const looksLikeEnoceanQr = (text) => /30S[0-9A-Fa-f]{12}/.test(text) && /\+Z[0-9A-Fa-f]{32}/.test(text);
@@ -291,6 +327,8 @@ const looksLikeEnoceanQr = (text) => /30S[0-9A-Fa-f]{12}/.test(text) && /\+Z[0-9
 let detector = null;
 let jsQrLoaded = false;
 let done = false;
+// Digital zoom factor: the video is enlarged and only its centre is decoded.
+let digitalZoom = 1;
 
 const loadScript = (src) => new Promise((resolve, reject) => {
   const script = document.createElement("script");
@@ -321,24 +359,95 @@ async function ensureJsQr() {
   }
 }
 
+// Draw the centre of the source (1/zoom of each side) on the canvas.
+function drawCentre(source, width, height, zoom) {
+  const sw = Math.round(width / zoom);
+  const sh = Math.round(height / zoom);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  canvas.width = sw;
+  canvas.height = sh;
+  ctx.drawImage(source, Math.round((width - sw) / 2), Math.round((height - sh) / 2), sw, sh, 0, 0, sw, sh);
+  return ctx;
+}
+
 // Decode a video frame or an image with BarcodeDetector, else jsQR.
-async function decode(source, width, height) {
+async function decode(source, width, height, zoom = 1) {
   if (detector) {
     try {
-      return (await detector.detect(source))[0]?.rawValue;
+      const target = zoom > 1 ? (drawCentre(source, width, height, zoom), canvas) : source;
+      return (await detector.detect(target))[0]?.rawValue;
     } catch (e) {
       detector = null; // native detector failed: switch to jsQR
     }
   }
   await ensureJsQr();
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  canvas.width = width;
-  canvas.height = height;
-  ctx.drawImage(source, 0, 0, width, height);
-  return jsQR(ctx.getImageData(0, 0, width, height).data, width, height)?.data;
+  const ctx = drawCentre(source, width, height, zoom);
+  return jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)?.data;
+}
+
+// Light and zoom. The camera's own zoom and light are used when the browser offers
+// them (Chrome on Android); otherwise the zoom is digital and there is no light.
+function setupControls(track) {
+  let caps = {};
+  try {
+    caps = (track.getCapabilities && track.getCapabilities()) || {};
+  } catch (e) {
+    caps = {};
+  }
+  if ((caps.focusMode || []).includes("continuous")) {
+    track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
+  }
+
+  torchButton.hidden = !caps.torch;
+  if (caps.torch) {
+    let on = false;
+    torchButton.setAttribute("aria-pressed", "false");
+    torchButton.onclick = async () => {
+      try {
+        await track.applyConstraints({ advanced: [{ torch: !on }] });
+        on = !on;
+        torchButton.setAttribute("aria-pressed", String(on));
+      } catch (e) {
+        torchButton.hidden = true;
+      }
+    };
+  }
+
+  let cameraZoom = caps.zoom && caps.zoom.max > caps.zoom.min ? caps.zoom : null;
+  const useDigitalZoom = () => {
+    cameraZoom = null;
+    zoomInput.min = 1;
+    zoomInput.max = 4;
+    zoomInput.step = 0.1;
+    zoomInput.value = 1;
+  };
+  if (cameraZoom) {
+    zoomInput.min = cameraZoom.min;
+    zoomInput.max = cameraZoom.max;
+    zoomInput.step = cameraZoom.step || 0.1;
+    zoomInput.value = track.getSettings().zoom || cameraZoom.min;
+  } else {
+    useDigitalZoom();
+  }
+  digitalZoom = 1;
+  video.style.transform = "";
+  zoomInput.oninput = () => {
+    const value = Number(zoomInput.value);
+    if (cameraZoom) {
+      track.applyConstraints({ advanced: [{ zoom: value }] }).catch(() => useDigitalZoom());
+      return;
+    }
+    digitalZoom = value;
+    video.style.transform = value > 1 ? `scale(${value})` : "";
+  };
+  zoomWrap.hidden = false;
+  controls.hidden = false;
 }
 
 function stopCamera() {
+  controls.hidden = true;
+  digitalZoom = 1;
+  video.style.transform = "";
   if (video.srcObject) {
     video.srcObject.getTracks().forEach((track) => track.stop());
     video.srcObject = null;
@@ -381,7 +490,7 @@ async function send(text) {
 async function tick() {
   if (done) return;
   try {
-    const text = video.readyState >= 2 ? await decode(video, video.videoWidth, video.videoHeight) : null;
+    const text = video.readyState >= 2 ? await decode(video, video.videoWidth, video.videoHeight, digitalZoom) : null;
     if (text) {
       if (looksLikeEnoceanQr(text)) {
         await send(text);
@@ -405,8 +514,13 @@ async function startCamera() {
   video.hidden = false;
   try {
     await setupDecoder();
-    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    // Ask for a high resolution: browsers often default to 640x480, too low for a small QR code.
+    video.srcObject = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false,
+    });
     await video.play();
+    setupControls(video.srcObject.getVideoTracks()[0]);
     say(T.aim);
     tick();
   } catch (e) {
