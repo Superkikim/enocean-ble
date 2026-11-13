@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "Zeskanuj kod QR",
-        "description": "Otwórz stronę skanowania i skieruj aparat na kod QR na etykiecie modułu {name}. Na komputerze strona wyświetla kod QR, aby otworzyć ją w telefonie. To okno przejdzie dalej samo, gdy kod zostanie zaakceptowany."
+        "description": "Otwórz stronę skanowania i skieruj aparat na kod QR na etykiecie modułu {name}. Na komputerze strona wyświetla kod QR, aby otworzyć ją w telefonie. To okno przejdzie dalej samo, gdy kod QR zostanie zeskanowany."
+      },
+      "qr_scan_done": {
+        "title": "Kod QR zweryfikowany",
+        "description": "Kod QR pasuje do przełącznika {name} ({mac}). Kliknij Prześlij, aby go dodać."
+      },
+      "qr_scan_error": {
+        "title": "Kod QR odrzucony",
+        "description": "Zeskanowany kod QR nie pozwala dodać przełącznika {name} ({mac}). Kliknij Prześlij, aby ponownie wybrać sposób dodania, lub zamknij to okno."
       },
       "commissioning": {
         "title": "Automatyczne commissioning EnOcean BLE",

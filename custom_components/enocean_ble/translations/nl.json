@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "QR-code scannen",
-        "description": "Open de scanpagina en richt op de QR-code op het modulelabel van {name}. Op een computer toont de pagina een QR-code om haar op je telefoon te openen. Dit venster gaat vanzelf verder zodra de code is geaccepteerd."
+        "description": "Open de scanpagina en richt op de QR-code op het modulelabel van {name}. Op een computer toont de pagina een QR-code om haar op je telefoon te openen. Dit venster gaat vanzelf verder zodra de QR-code is gescand."
+      },
+      "qr_scan_done": {
+        "title": "QR-code gevalideerd",
+        "description": "De QR-code hoort bij schakelaar {name} ({mac}). Klik op Verzenden om hem toe te voegen."
+      },
+      "qr_scan_error": {
+        "title": "QR-code geweigerd",
+        "description": "Met de gescande QR-code kan schakelaar {name} ({mac}) niet worden toegevoegd. Klik op Verzenden om opnieuw te kiezen hoe je hem toevoegt, of sluit dit venster."
       },
       "commissioning": {
         "title": "EnOcean BLE auto-commissioning",

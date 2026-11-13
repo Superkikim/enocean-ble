@@ -70,9 +70,11 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._stage_stats: dict[str, dict[str, Any]] = {}
         # Payload that triggered the discovery, kept to validate a QR code key.
         self._discovery_payload: bytes | None = None
-        # Error to show on the QR text form when it is opened after a failed scan.
+        # Error to show on the QR text form when scanning is not possible (no HTTPS).
         self._qr_error: str | None = None
         self._scan_notify_task: asyncio.Task[None] | None = None
+        # Why the scanned QR code was rejected, shown until the user moves on.
+        self._scan_error: str | None = None
 
     def async_remove(self) -> None:
         """Cleanup when flow is aborted/cancelled/finished by HA."""
@@ -202,12 +204,10 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 onboarding = self._validate_qr(str(user_input.get(CONF_QR_CODE, "")))
             except QrValidationError as err:
-                # The page validates before posting, so this is a race (e.g. the
-                # telegram cache changed): fall back on the text form with the error.
-                self._qr_error = err.code
+                self._scan_error = err.code
                 self._log_qr_rejected(step="qr_scan", code=err.code)
                 self._start_scan_notify()
-                return self.async_external_step_done(next_step_id="qr_text")
+                return self.async_external_step_done(next_step_id="qr_scan_error")
             self._pending_security_key = onboarding.security_key_hex
             self._start_scan_notify()
             return self.async_external_step_done(next_step_id="qr_scan_done")
@@ -226,12 +226,19 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_qr_scan_done(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create the entry once the scanned QR code has been validated."""
-        # The frontend has reloaded the flow: another notification would make it
-        # reload again while the entry is being set up, and show a flow error.
+        """Confirm, then create the entry once the scanned QR code has been validated.
+
+        The entry is only created on the user's click: the frontend may reload this
+        step several times (see ``_start_scan_notify``), which must have no effect.
+        """
         self._stop_scan_notify()
         if self._pending_mac is None or self._pending_security_key is None:
             return self.async_abort(reason="no_bluetooth_discovery")
+        if user_input is None:
+            return self.async_show_form(
+                step_id="qr_scan_done",
+                description_placeholders=self._name_placeholders(),
+            )
         return self._create_entry_from_qr(
             OnboardingData(
                 mac_address=self._pending_mac,
@@ -240,13 +247,29 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             method="scan",
         )
 
+    async def async_step_qr_scan_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show why the scanned QR code was rejected; Submit goes back to the menu."""
+        self._stop_scan_notify()
+        if user_input is None:
+            return self.async_show_form(
+                step_id="qr_scan_error",
+                errors={"base": self._scan_error or "invalid_qr"},
+                description_placeholders=self._name_placeholders(),
+            )
+        self._scan_error = None
+        return await self.async_step_bluetooth_method()
+
     def _start_scan_notify(self) -> None:
         """Keep notifying the frontend until it moves the flow on after a scan.
 
         Home Assistant notifies the frontend once when the external step ends. The
         scan page opens in the browser, so the phone app is in the background at that
-        moment, its connection is closed and it misses the notification: the dialog
-        stays on the scan step. Repeating it lets the app reload the flow once back.
+        moment and may miss it: the dialog stays on the scan step. Repeating it lets
+        the app reload the flow once back. A paused app may also get several queued
+        notifications at once, so the steps that follow (qr_scan_done, qr_scan_error)
+        are forms that can be reloaded any number of times without effect.
         """
         if self._scan_notify_task is None or self._scan_notify_task.done():
             self._scan_notify_task = self.hass.async_create_background_task(

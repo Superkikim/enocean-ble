@@ -3,7 +3,8 @@
 The config flow opens the scan page as an external step. The page decodes the QR
 code in the browser and posts it back here. The QR code is validated against the
 discovered switch (address and key) before it is fed to the flow, so errors are
-shown on the phone, where the user is scanning.
+shown on the phone, where the user is scanning, and in Home Assistant, where
+the user carries on.
 
 Adapted from hass-pronote (https://github.com/delphiki/hass-pronote, PR #229).
 Copyright (c) 2023 delphiki, MIT License.
@@ -113,6 +114,7 @@ class QrScanView(HomeAssistantView):
         if not isinstance(qr_code, str):
             return self.json({"code": "invalid_qr"}, 400)
 
+        error: str | None = None
         try:
             validate_qr_for_device(
                 qr_code,
@@ -120,9 +122,13 @@ class QrScanView(HomeAssistantView):
                 payloads=device_payloads(async_discovered_service_info(hass), mac_address),
             )
         except QrValidationError as err:
-            return self.json({"code": err.code}, 400)
+            error = err.code
 
+        # Fed either way: the flow checks the QR code again and shows the result
+        # (confirmation or error) in Home Assistant, where the user carries on.
         await hass.config_entries.flow.async_configure(
             flow_id=flow_id, user_input={CONF_QR_CODE: qr_code}
         )
+        if error is not None:
+            return self.json({"code": error}, 400)
         return self.json({"ok": True})

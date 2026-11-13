@@ -31,7 +31,6 @@
 <video id="video" playsinline muted hidden></video>
 <div id="status"></div>
 <div>
-  <button id="again" type="button" hidden></button>
   <button id="photo" type="button" hidden></button>
   <input id="file" type="file" accept="image/*" hidden>
 </div>
@@ -47,9 +46,9 @@ const I18N = {
     handoff: "Scan this QR code with your phone to open the scan page.",
     useHere: "Use this device's camera",
     photo: "Scan from a photo",
-    again: "Scan again",
     checking: "Checking with Home Assistant…",
-    added: "✅ Switch accepted. You can close this tab and go back to Home Assistant.",
+    added: "✅ QR code accepted. Go back to Home Assistant and confirm to add the switch.",
+    goBack: "Go back to Home Assistant to start again.",
     stepDone: "✅ Step done. You can close this tab and go back to Home Assistant.",
     notEnocean: "This is not an EnOcean module QR code.",
     noQrInPhoto: "No EnOcean QR code found in this photo.",
@@ -69,9 +68,9 @@ const I18N = {
     handoff: "Scannez ce QR code avec votre téléphone pour ouvrir la page de scan.",
     useHere: "Utiliser la caméra de cet appareil",
     photo: "Scanner depuis une photo",
-    again: "Scanner à nouveau",
     checking: "Vérification avec Home Assistant…",
-    added: "✅ Switch accepté. Vous pouvez fermer cet onglet et revenir à Home Assistant.",
+    added: "✅ QR code accepté. Revenez dans Home Assistant et confirmez pour ajouter le switch.",
+    goBack: "Revenez dans Home Assistant pour recommencer.",
     stepDone: "✅ Étape terminée. Vous pouvez fermer cet onglet et revenir à Home Assistant.",
     notEnocean: "Ce n'est pas un QR code de module EnOcean.",
     noQrInPhoto: "Aucun QR code EnOcean trouvé sur cette photo.",
@@ -91,9 +90,9 @@ const I18N = {
     handoff: "Scanne diesen QR-Code mit deinem Smartphone, um die Scan-Seite zu öffnen.",
     useHere: "Kamera dieses Geräts verwenden",
     photo: "Aus einem Foto scannen",
-    again: "Erneut scannen",
     checking: "Prüfung mit Home Assistant…",
-    added: "✅ Schalter akzeptiert. Du kannst diesen Tab schließen und zu Home Assistant zurückkehren.",
+    added: "✅ QR-Code akzeptiert. Kehre zu Home Assistant zurück und bestätige, um den Schalter hinzuzufügen.",
+    goBack: "Kehre zu Home Assistant zurück, um neu zu beginnen.",
     stepDone: "✅ Schritt abgeschlossen. Du kannst diesen Tab schließen und zu Home Assistant zurückkehren.",
     notEnocean: "Das ist kein QR-Code eines EnOcean-Moduls.",
     noQrInPhoto: "Kein EnOcean-QR-Code auf diesem Foto gefunden.",
@@ -113,9 +112,9 @@ const I18N = {
     handoff: "Escanea este código QR con tu teléfono para abrir la página de escaneo.",
     useHere: "Usar la cámara de este dispositivo",
     photo: "Escanear desde una foto",
-    again: "Escanear de nuevo",
     checking: "Comprobando con Home Assistant…",
-    added: "✅ Interruptor aceptado. Puedes cerrar esta pestaña y volver a Home Assistant.",
+    added: "✅ Código QR aceptado. Vuelve a Home Assistant y confirma para añadir el interruptor.",
+    goBack: "Vuelve a Home Assistant para empezar de nuevo.",
     stepDone: "✅ Paso completado. Puedes cerrar esta pestaña y volver a Home Assistant.",
     notEnocean: "No es el código QR de un módulo EnOcean.",
     noQrInPhoto: "No se encontró ningún código QR EnOcean en esta foto.",
@@ -135,9 +134,9 @@ const I18N = {
     handoff: "Scansiona questo codice QR con il telefono per aprire la pagina di scansione.",
     useHere: "Usa la fotocamera di questo dispositivo",
     photo: "Scansiona da una foto",
-    again: "Scansiona di nuovo",
     checking: "Verifica con Home Assistant…",
-    added: "✅ Interruttore accettato. Puoi chiudere questa scheda e tornare a Home Assistant.",
+    added: "✅ Codice QR accettato. Torna a Home Assistant e conferma per aggiungere l'interruttore.",
+    goBack: "Torna a Home Assistant per ricominciare.",
     stepDone: "✅ Passaggio completato. Puoi chiudere questa scheda e tornare a Home Assistant.",
     notEnocean: "Questo non è il codice QR di un modulo EnOcean.",
     noQrInPhoto: "Nessun codice QR EnOcean trovato in questa foto.",
@@ -157,9 +156,9 @@ const I18N = {
     handoff: "Scan deze QR-code met je telefoon om de scanpagina te openen.",
     useHere: "De camera van dit apparaat gebruiken",
     photo: "Scannen vanaf een foto",
-    again: "Opnieuw scannen",
     checking: "Controleren met Home Assistant…",
-    added: "✅ Schakelaar geaccepteerd. Je kunt dit tabblad sluiten en teruggaan naar Home Assistant.",
+    added: "✅ QR-code geaccepteerd. Ga terug naar Home Assistant en bevestig om de schakelaar toe te voegen.",
+    goBack: "Ga terug naar Home Assistant om opnieuw te beginnen.",
     stepDone: "✅ Stap voltooid. Je kunt dit tabblad sluiten en teruggaan naar Home Assistant.",
     notEnocean: "Dit is geen QR-code van een EnOcean-module.",
     noQrInPhoto: "Geen EnOcean-QR-code gevonden op deze foto.",
@@ -179,9 +178,9 @@ const I18N = {
     handoff: "Zeskanuj ten kod QR telefonem, aby otworzyć stronę skanowania.",
     useHere: "Użyj aparatu tego urządzenia",
     photo: "Skanuj ze zdjęcia",
-    again: "Skanuj ponownie",
     checking: "Sprawdzanie w Home Assistant…",
-    added: "✅ Przełącznik zaakceptowany. Możesz zamknąć tę kartę i wrócić do Home Assistant.",
+    added: "✅ Kod QR zaakceptowany. Wróć do Home Assistant i potwierdź, aby dodać przełącznik.",
+    goBack: "Wróć do Home Assistant, aby zacząć od nowa.",
     stepDone: "✅ Krok zakończony. Możesz zamknąć tę kartę i wrócić do Home Assistant.",
     notEnocean: "To nie jest kod QR modułu EnOcean.",
     noQrInPhoto: "Na tym zdjęciu nie znaleziono kodu QR EnOcean.",
@@ -201,9 +200,9 @@ const I18N = {
     handoff: "Escaneie este código QR com o celular para abrir a página de escaneamento.",
     useHere: "Usar a câmera deste dispositivo",
     photo: "Escanear de uma foto",
-    again: "Escanear novamente",
     checking: "Verificando com o Home Assistant…",
-    added: "✅ Interruptor aceito. Você pode fechar esta aba e voltar ao Home Assistant.",
+    added: "✅ Código QR aceito. Volte ao Home Assistant e confirme para adicionar o interruptor.",
+    goBack: "Volte ao Home Assistant para começar de novo.",
     stepDone: "✅ Etapa concluída. Você pode fechar esta aba e voltar ao Home Assistant.",
     notEnocean: "Este não é o código QR de um módulo EnOcean.",
     noQrInPhoto: "Nenhum código QR EnOcean encontrado nesta foto.",
@@ -223,9 +222,9 @@ const I18N = {
     handoff: "Naskenujte tento QR kód telefonem a otevřete stránku pro skenování.",
     useHere: "Použít kameru tohoto zařízení",
     photo: "Naskenovat z fotografie",
-    again: "Skenovat znovu",
     checking: "Ověřování v Home Assistant…",
-    added: "✅ Spínač přijat. Můžete zavřít tuto kartu a vrátit se do Home Assistant.",
+    added: "✅ QR kód přijat. Vraťte se do Home Assistant a potvrďte přidání spínače.",
+    goBack: "Vraťte se do Home Assistant a začněte znovu.",
     stepDone: "✅ Krok dokončen. Můžete zavřít tuto kartu a vrátit se do Home Assistant.",
     notEnocean: "Toto není QR kód modulu EnOcean.",
     noQrInPhoto: "Na této fotografii nebyl nalezen žádný QR kód EnOcean.",
@@ -245,9 +244,9 @@ const I18N = {
     handoff: "Skanna den här QR-koden med telefonen för att öppna skanningssidan.",
     useHere: "Använd den här enhetens kamera",
     photo: "Skanna från ett foto",
-    again: "Skanna igen",
     checking: "Kontrollerar med Home Assistant…",
-    added: "✅ Brytaren godkänd. Du kan stänga den här fliken och gå tillbaka till Home Assistant.",
+    added: "✅ QR-koden godkänd. Gå tillbaka till Home Assistant och bekräfta för att lägga till brytaren.",
+    goBack: "Gå tillbaka till Home Assistant för att börja om.",
     stepDone: "✅ Steget är klart. Du kan stänga den här fliken och gå tillbaka till Home Assistant.",
     notEnocean: "Det här är inte en QR-kod för en EnOcean-modul.",
     noQrInPhoto: "Ingen EnOcean-QR-kod hittades på det här fotot.",
@@ -279,13 +278,11 @@ document.documentElement.lang = LANG;
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const status = document.getElementById("status");
-const againButton = document.getElementById("again");
 const photoButton = document.getElementById("photo");
 const fileInput = document.getElementById("file");
 document.getElementById("title").textContent = T.title;
 document.getElementById("handoff-text").textContent = T.handoff;
 document.getElementById("use-here").textContent = T.useHere;
-againButton.textContent = T.again;
 photoButton.textContent = T.photo;
 
 const say = (text, cls) => { status.textContent = text; status.className = cls || ""; };
@@ -366,20 +363,19 @@ async function send(text) {
     return;
   }
   stopCamera();
+  photoButton.hidden = true;
   if (resp.ok) {
     say(T.added, "ok");
-    photoButton.hidden = true;
     return;
   }
   if (resp.status === 404) {
     say(T.expired, "err");
-    photoButton.hidden = true;
     return;
   }
   let code = null;
   try { code = (await resp.json()).code; } catch (e) { /* no body */ }
-  say(T[code] || T.notEnocean, "err");
-  againButton.hidden = false;
+  // The flow now shows the error in Home Assistant: the user starts again from there.
+  say(`${T[code] || T.notEnocean} ${T.goBack}`, "err");
 }
 
 async function tick() {
@@ -402,7 +398,6 @@ async function tick() {
 
 async function startCamera() {
   done = false;
-  againButton.hidden = true;
   photoButton.hidden = false;
   if (!window.isSecureContext || !navigator.mediaDevices) {
     return say(T.https, "err");
@@ -434,7 +429,6 @@ async function scanPhoto(file) {
   }
 }
 
-againButton.onclick = () => startCamera();
 photoButton.onclick = () => fileInput.click();
 fileInput.onchange = () => {
   const file = fileInput.files && fileInput.files[0];

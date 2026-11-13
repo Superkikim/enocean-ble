@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "QR-Code scannen",
-        "description": "Öffne die Scan-Seite und richte die Kamera auf den QR-Code auf dem Modul-Etikett von {name}. Auf einem Computer zeigt die Seite einen QR-Code an, um sie auf dem Smartphone zu öffnen. Dieser Dialog geht automatisch weiter, sobald der Code akzeptiert wurde."
+        "description": "Öffne die Scan-Seite und richte die Kamera auf den QR-Code auf dem Modul-Etikett von {name}. Auf einem Computer zeigt die Seite einen QR-Code an, um sie auf dem Smartphone zu öffnen. Dieser Dialog geht automatisch weiter, sobald der QR-Code gescannt wurde."
+      },
+      "qr_scan_done": {
+        "title": "QR-Code bestätigt",
+        "description": "Der QR-Code passt zum Schalter {name} ({mac}). Klicke auf Senden, um ihn hinzuzufügen."
+      },
+      "qr_scan_error": {
+        "title": "QR-Code abgelehnt",
+        "description": "Mit dem gescannten QR-Code kann der Schalter {name} ({mac}) nicht hinzugefügt werden. Klicke auf Senden, um erneut zu wählen, wie er hinzugefügt wird, oder schließe diesen Dialog."
       },
       "commissioning": {
         "title": "EnOcean BLE Auto-Kommissionierung",

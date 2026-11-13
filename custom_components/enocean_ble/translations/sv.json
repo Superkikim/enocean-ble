@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "Skanna QR-koden",
-        "description": "Öppna skanningssidan och rikta kameran mot QR-koden på modulens etikett för {name}. På en dator visar sidan en QR-kod för att öppna den på telefonen. Den här dialogen fortsätter av sig själv när koden har godkänts."
+        "description": "Öppna skanningssidan och rikta kameran mot QR-koden på modulens etikett för {name}. På en dator visar sidan en QR-kod för att öppna den på telefonen. Den här dialogen fortsätter av sig själv när QR-koden har skannats."
+      },
+      "qr_scan_done": {
+        "title": "QR-koden validerad",
+        "description": "QR-koden hör till brytaren {name} ({mac}). Klicka på Skicka för att lägga till den."
+      },
+      "qr_scan_error": {
+        "title": "QR-koden avvisad",
+        "description": "Den skannade QR-koden kan inte användas för att lägga till brytaren {name} ({mac}). Klicka på Skicka för att välja igen hur den ska läggas till, eller stäng dialogen."
       },
       "commissioning": {
         "title": "EnOcean BLE automatisk provisionering",

@@ -136,7 +136,14 @@ async def test_qr_scan_external_step_then_entry(hass: Any) -> None:
     assert result["type"] == FlowResultType.EXTERNAL_STEP_DONE
     assert result["step_id"] == "qr_scan_done"
 
-    result = await flow.async_step_qr_scan_done()
+    # The frontend reloads the step: a confirmation form, as many times as it likes.
+    for _ in range(3):
+        result = await flow.async_step_qr_scan_done()
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "qr_scan_done"
+        assert result["description_placeholders"] == {"name": MAC, "mac": MAC}
+
+    result = await flow.async_step_qr_scan_done({})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_MAC_ADDRESS: MAC, CONF_SECURITY_KEY: KEY}
 
@@ -156,12 +163,11 @@ async def test_qr_scan_keeps_notifying_until_the_flow_moves_on(hass: Any) -> Non
         assert events
         assert all(event.data["flow_id"] == "test-flow" for event in events)
 
-        # The frontend reloads the flow: the notifications stop at once, while the
-        # flow still sits on the done step (the entry is being set up).
+        # The frontend reloads the flow: the notifications stop at once.
         task = flow._scan_notify_task
         assert task is not None
         result = await flow.async_step_qr_scan_done()
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] == FlowResultType.FORM
         count = len(events)
         await asyncio.sleep(0.05)
         await hass.async_block_till_done()
@@ -181,14 +187,23 @@ async def test_flow_removal_stops_scan_notifications(hass: Any) -> None:
     assert task.cancelled()
 
 
-async def test_qr_scan_invalid_result_falls_back_on_text(hass: Any) -> None:
+async def test_qr_scan_rejected_shows_the_error_then_the_menu(hass: Any) -> None:
     flow, _ = await _discovered_flow(hass, [_service_info()])
     with patch.object(config_flow_module, "async_discovered_service_info", return_value=[_service_info()]):
-        result = await flow.async_step_qr_scan({"qr_code": OTHER_KEY_QR})
+        result = await flow.async_step_qr_scan({"qr_code": OTHER_SWITCH_QR})
     assert result["type"] == FlowResultType.EXTERNAL_STEP_DONE
-    assert result["step_id"] == "qr_text"
-    result = await flow.async_step_qr_text()
-    assert result["errors"] == {"base": "qr_key_invalid"}
+    assert result["step_id"] == "qr_scan_error"
+
+    # Reloading the error step keeps showing the error.
+    for _ in range(2):
+        result = await flow.async_step_qr_scan_error()
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "qr_scan_error"
+        assert result["errors"] == {"base": "qr_mac_mismatch"}
+
+    result = await flow.async_step_qr_scan_error({})
+    assert result["type"] == FlowResultType.MENU
+    assert result["step_id"] == "bluetooth_method"
 
 
 def test_device_payloads_filters_by_address() -> None:

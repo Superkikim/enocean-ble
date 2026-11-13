@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "Naskenovat QR kód",
-        "description": "Otevřete stránku pro skenování a namiřte na QR kód na štítku modulu {name}. Na počítači stránka zobrazí QR kód, abyste ji otevřeli v telefonu. Toto okno pokračuje samo, jakmile je kód přijat."
+        "description": "Otevřete stránku pro skenování a namiřte na QR kód na štítku modulu {name}. Na počítači stránka zobrazí QR kód, abyste ji otevřeli v telefonu. Toto okno pokračuje samo, jakmile je QR kód naskenován."
+      },
+      "qr_scan_done": {
+        "title": "QR kód ověřen",
+        "description": "QR kód odpovídá spínači {name} ({mac}). Klikněte na Odeslat pro jeho přidání."
+      },
+      "qr_scan_error": {
+        "title": "QR kód odmítnut",
+        "description": "Naskenovaný QR kód neumožňuje přidat spínač {name} ({mac}). Klikněte na Odeslat a znovu zvolte způsob přidání, nebo toto okno zavřete."
       },
       "commissioning": {
         "title": "Automatické uvedení EnOcean BLE do provozu",

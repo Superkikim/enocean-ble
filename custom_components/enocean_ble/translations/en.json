@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "Scan the QR code",
-        "description": "Open the scan page and aim at the QR code on the module label of {name}. On a computer, the page shows a QR code to open it on your phone. This dialog continues by itself once the code is accepted."
+        "description": "Open the scan page and aim at the QR code on the module label of {name}. On a computer, the page shows a QR code to open it on your phone. This dialog continues by itself once the QR code has been scanned."
+      },
+      "qr_scan_done": {
+        "title": "QR code validated",
+        "description": "The QR code matches switch {name} ({mac}). Click Submit to add it."
+      },
+      "qr_scan_error": {
+        "title": "QR code rejected",
+        "description": "The scanned QR code cannot be used to add switch {name} ({mac}). Click Submit to choose how to add it again, or close this dialog."
       },
       "commissioning": {
         "title": "EnOcean BLE Auto-Commissioning",

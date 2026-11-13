@@ -22,7 +22,15 @@
       },
       "qr_scan": {
         "title": "Escanear o código QR",
-        "description": "Abra a página de escaneamento e aponte para o código QR da etiqueta do módulo de {name}. Em um computador, a página mostra um código QR para abri-la no celular. Esta janela continua sozinha assim que o código é aceito."
+        "description": "Abra a página de escaneamento e aponte para o código QR da etiqueta do módulo de {name}. Em um computador, a página mostra um código QR para abri-la no celular. Esta janela continua sozinha assim que o código QR é escaneado."
+      },
+      "qr_scan_done": {
+        "title": "Código QR validado",
+        "description": "O código QR corresponde ao interruptor {name} ({mac}). Clique em Enviar para adicioná-lo."
+      },
+      "qr_scan_error": {
+        "title": "Código QR recusado",
+        "description": "O código QR escaneado não permite adicionar o interruptor {name} ({mac}). Clique em Enviar para escolher novamente como adicioná-lo, ou feche esta janela."
       },
       "commissioning": {
         "title": "Auto-comissionamento EnOcean BLE",

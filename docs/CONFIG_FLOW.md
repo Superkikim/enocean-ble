@@ -33,9 +33,17 @@ Bluetooth discovery (press any button on it).
 - The page decodes the QR code with `BarcodeDetector`, else the embedded jsQR (Safari iOS), live
   or from a photo. On a computer it shows its own URL as a QR code (embedded qrcode-generator).
 - The view (no auth, like an OAuth callback) only answers for an EnOcean BLE flow waiting on
-  `qr_scan` (else 404). It validates the QR code first and returns `400 {"code": …}` on error,
-  shown on the phone; a valid code is fed to the flow (`async_configure`).
-- `qr_scan` then ends with `external_step_done` -> `qr_scan_done`, which creates the entry.
+  `qr_scan` (else 404). It validates the QR code and feeds it to the flow (`async_configure`)
+  either way; on error it returns `400 {"code": …}`, shown on the phone with "go back to Home
+  Assistant" (no rescan from the page).
+- `qr_scan` then ends with `external_step_done` -> `qr_scan_done` (valid) or `qr_scan_error`.
+- `qr_scan_done` (form): "QR code validated", Submit creates the entry.
+- `qr_scan_error` (form): shows the error, Submit goes back to `bluetooth_method`.
+- The phone app is in the background while the scan page is open (it opens in the browser) and
+  may miss the one "flow progressed" event Home Assistant fires. The flow repeats it every 3 s
+  (at most 2 min) until the frontend reloads the flow. A paused app can receive several at once,
+  which is why both next steps are forms: reloading them has no effect, nothing is created
+  before the user's Submit.
 
 Validation (`validate_qr_for_device`), each failure has its own error code:
 - `invalid_qr`: not a module label QR code (`30S<MAC>+Z<key>…`) nor free text with MAC + key.
