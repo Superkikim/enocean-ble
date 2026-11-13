@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Text des QR-Codes eingeben",
-        "description": "Tippe oder füge den Text des QR-Codes vom Modul-Etikett von {name} ein. Er sieht aus wie 30SE215…+Z…+30P… und seine Adresse muss {mac} sein.",
+        "description": "Tippe oder füge den Text des QR-Codes vom Modul-Etikett von {name} ein. Nur zwei Teile werden benötigt: die Adresse nach 30S (12 Zeichen, {mac} ohne Doppelpunkte) und der Schlüssel nach +Z (32 Zeichen). Der Rest des Textes wird ignoriert und kann weggelassen werden.",
         "data": {
           "qr_code": "Text des QR-Codes"
         },
         "data_description": {
-          "qr_code": "Beispiel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Beispiel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (nur 30S… und +Z… werden verwendet)"
         }
       },
       "qr_scan": {

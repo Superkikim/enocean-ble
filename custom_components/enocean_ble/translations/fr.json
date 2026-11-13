@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Saisir le texte du QR code",
-        "description": "Tapez ou collez le texte du QR code de l'étiquette du module de {name}. Il ressemble à 30SE215…+Z…+30P… et son adresse doit être {mac}.",
+        "description": "Tapez ou collez le texte du QR code de l'étiquette du module de {name}. Seules deux parties sont nécessaires : l'adresse après 30S (12 caractères, {mac} sans les deux-points) et la clé après +Z (32 caractères). Le reste du texte est ignoré et peut être omis.",
         "data": {
           "qr_code": "Texte du QR code"
         },
         "data_description": {
-          "qr_code": "Exemple : 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Exemple : 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (seuls 30S… et +Z… sont utilisés)"
         }
       },
       "qr_scan": {

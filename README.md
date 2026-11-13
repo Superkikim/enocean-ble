@@ -53,6 +53,10 @@ it the way to add OEM switches whose radio commissioning is disabled (for exampl
   label). On a computer it shows a QR code to open the page on your phone. Camera access needs
   Home Assistant to be reached over **HTTPS**; without it, enter the text instead.
 - **Text:** type or paste the QR code text (for example read with your phone's camera app).
+  Only two parts are needed: the address after `30S` (12 characters) and the security key after
+  `+Z` (32 characters), for example `30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF`. The
+  other parts (`+30P…` product, `+2P…` revision, `+S…` serial number) are not used and can be
+  left out.
 
 Before the switch is added, the integration checks that:
 - the text is an EnOcean module QR code,

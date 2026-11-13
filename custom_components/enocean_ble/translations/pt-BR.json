@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Digitar o texto do código QR",
-        "description": "Digite ou cole o texto do código QR da etiqueta do módulo de {name}. Ele tem o formato 30SE215…+Z…+30P… e o endereço deve ser {mac}.",
+        "description": "Digite ou cole o texto do código QR da etiqueta do módulo de {name}. Só duas partes são necessárias: o endereço após 30S (12 caracteres, {mac} sem os dois-pontos) e a chave após +Z (32 caracteres). O resto do texto é ignorado e pode ser omitido.",
         "data": {
           "qr_code": "Texto do código QR"
         },
         "data_description": {
-          "qr_code": "Exemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Exemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (só 30S… e +Z… são usados)"
         }
       },
       "qr_scan": {

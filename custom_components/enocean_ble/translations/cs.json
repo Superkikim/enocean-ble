@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Zadat text QR kódu",
-        "description": "Napište nebo vložte text QR kódu ze štítku modulu {name}. Vypadá jako 30SE215…+Z…+30P… a jeho adresa musí být {mac}.",
+        "description": "Napište nebo vložte text QR kódu ze štítku modulu {name}. Potřebné jsou jen dvě části: adresa za 30S (12 znaků, {mac} bez dvojteček) a klíč za +Z (32 znaků). Zbytek textu se ignoruje a lze ho vynechat.",
         "data": {
           "qr_code": "Text QR kódu"
         },
         "data_description": {
-          "qr_code": "Příklad: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Příklad: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (používají se jen 30S… a +Z…)"
         }
       },
       "qr_scan": {

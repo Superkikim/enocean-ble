@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Ange QR-kodens text",
-        "description": "Skriv eller klistra in texten från QR-koden på modulens etikett för {name}. Den ser ut som 30SE215…+Z…+30P… och adressen måste vara {mac}.",
+        "description": "Skriv eller klistra in texten från QR-koden på modulens etikett för {name}. Bara två delar behövs: adressen efter 30S (12 tecken, {mac} utan kolon) och nyckeln efter +Z (32 tecken). Resten av texten ignoreras och kan utelämnas.",
         "data": {
           "qr_code": "QR-kodens text"
         },
         "data_description": {
-          "qr_code": "Exempel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Exempel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (bara 30S… och +Z… används)"
         }
       },
       "qr_scan": {

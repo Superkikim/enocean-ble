@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Introducir el texto del código QR",
-        "description": "Escribe o pega el texto del código QR de la etiqueta del módulo de {name}. Tiene el aspecto 30SE215…+Z…+30P… y su dirección debe ser {mac}.",
+        "description": "Escribe o pega el texto del código QR de la etiqueta del módulo de {name}. Solo se necesitan dos partes: la dirección tras 30S (12 caracteres, {mac} sin los dos puntos) y la clave tras +Z (32 caracteres). El resto del texto se ignora y puede omitirse.",
         "data": {
           "qr_code": "Texto del código QR"
         },
         "data_description": {
-          "qr_code": "Ejemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Ejemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (solo se usan 30S… y +Z…)"
         }
       },
       "qr_scan": {

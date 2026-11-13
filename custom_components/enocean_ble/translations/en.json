@@ -12,12 +12,12 @@
       },
       "qr_text": {
         "title": "Enter the QR code text",
-        "description": "Type or paste the text of the QR code on the module label of {name}. It looks like 30SE215…+Z…+30P… and its address must be {mac}.",
+        "description": "Type or paste the text of the QR code on the module label of {name}. Only two parts are needed: the address after 30S (12 characters, {mac} without the colons) and the key after +Z (32 characters). The rest of the text is ignored and can be left out.",
         "data": {
           "qr_code": "QR code text"
         },
         "data_description": {
-          "qr_code": "Example: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF+30PS3221-A215"
+          "qr_code": "Example: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (only 30S… and +Z… are used)"
         }
       },
       "qr_scan": {
