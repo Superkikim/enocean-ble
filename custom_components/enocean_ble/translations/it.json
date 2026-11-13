@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Aggiungi interruttore EnOcean BLE",
+        "description": "È stato rilevato l'interruttore {name} ({mac}). Come vuoi aggiungerlo?\n\nIl codice QR si trova sull'etichetta del modulo EnOcean, dietro il bilanciere.",
+        "menu_options": {
+          "qr_scan": "Scansiona il codice QR con la fotocamera",
+          "qr_text": "Inserisci il testo del codice QR",
+          "commissioning": "Commissioning manuale (sequenza di tasti)"
+        }
+      },
+      "qr_text": {
+        "title": "Inserisci il testo del codice QR",
+        "description": "Digita o incolla il testo del codice QR sull'etichetta del modulo di {name}. Servono solo due parti: l'indirizzo dopo 30S (12 caratteri, {mac} senza i due punti) e la chiave dopo +Z (32 caratteri). Il resto del testo viene ignorato e può essere omesso.",
+        "data": {
+          "qr_code": "Testo del codice QR"
+        },
+        "data_description": {
+          "qr_code": "Esempio: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (si usano solo 30S… e +Z…)"
+        }
+      },
+      "qr_scan": {
+        "title": "Scansiona il codice QR",
+        "description": "Apri la pagina di scansione e inquadra il codice QR sull'etichetta del modulo di {name}. Su un computer, la pagina mostra un codice QR per aprirla sul telefono. Questa finestra prosegue da sola appena il codice QR viene scansionato."
+      },
+      "qr_scan_done": {
+        "title": "Codice QR convalidato",
+        "description": "Il codice QR corrisponde all'interruttore {name} ({mac}). Fai clic su Invia per aggiungerlo."
+      },
+      "qr_scan_error": {
+        "title": "Codice QR rifiutato",
+        "description": "Il codice QR scansionato non permette di aggiungere l'interruttore {name} ({mac}). Fai clic su Invia per scegliere di nuovo come aggiungerlo, oppure chiudi questa finestra."
+      },
       "commissioning": {
         "title": "Auto-commissioning EnOcean BLE",
         "description": "Attiva l'auto-commissioning su {name}:\n\n1. Tieni premuto il pulsante 1 per 7 secondi\n2. Premi brevemente il pulsante 1\n3. Tieni di nuovo premuto il pulsante 1 per 7 secondi\n\nHai 2 minuti. Riprova se necessario."
@@ -15,11 +46,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Questa configurazione deve partire da un dispositivo Bluetooth rilevato.",
-      "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15).",
+      "already_configured": "Questo interruttore è già configurato.",
+      "discovery_required": "Premi un tasto qualsiasi dell'interruttore: comparirà come dispositivo rilevato in Impostazioni → Dispositivi e servizi, da cui puoi aggiungerlo."
     },
     "error": {
       "commissioning_not_detected": "Nessun telegramma di commissioning ricevuto entro 2 minuti. Riprova. Se continua a non funzionare dopo più tentativi, puoi provare un reset di fabbrica. Leggi prima il disclaimer sul reset nella documentazione.",
-      "invalid_commissioning": "È stato ricevuto un telegramma di commissioning, ma non è stato possibile validarlo. Riprova. Se continua a fallire, leggi il disclaimer sul reset nella documentazione prima di resettare."
+      "invalid_commissioning": "È stato ricevuto un telegramma di commissioning, ma non è stato possibile validarlo. Riprova. Se continua a fallire, leggi il disclaimer sul reset nella documentazione prima di resettare.",
+      "invalid_qr": "In questo testo non sono stati trovati un indirizzo di interruttore EnOcean (30SE215…) e una chiave di sicurezza di 32 caratteri (+Z…).",
+      "qr_mac_mismatch": "Questo codice QR appartiene a un interruttore diverso da quello rilevato.",
+      "qr_key_invalid": "La chiave di questo codice QR non corrisponde ai telegrammi ricevuti da questo interruttore. Potrebbe essere stato riconfigurato (ad esempio da un altro sistema).",
+      "qr_no_telegram": "Non è ancora stato ricevuto alcun telegramma da questo interruttore. Premi uno dei suoi tasti, poi riprova.",
+      "scan_https_required": "La scansione con la fotocamera richiede che Home Assistant sia raggiungibile tramite HTTPS. Inserisci invece il testo del codice QR."
     }
   }
 }

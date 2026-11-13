@@ -15,13 +15,16 @@ ENOCEAN_MAC_PREFIX = "E2:15:"
 EVENT_BUTTON_EVENT = "enocean_ble_button_event"
 # Backward compatibility with existing automations.
 EVENT_BUTTON_ACTION = "enocean_ble_button_action"
-SIGNAL_BUTTON_EVENT = "enocean_ble_button_event_{entry_id}"
+# One signal per button, so only the entities of that button receive its events.
+SIGNAL_BUTTON_EVENT = "enocean_ble_button_event_{entry_id}_{button}"
 
 ATTR_BUTTON = "button"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_RSSI = "rssi"
 ATTR_SEQUENCE_COUNTER = "sequence_counter"
 ATTR_MAC_ADDRESS = "mac_address"
+# Bluetooth receiver (adapter or proxy) that delivered the telegram.
+ATTR_RECEIVER = "receiver"
 
 SUPPORTED_BUTTONS = {"A0", "A1", "B0", "B1"}
 SUPPORTED_EVENT_TYPES = {
@@ -34,6 +37,10 @@ DATA_TELEGRAM_MIN_LENGTH = 9
 MIC_LENGTH = 4
 LONG_PRESS_SECONDS = 1.2
 RELEASE_TIMEOUT_SECONDS = 8.0
+
+# The last accepted sequence counter is stored, so replay protection survives restarts.
+STORAGE_VERSION = 1
+STORAGE_SAVE_DELAY_SECONDS = 5.0
 
 STATUS_BIT_ENERGY_BOW = 0x01
 STATUS_BIT_A0 = 0x02

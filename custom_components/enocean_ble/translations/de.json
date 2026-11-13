@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "EnOcean-BLE-Schalter hinzufügen",
+        "description": "Schalter {name} ({mac}) wurde erkannt. Wie möchtest du ihn hinzufügen?\n\nDer QR-Code befindet sich auf dem Etikett des EnOcean-Moduls, hinter der Wippe.",
+        "menu_options": {
+          "qr_scan": "QR-Code mit der Kamera scannen",
+          "qr_text": "Text des QR-Codes eingeben",
+          "commissioning": "Manuelles Commissioning (Tastenfolge)"
+        }
+      },
+      "qr_text": {
+        "title": "Text des QR-Codes eingeben",
+        "description": "Tippe oder füge den Text des QR-Codes vom Modul-Etikett von {name} ein. Nur zwei Teile werden benötigt: die Adresse nach 30S (12 Zeichen, {mac} ohne Doppelpunkte) und der Schlüssel nach +Z (32 Zeichen). Der Rest des Textes wird ignoriert und kann weggelassen werden.",
+        "data": {
+          "qr_code": "Text des QR-Codes"
+        },
+        "data_description": {
+          "qr_code": "Beispiel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (nur 30S… und +Z… werden verwendet)"
+        }
+      },
+      "qr_scan": {
+        "title": "QR-Code scannen",
+        "description": "Öffne die Scan-Seite und richte die Kamera auf den QR-Code auf dem Modul-Etikett von {name}. Auf einem Computer zeigt die Seite einen QR-Code an, um sie auf dem Smartphone zu öffnen. Dieser Dialog geht automatisch weiter, sobald der QR-Code gescannt wurde."
+      },
+      "qr_scan_done": {
+        "title": "QR-Code bestätigt",
+        "description": "Der QR-Code passt zum Schalter {name} ({mac}). Klicke auf Senden, um ihn hinzuzufügen."
+      },
+      "qr_scan_error": {
+        "title": "QR-Code abgelehnt",
+        "description": "Mit dem gescannten QR-Code kann der Schalter {name} ({mac}) nicht hinzugefügt werden. Klicke auf Senden, um erneut zu wählen, wie er hinzugefügt wird, oder schließe diesen Dialog."
+      },
       "commissioning": {
         "title": "EnOcean BLE Auto-Kommissionierung",
         "description": "Auto-Kommissionierung für {name} aktivieren:\n\n1. Taste 1 für 7 Sekunden gedrückt halten\n2. Taste 1 kurz drücken\n3. Taste 1 erneut für 7 Sekunden gedrückt halten\n\nSie haben 2 Minuten. Bei Bedarf erneut versuchen."
@@ -15,11 +46,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Dieses Setup muss mit einem per Bluetooth gefundenen Gerät gestartet werden.",
-      "not_enocean_prefix": "Dieses gefundene Gerät verwendet nicht den EnOcean BLE MAC-Präfix (E2:15)."
+      "not_enocean_prefix": "Dieses gefundene Gerät verwendet nicht den EnOcean BLE MAC-Präfix (E2:15).",
+      "already_configured": "Dieser Schalter ist bereits eingerichtet.",
+      "discovery_required": "Drücke eine beliebige Taste am Schalter: Er erscheint dann als erkanntes Gerät unter Einstellungen → Geräte & Dienste, wo du ihn hinzufügen kannst."
     },
     "error": {
       "commissioning_not_detected": "Innerhalb von 2 Minuten wurde kein Kommissionierungs-Telegramm empfangen. Versuchen Sie es erneut. Wenn es nach mehreren Versuchen weiterhin nicht funktioniert, können Sie einen Werksreset versuchen. Lesen Sie vorher den Reset-Hinweis in der Dokumentation.",
-      "invalid_commissioning": "Ein Kommissionierungs-Telegramm wurde empfangen, konnte aber nicht validiert werden. Versuchen Sie es erneut. Wenn dies weiterhin fehlschlägt, lesen Sie vor einem Reset den Hinweis in der Dokumentation."
+      "invalid_commissioning": "Ein Kommissionierungs-Telegramm wurde empfangen, konnte aber nicht validiert werden. Versuchen Sie es erneut. Wenn dies weiterhin fehlschlägt, lesen Sie vor einem Reset den Hinweis in der Dokumentation.",
+      "invalid_qr": "In diesem Text wurden keine EnOcean-Schalteradresse (30SE215…) und kein 32-stelliger Sicherheitsschlüssel (+Z…) gefunden.",
+      "qr_mac_mismatch": "Dieser QR-Code gehört zu einem anderen Schalter als dem erkannten.",
+      "qr_key_invalid": "Der Schlüssel in diesem QR-Code passt nicht zu den Telegrammen dieses Schalters. Er wurde möglicherweise neu konfiguriert (z. B. von einem anderen System).",
+      "qr_no_telegram": "Von diesem Schalter wurde noch kein Telegramm empfangen. Drücke eine seiner Tasten und versuche es erneut.",
+      "scan_https_required": "Das Scannen mit der Kamera erfordert, dass Home Assistant über HTTPS erreichbar ist. Gib stattdessen den Text des QR-Codes ein."
     }
   }
 }

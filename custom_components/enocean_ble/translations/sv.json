@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Lägg till EnOcean BLE-brytare",
+        "description": "Brytaren {name} ({mac}) har upptäckts. Hur vill du lägga till den?\n\nQR-koden sitter på EnOcean-modulens etikett, bakom vippan.",
+        "menu_options": {
+          "qr_scan": "Skanna QR-koden med kameran",
+          "qr_text": "Ange QR-kodens text",
+          "commissioning": "Manuell commissioning (knappsekvens)"
+        }
+      },
+      "qr_text": {
+        "title": "Ange QR-kodens text",
+        "description": "Skriv eller klistra in texten från QR-koden på modulens etikett för {name}. Bara två delar behövs: adressen efter 30S (12 tecken, {mac} utan kolon) och nyckeln efter +Z (32 tecken). Resten av texten ignoreras och kan utelämnas.",
+        "data": {
+          "qr_code": "QR-kodens text"
+        },
+        "data_description": {
+          "qr_code": "Exempel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (bara 30S… och +Z… används)"
+        }
+      },
+      "qr_scan": {
+        "title": "Skanna QR-koden",
+        "description": "Öppna skanningssidan och rikta kameran mot QR-koden på modulens etikett för {name}. På en dator visar sidan en QR-kod för att öppna den på telefonen. Den här dialogen fortsätter av sig själv när QR-koden har skannats."
+      },
+      "qr_scan_done": {
+        "title": "QR-koden validerad",
+        "description": "QR-koden hör till brytaren {name} ({mac}). Klicka på Skicka för att lägga till den."
+      },
+      "qr_scan_error": {
+        "title": "QR-koden avvisad",
+        "description": "Den skannade QR-koden kan inte användas för att lägga till brytaren {name} ({mac}). Klicka på Skicka för att välja igen hur den ska läggas till, eller stäng dialogen."
+      },
       "commissioning": {
         "title": "EnOcean BLE automatisk provisionering",
         "description": "Aktivera automatisk provisionering på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
@@ -15,11 +46,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Denna konfiguration måste startas från en upptäckt Bluetooth-enhet.",
-      "not_enocean_prefix": "Den upptäckta enheten använder inte EnOcean BLE MAC-prefix (E2:15)."
+      "not_enocean_prefix": "Den upptäckta enheten använder inte EnOcean BLE MAC-prefix (E2:15).",
+      "already_configured": "Den här brytaren är redan konfigurerad.",
+      "discovery_required": "Tryck på valfri knapp på brytaren: den visas då som en upptäckt enhet under Inställningar → Enheter och tjänster, där du kan lägga till den."
     },
     "error": {
       "commissioning_not_detected": "Ingen commissioning-telegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först reset-varningen i dokumentationen.",
-      "invalid_commissioning": "Ett commissioning-telegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs reset-varningen i dokumentationen innan du återställer."
+      "invalid_commissioning": "Ett commissioning-telegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs reset-varningen i dokumentationen innan du återställer.",
+      "invalid_qr": "Ingen EnOcean-brytaradress (30SE215…) och säkerhetsnyckel på 32 tecken (+Z…) hittades i den här texten.",
+      "qr_mac_mismatch": "Den här QR-koden tillhör en annan brytare än den som upptäcktes.",
+      "qr_key_invalid": "Nyckeln i den här QR-koden matchar inte de telegram som tagits emot från brytaren. Den kan ha konfigurerats om (till exempel av ett annat system).",
+      "qr_no_telegram": "Inget telegram har tagits emot från den här brytaren än. Tryck på en av dess knappar och försök igen.",
+      "scan_https_required": "Skanning med kameran kräver att Home Assistant nås via HTTPS. Ange QR-kodens text i stället."
     }
   }
 }

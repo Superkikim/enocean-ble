@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "EnOcean BLE-schakelaar toevoegen",
+        "description": "Schakelaar {name} ({mac}) is ontdekt. Hoe wil je hem toevoegen?\n\nDe QR-code staat op het label van de EnOcean-module, achter de wip.",
+        "menu_options": {
+          "qr_scan": "QR-code scannen met de camera",
+          "qr_text": "Tekst van de QR-code invoeren",
+          "commissioning": "Handmatige commissioning (knoppenreeks)"
+        }
+      },
+      "qr_text": {
+        "title": "Tekst van de QR-code invoeren",
+        "description": "Typ of plak de tekst van de QR-code op het modulelabel van {name}. Alleen twee delen zijn nodig: het adres na 30S (12 tekens, {mac} zonder dubbele punten) en de sleutel na +Z (32 tekens). De rest van de tekst wordt genegeerd en mag weggelaten worden.",
+        "data": {
+          "qr_code": "Tekst van de QR-code"
+        },
+        "data_description": {
+          "qr_code": "Voorbeeld: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (alleen 30S… en +Z… worden gebruikt)"
+        }
+      },
+      "qr_scan": {
+        "title": "QR-code scannen",
+        "description": "Open de scanpagina en richt op de QR-code op het modulelabel van {name}. Op een computer toont de pagina een QR-code om haar op je telefoon te openen. Dit venster gaat vanzelf verder zodra de QR-code is gescand."
+      },
+      "qr_scan_done": {
+        "title": "QR-code gevalideerd",
+        "description": "De QR-code hoort bij schakelaar {name} ({mac}). Klik op Verzenden om hem toe te voegen."
+      },
+      "qr_scan_error": {
+        "title": "QR-code geweigerd",
+        "description": "Met de gescande QR-code kan schakelaar {name} ({mac}) niet worden toegevoegd. Klik op Verzenden om opnieuw te kiezen hoe je hem toevoegt, of sluit dit venster."
+      },
       "commissioning": {
         "title": "EnOcean BLE auto-commissioning",
         "description": "Activeer auto-commissioning op {name}:\n\n1. Houd knop 1 7 seconden ingedrukt\n2. Druk kort op knop 1\n3. Houd knop 1 opnieuw 7 seconden ingedrukt\n\nJe hebt 2 minuten. Probeer opnieuw indien nodig."
@@ -14,12 +45,19 @@
       "waiting_commissioning": "Houd knop 1 7 seconden ingedrukt, druk dan kort op knop 1 en houd opnieuw 7 seconden ingedrukt."
     },
     "abort": {
+      "already_configured": "Deze schakelaar is al geconfigureerd.",
       "no_bluetooth_discovery": "Deze configuratie moet gestart worden vanaf een ontdekt Bluetooth-apparaat.",
-      "not_enocean_prefix": "Dit ontdekte apparaat gebruikt niet de EnOcean BLE MAC-prefix (E2:15)."
+      "not_enocean_prefix": "Dit ontdekte apparaat gebruikt niet de EnOcean BLE MAC-prefix (E2:15).",
+      "discovery_required": "Druk op een willekeurige knop van de schakelaar: hij verschijnt dan als ontdekt apparaat in Instellingen → Apparaten en diensten, waar je hem kunt toevoegen."
     },
     "error": {
+      "invalid_qr": "In deze tekst is geen EnOcean-schakelaaradres (30SE215…) en beveiligingssleutel van 32 tekens (+Z…) gevonden.",
       "commissioning_not_detected": "Binnen 2 minuten is geen commissioning-telegram ontvangen. Probeer opnieuw. Als het na meerdere pogingen nog steeds niet werkt, kun je een fabrieksreset proberen. Lees eerst de resetdisclaimer in de documentatie.",
-      "invalid_commissioning": "Er is een commissioning-telegram ontvangen, maar dit kon niet worden gevalideerd. Probeer opnieuw. Als dit blijft mislukken, lees dan eerst de resetdisclaimer in de documentatie."
+      "invalid_commissioning": "Er is een commissioning-telegram ontvangen, maar dit kon niet worden gevalideerd. Probeer opnieuw. Als dit blijft mislukken, lees dan eerst de resetdisclaimer in de documentatie.",
+      "qr_mac_mismatch": "Deze QR-code hoort bij een andere schakelaar dan de ontdekte.",
+      "qr_key_invalid": "De sleutel in deze QR-code past niet bij de telegrammen van deze schakelaar. Mogelijk is hij opnieuw geconfigureerd (bijvoorbeeld door een ander systeem).",
+      "qr_no_telegram": "Er is nog geen telegram van deze schakelaar ontvangen. Druk op een van de knoppen en probeer het opnieuw.",
+      "scan_https_required": "Scannen met de camera vereist dat Home Assistant via HTTPS bereikbaar is. Voer in plaats daarvan de tekst van de QR-code in."
     }
   }
 }

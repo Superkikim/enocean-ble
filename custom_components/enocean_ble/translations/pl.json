@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Dodaj przełącznik EnOcean BLE",
+        "description": "Wykryto przełącznik {name} ({mac}). Jak chcesz go dodać?\n\nKod QR znajduje się na etykiecie modułu EnOcean, pod klawiszem.",
+        "menu_options": {
+          "qr_scan": "Zeskanuj kod QR aparatem",
+          "qr_text": "Wpisz tekst kodu QR",
+          "commissioning": "Ręczny commissioning (sekwencja przycisków)"
+        }
+      },
+      "qr_text": {
+        "title": "Wpisz tekst kodu QR",
+        "description": "Wpisz lub wklej tekst kodu QR z etykiety modułu {name}. Potrzebne są tylko dwie części: adres po 30S (12 znaków, {mac} bez dwukropków) i klucz po +Z (32 znaki). Reszta tekstu jest ignorowana i można ją pominąć.",
+        "data": {
+          "qr_code": "Tekst kodu QR"
+        },
+        "data_description": {
+          "qr_code": "Przykład: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (używane są tylko 30S… i +Z…)"
+        }
+      },
+      "qr_scan": {
+        "title": "Zeskanuj kod QR",
+        "description": "Otwórz stronę skanowania i skieruj aparat na kod QR na etykiecie modułu {name}. Na komputerze strona wyświetla kod QR, aby otworzyć ją w telefonie. To okno przejdzie dalej samo, gdy kod QR zostanie zeskanowany."
+      },
+      "qr_scan_done": {
+        "title": "Kod QR zweryfikowany",
+        "description": "Kod QR pasuje do przełącznika {name} ({mac}). Kliknij Prześlij, aby go dodać."
+      },
+      "qr_scan_error": {
+        "title": "Kod QR odrzucony",
+        "description": "Zeskanowany kod QR nie pozwala dodać przełącznika {name} ({mac}). Kliknij Prześlij, aby ponownie wybrać sposób dodania, lub zamknij to okno."
+      },
       "commissioning": {
         "title": "Automatyczne commissioning EnOcean BLE",
         "description": "Włącz auto-commissioning dla {name}:\n\n1. Przytrzymaj przycisk 1 przez 7 sekund\n2. Naciśnij krótko przycisk 1\n3. Ponownie przytrzymaj przycisk 1 przez 7 sekund\n\nMasz 2 minuty. W razie potrzeby spróbuj ponownie."
@@ -15,11 +46,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Ta konfiguracja musi zostać uruchomiona z wykrytego urządzenia Bluetooth.",
-      "not_enocean_prefix": "To wykryte urządzenie nie używa prefiksu MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "To wykryte urządzenie nie używa prefiksu MAC EnOcean BLE (E2:15).",
+      "already_configured": "Ten przełącznik jest już skonfigurowany.",
+      "discovery_required": "Naciśnij dowolny przycisk przełącznika: pojawi się on jako wykryte urządzenie w Ustawienia → Urządzenia i usługi, skąd możesz go dodać."
     },
     "error": {
       "commissioning_not_detected": "Nie odebrano telegramu commissioning w ciągu 2 minut. Spróbuj ponownie. Jeśli po kilku próbach nadal nie działa, możesz wykonać reset fabryczny. Najpierw przeczytaj ostrzeżenie dotyczące resetu w dokumentacji.",
-      "invalid_commissioning": "Odebrano telegram commissioning, ale nie udało się go zweryfikować. Spróbuj ponownie. Jeśli problem się powtarza, przeczytaj ostrzeżenie dotyczące resetu w dokumentacji przed resetem."
+      "invalid_commissioning": "Odebrano telegram commissioning, ale nie udało się go zweryfikować. Spróbuj ponownie. Jeśli problem się powtarza, przeczytaj ostrzeżenie dotyczące resetu w dokumentacji przed resetem.",
+      "invalid_qr": "W tym tekście nie znaleziono adresu przełącznika EnOcean (30SE215…) ani 32-znakowego klucza bezpieczeństwa (+Z…).",
+      "qr_mac_mismatch": "Ten kod QR należy do innego przełącznika niż wykryty.",
+      "qr_key_invalid": "Klucz w tym kodzie QR nie pasuje do telegramów odebranych z tego przełącznika. Mógł zostać ponownie skonfigurowany (na przykład przez inny system).",
+      "qr_no_telegram": "Nie odebrano jeszcze żadnego telegramu z tego przełącznika. Naciśnij jeden z jego przycisków i spróbuj ponownie.",
+      "scan_https_required": "Skanowanie aparatem wymaga dostępu do Home Assistant przez HTTPS. Zamiast tego wpisz tekst kodu QR."
     }
   }
 }

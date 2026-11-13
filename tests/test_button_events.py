@@ -55,8 +55,13 @@ def _emit(
     events: list[str],
     fake_call_later: Any,
     seq: int | None = None,
+    button: str = _BUTTON,
 ) -> None:
-    """Emit one button event, capturing fired event_types into events list."""
+    """Emit one button event, capturing fired event_types into events list.
+
+    Like ``_process_advertisement``, the device-wide sequence counter is updated
+    after the event is emitted.
+    """
     seq_val: int = seq if seq is not None else _SEQ
     with (
         patch("homeassistant.helpers.event.async_call_later", side_effect=fake_call_later),
@@ -67,11 +72,12 @@ def _emit(
             entry=entry,
             entry_data=entry_data,
             event_type=event_type,
-            button=_BUTTON,
+            button=button,
             sequence_counter=seq_val,
             rssi=_RSSI,
             mac_address=_MAC,
         )
+    entry_data["last_sequence_counter"] = seq_val
 
 
 def _fire_pending(
@@ -246,7 +252,7 @@ class TestOrphanRelease:
         hass, entry, entry_data, _pending, fake_call_later = _make_env()
         events: list[str] = []
 
-        # Complete a normal cycle to set last_received_seq = 2
+        # Complete a normal cycle: the device-wide counter is now 2
         _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1)
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2)
         events.clear()
@@ -275,3 +281,16 @@ class TestOrphanRelease:
         # Gap = 7 - 2 = 5 ≠ 2 → stale
         _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=7)
         assert events == ["orphan_release"]
+
+
+def test_orphan_after_another_button_fires_single_press() -> None:
+    """The counter is shared by all buttons: a lost press is recovered after another button."""
+    hass, entry, entry_data, _pending, fake_call_later = _make_env()
+    events: list[str] = []
+    _emit(hass, entry, entry_data, "press", events, fake_call_later, seq=1, button="A0")
+    _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=2, button="A0")
+    events.clear()
+
+    # Press of B0 at seq=3 is lost; its release at seq=4 must still be recovered.
+    _emit(hass, entry, entry_data, "release", events, fake_call_later, seq=4, button="B0")
+    assert events == ["orphan_release", "single_press"]

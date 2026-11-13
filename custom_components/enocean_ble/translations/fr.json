@@ -1,6 +1,37 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Ajouter un switch EnOcean BLE",
+        "description": "Le switch {name} ({mac}) a été découvert. Comment voulez-vous l'ajouter ?\n\nLe QR code se trouve sur l'étiquette du module EnOcean, derrière la bascule.",
+        "menu_options": {
+          "qr_scan": "Scanner le QR code avec la caméra",
+          "qr_text": "Saisir le texte du QR code",
+          "commissioning": "Commissioning manuel (séquence de boutons)"
+        }
+      },
+      "qr_text": {
+        "title": "Saisir le texte du QR code",
+        "description": "Tapez ou collez le texte du QR code de l'étiquette du module de {name}. Seules deux parties sont nécessaires : l'adresse après 30S (12 caractères, {mac} sans les deux-points) et la clé après +Z (32 caractères). Le reste du texte est ignoré et peut être omis.",
+        "data": {
+          "qr_code": "Texte du QR code"
+        },
+        "data_description": {
+          "qr_code": "Exemple : 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (seuls 30S… et +Z… sont utilisés)"
+        }
+      },
+      "qr_scan": {
+        "title": "Scanner le QR code",
+        "description": "Ouvrez la page de scan et visez le QR code de l'étiquette du module de {name}. Sur un ordinateur, la page affiche un QR code pour l'ouvrir sur votre téléphone. Cette fenêtre continue toute seule dès que le QR code a été scanné."
+      },
+      "qr_scan_done": {
+        "title": "QR code validé",
+        "description": "Le QR code correspond au switch {name} ({mac}). Cliquez sur Soumettre pour l'ajouter."
+      },
+      "qr_scan_error": {
+        "title": "QR code refusé",
+        "description": "Le QR code scanné ne permet pas d'ajouter le switch {name} ({mac}). Cliquez sur Soumettre pour choisir à nouveau comment l'ajouter, ou fermez cette fenêtre."
+      },
       "commissioning": {
         "title": "Auto-commissioning EnOcean BLE",
         "description": "Activez l'auto-commissioning sur {name} :\n\n1. Maintenez le bouton 1 pendant 7 secondes\n2. Appuyez brièvement sur le bouton 1\n3. Maintenez à nouveau le bouton 1 pendant 7 secondes\n\nVous avez 2 minutes. Réessayez si nécessaire."
@@ -15,11 +46,18 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Cette configuration doit être lancée depuis un appareil Bluetooth détecté.",
-      "not_enocean_prefix": "L'appareil détecté n'utilise pas le préfixe MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "L'appareil détecté n'utilise pas le préfixe MAC EnOcean BLE (E2:15).",
+      "already_configured": "Ce switch est déjà configuré.",
+      "discovery_required": "Appuyez sur n'importe quel bouton du switch : il apparaît alors comme appareil découvert dans Paramètres → Appareils et services, d'où vous pouvez l'ajouter."
     },
     "error": {
       "commissioning_not_detected": "Aucune trame de commissioning n'a été reçue dans les 2 minutes. Réessayez. Si cela ne fonctionne toujours pas après plusieurs tentatives, vous pouvez essayer un reset usine. Merci de lire d'abord le disclaimer de reset dans la documentation.",
-      "invalid_commissioning": "Une trame de commissioning a été reçue mais n'a pas pu être validée. Réessayez. Si cela continue d'échouer, consultez le disclaimer de reset dans la documentation avant de réinitialiser."
+      "invalid_commissioning": "Une trame de commissioning a été reçue mais n'a pas pu être validée. Réessayez. Si cela continue d'échouer, consultez le disclaimer de reset dans la documentation avant de réinitialiser.",
+      "invalid_qr": "Aucune adresse de switch EnOcean (30SE215…) ni clé de sécurité de 32 caractères (+Z…) n'a été trouvée dans ce texte.",
+      "qr_mac_mismatch": "Ce QR code correspond à un autre switch que celui qui a été découvert.",
+      "qr_key_invalid": "La clé de ce QR code ne correspond pas aux télégrammes reçus de ce switch. Il a peut-être été reconfiguré (par exemple par un autre système).",
+      "qr_no_telegram": "Aucun télégramme n'a encore été reçu de ce switch. Appuyez sur un de ses boutons, puis réessayez.",
+      "scan_https_required": "Le scan par caméra nécessite que Home Assistant soit accessible en HTTPS. Saisissez plutôt le texte du QR code."
     }
   }
 }

@@ -15,27 +15,67 @@ It provides:
 
 ## Installation
 
-### HACS (recommended)
-1. HACS -> `Integrations` -> `...` -> `Custom repositories`
-2. Add this repository URL, category: `Integration`
-3. Install `EnOcean BLE`
-4. Restart Home Assistant
+### Marketplace (Home Assistant 2026.11 and later)
+1. Settings -> `Marketplace`
+2. Search for `EnOcean BLE Switches` and install it
+3. Restart Home Assistant
+
+### HACS (Home Assistant before 2026.11)
+1. HACS -> search for `EnOcean BLE Switches` (no custom repository needed)
+2. Download it
+3. Restart Home Assistant
 
 ### Manual
 1. Copy [`custom_components/enocean_ble`](custom_components/enocean_ble) to your HA `custom_components` directory
 2. Restart Home Assistant
-3. Settings -> Devices & Services -> `Add Integration` -> `EnOcean BLE`
+3. Add your switches as described below
 
 ## Add Your Device
 
-1. Press any button on the switch — it will appear as a discovered device in Home Assistant.
-2. Click `Add` when it appears.
-3. Follow the sequence on button 1:
+1. Press any button on the switch — it will appear as a discovered device in Home Assistant
+   (Settings -> Devices & Services).
+2. Click `Add` when it appears, then choose how to add it:
+   - **Scan the QR code with the camera**
+   - **Enter the QR code text**
+   - **Manual commissioning (button sequence)**
+
+Switches are always added from their discovery: this guarantees the switch is present, and lets the
+integration check the QR code against a telegram really received from it.
+
+### From the QR code (scan or text)
+
+The QR code on the PTM 215B/216B module label (behind the rocker) contains the switch address and
+its security key, for example `30SE215…+Z…+30P…`. No button sequence is needed, which also makes
+it the way to add OEM switches whose radio commissioning is disabled (for example Busch-Jaeger
+6716 UBT and Jung BLE switches).
+
+- **Scan:** a scan page opens. On a phone it uses the camera (it can also read a photo of the
+  label). On a computer it shows a QR code to open the page on your phone. Camera access needs
+  Home Assistant to be reached over **HTTPS**; without it, enter the text instead.
+- **Text:** type or paste the QR code text (for example read with your phone's camera app).
+  Only two parts are needed: the address after `30S` (12 characters) and the security key after
+  `+Z` (32 characters), for example `30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF`. The
+  other parts (`+30P…` product, `+2P…` revision, `+S…` serial number) are not used and can be
+  left out.
+
+Before the switch is added, the integration checks that:
+- the text is an EnOcean module QR code,
+- its address is the address of the discovered switch,
+- its key verifies a telegram received from that switch (MIC check). If the switch was
+  reconfigured (for example by another system), the key no longer matches and the switch is not
+  added.
+
+Treat the QR code like a password: anyone with the key can create valid button telegrams for
+that switch.
+
+### Manual commissioning (button sequence)
+
+1. Follow the sequence on button 1:
    - hold for about 7 seconds,
    - press briefly,
    - hold again for about 7 seconds.
-4. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
-5. Click `Submit`.
+2. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+3. Click `Submit`.
 
 Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
@@ -90,12 +130,14 @@ Choose **one mode per button** — do not mix `single_press` with advanced event
 > alongside `long_press`.
 >
 > **Reliability:** `single_press` is robust to both telegram losses:
-> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2)
+> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2, on the switch-wide
+>   sequence counter, so it also works after using another button)
 > - **Lost release** → already fired on press; the lost release has no effect
 
 Event data includes:
 - `mac_address`
 - `rssi`
+- `receiver` (the Bluetooth adapter or proxy that received the telegram)
 - `sequence_counter`
 - `button` (`A0`/`A1`/`B0`/`B1`)
 - `event_type` (the event name)
@@ -280,7 +322,12 @@ actions:
 - Auto-commissioning sequence never works:
   device may have commissioning mode disabled by prior configuration; try factory reset.
 - Intermittent events:
-  check distance/RSSI/interference.
+  check distance/RSSI/interference. The `receiver` and `rssi` attributes of each event show which
+  Bluetooth adapter or proxy received it and how strong the signal was. Proxies in passive mode are
+  supported. With Home Assistant 2026.10 or newer, the integration listens to every Bluetooth
+  adapter and proxy: a telegram is only lost if all of them missed it, so adding a proxy near the
+  switches improves reliability. Before 2026.10, Home Assistant only delivers the advertisements of
+  the receiver it selected for the switch (the others are discarded unless much stronger).
 - Occasional missed press:
   can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
 
@@ -395,6 +442,22 @@ ruff check .
 mypy custom_components tests
 pytest -q
 ```
+
+## Credits
+
+- [@DOABrain](https://github.com/DOABrain): onboarding from the module label QR code
+  ([#4](https://github.com/Superkikim/enocean-ble/pull/4)). This covers the QR code format
+  parsing and the work on OEM switches whose radio commissioning is disabled
+  (Busch-Jaeger, Jung), tested on real devices.
+- [hass-pronote](https://github.com/delphiki/hass-pronote) by [@delphiki](https://github.com/delphiki):
+  the QR code scan is inspired by its approach: scanning with the phone camera from a config flow
+  through an external step and a page served by the integration
+  ([delphiki/hass-pronote#229](https://github.com/delphiki/hass-pronote/pull/229)).
+- [@lafriks](https://github.com/lafriks): reliability fixes from
+  [#2](https://github.com/Superkikim/enocean-ble/pull/2): passive Bluetooth scanners, lost-press
+  recovery on the switch-wide sequence counter, replay protection kept across restarts, per-switch
+  and per-button event routing, cleanup on unload and constant-time MIC check. His own continuation
+  of this integration is [lafriks/enocean_ble](https://github.com/lafriks/enocean_ble).
 
 ## References
 
