@@ -100,9 +100,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._log_terminal_without_entry()
         self._cancel_stage_task(reason="flow_removed")
-        if self._scan_notify_task is not None:
-            self._scan_notify_task.cancel()
-            self._scan_notify_task = None
+        self._stop_scan_notify()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manual start is not supported: a switch is added from its discovery.
@@ -176,6 +174,7 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_qr_text(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Add the switch from the QR code text, typed or pasted."""
+        self._stop_scan_notify()
         errors: dict[str, str] = {}
         if self._qr_error is not None:
             errors["base"] = self._qr_error
@@ -228,6 +227,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create the entry once the scanned QR code has been validated."""
+        # The frontend has reloaded the flow: another notification would make it
+        # reload again while the entry is being set up, and show a flow error.
+        self._stop_scan_notify()
         if self._pending_mac is None or self._pending_security_key is None:
             return self.async_abort(reason="no_bluetooth_discovery")
         return self._create_entry_from_qr(
@@ -250,6 +252,11 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._scan_notify_task = self.hass.async_create_background_task(
                 self._async_scan_notify(), name=f"{DOMAIN} scan notify {self.flow_id}"
             )
+
+    def _stop_scan_notify(self) -> None:
+        if self._scan_notify_task is not None:
+            self._scan_notify_task.cancel()
+            self._scan_notify_task = None
 
     async def _async_scan_notify(self) -> None:
         loop = asyncio.get_running_loop()

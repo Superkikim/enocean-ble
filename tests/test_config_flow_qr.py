@@ -156,15 +156,18 @@ async def test_qr_scan_keeps_notifying_until_the_flow_moves_on(hass: Any) -> Non
         assert events
         assert all(event.data["flow_id"] == "test-flow" for event in events)
 
-        # The frontend reloaded the flow: the notifications stop.
-        flow.cur_step = await flow.async_step_qr_scan_done()
-        await asyncio.sleep(0.03)
-        await hass.async_block_till_done()
+        # The frontend reloads the flow: the notifications stop at once, while the
+        # flow still sits on the done step (the entry is being set up).
+        task = flow._scan_notify_task
+        assert task is not None
+        result = await flow.async_step_qr_scan_done()
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         count = len(events)
-        await asyncio.sleep(0.03)
+        await asyncio.sleep(0.05)
         await hass.async_block_till_done()
         assert len(events) == count
-    assert flow._scan_notify_task is not None and flow._scan_notify_task.done()
+    assert task.cancelled()
+    assert flow._scan_notify_task is None
 
 
 async def test_flow_removal_stops_scan_notifications(hass: Any) -> None:
