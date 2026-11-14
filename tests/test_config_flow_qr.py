@@ -14,6 +14,7 @@ from custom_components.enocean_ble import config_flow as config_flow_module
 from custom_components.enocean_ble import qr_scan as qr_scan_module
 from custom_components.enocean_ble.config_flow import EnOceanBleConfigFlow
 from custom_components.enocean_ble.const import (
+    CONF_BUTTON_MODE,
     CONF_MAC_ADDRESS,
     CONF_SECURITY_KEY,
     DOMAIN,
@@ -69,18 +70,51 @@ async def test_discovery_shows_method_menu(hass: Any) -> None:
     assert result["description_placeholders"]["mac"] == MAC
 
 
+async def _choose_mode(flow: EnOceanBleConfigFlow, result: Any, mode: str = "simple") -> Any:
+    """The last step of every method: the button mode form, then the entry."""
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "button_mode"
+    return await flow.async_step_button_mode({CONF_BUTTON_MODE: mode})
+
+
 async def test_qr_text_creates_entry(hass: Any) -> None:
     flow, _ = await _discovered_flow(hass, [_service_info()])
     with patch.object(config_flow_module, "async_discovered_service_info", return_value=[_service_info()]):
         result = await flow.async_step_qr_text({"qr_code": QR})
+    result = await _choose_mode(flow, result, "short_hold")
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_MAC_ADDRESS: MAC, CONF_SECURITY_KEY: KEY}
+    assert result["options"] == {CONF_BUTTON_MODE: "short_hold"}
+
+
+async def test_button_mode_form_defaults_to_simple(hass: Any) -> None:
+    flow, _ = await _discovered_flow(hass, [_service_info()])
+    with patch.object(config_flow_module, "async_discovered_service_info", return_value=[_service_info()]):
+        result = await flow.async_step_qr_text({"qr_code": QR})
+    assert result["step_id"] == "button_mode"
+    assert result["description_placeholders"] == {"name": MAC, "mac": MAC}
+    # Reloading the form has no effect; an unknown value falls back on Simple.
+    result = await flow.async_step_button_mode()
+    assert result["step_id"] == "button_mode"
+    result = await flow.async_step_button_mode({CONF_BUTTON_MODE: "legacy"})
+    assert result["options"] == {CONF_BUTTON_MODE: "simple"}
+
+
+async def test_commissioning_confirm_then_button_mode(hass: Any) -> None:
+    flow, _ = await _discovered_flow(hass, [_service_info()])
+    flow._pending_security_key = KEY
+    result = await flow.async_step_bluetooth_confirm({})
+    result = await _choose_mode(flow, result, "short_long")
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_MAC_ADDRESS: MAC, CONF_SECURITY_KEY: KEY}
+    assert result["options"] == {CONF_BUTTON_MODE: "short_long"}
 
 
 async def test_qr_text_uses_discovery_payload_when_cache_is_empty(hass: Any) -> None:
     flow, _ = await _discovered_flow(hass, [])
     with patch.object(config_flow_module, "async_discovered_service_info", return_value=[]):
         result = await flow.async_step_qr_text({"qr_code": QR})
+    result = await _choose_mode(flow, result)
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
@@ -145,6 +179,7 @@ async def test_qr_scan_external_step_then_entry(hass: Any) -> None:
         assert result["description_placeholders"] == {"name": MAC, "mac": MAC}
 
     result = await flow.async_step_qr_scan_done({})
+    result = await _choose_mode(flow, result)
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_MAC_ADDRESS: MAC, CONF_SECURITY_KEY: KEY}
 

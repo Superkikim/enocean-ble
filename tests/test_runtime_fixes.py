@@ -61,7 +61,7 @@ def _process(hass: Any, entry: Any) -> list[dict[str, Any]]:
 def test_new_telegram_is_emitted_with_its_receiver_and_counter_saved() -> None:
     hass, entry, entry_data = _env()
     fired = _process(hass, entry)
-    assert [kw["event_type"] for kw in fired] == ["press", "single_press"]
+    assert [kw["event_type"] for kw in fired] == ["raw_press", "press", "single_press"]
     assert all(kw["receiver"] == "atom-lite-bt-proxy" for kw in fired)
     assert entry_data["last_sequence_counter"] == TELEGRAM_SEQ
     entry_data["store"].async_delay_save.assert_called_once()
@@ -100,7 +100,7 @@ async def test_unload_cancels_timers_and_saves_the_counter() -> None:
     assert await integration.async_unload_entry(hass, entry) is True
     cancel_long.assert_called_once()
     cancel_timeout.assert_called_once()
-    store.async_save.assert_awaited_once_with({"last_sequence_counter": 42})
+    store.async_save.assert_awaited_once_with({"last_sequence_counter": 42, "lost_messages": 0})
     assert entry.entry_id not in hass.data[DOMAIN]
 
 

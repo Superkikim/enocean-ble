@@ -39,6 +39,13 @@
       "bluetooth_confirm": {
         "title": "Confirmar dispositivo EnOcean BLE",
         "description": "El interruptor EnOcean con dirección {mac} se comisionó correctamente.\n\n⚠️ Pulsa otro botón para desactivar el modo de comisionado y luego haz clic en Enviar."
+      },
+      "button_mode": {
+        "title": "Modo de los botones",
+        "description": "Elija cómo funcionan los botones de {name}. Puede cambiarlo más tarde con el botón Configurar.\n\n- **Simple**: una acción por botón. Se ejecuta en cuanto se pulsa. El más fiable.\n- **Corto + largo**: dos acciones por botón: una pulsación corta (menos de 1 s) o una pulsación larga (1 s o más). La acción se ejecuta al soltar el botón.\n- **Corto + mantener**: una pulsación corta ejecuta una acción. Mantener el botón controla algo de forma continua, como el brillo o el volumen. El mantenimiento empieza tras 1 s y termina al soltar.\n\nCorto + largo y Corto + mantener necesitan recibir el soltado. Si se pierde, la acción se pierde, y con Corto + mantener un mantenimiento puede durar hasta 8 segundos. Más receptores Bluetooth cerca del interruptor lo hacen poco frecuente (ver Solución de problemas en la documentación).",
+        "data": {
+          "button_mode": "Modo de los botones"
+        }
       }
     },
     "progress": {
@@ -58,6 +65,46 @@
       "qr_key_invalid": "La clave de este código QR no coincide con los telegramas recibidos de este interruptor. Puede que se haya reconfigurado (por ejemplo, con otro sistema).",
       "qr_no_telegram": "Aún no se ha recibido ningún telegrama de este interruptor. Pulsa uno de sus botones y vuelve a intentarlo.",
       "scan_https_required": "Escanear con la cámara requiere que Home Assistant sea accesible por HTTPS. Introduce el texto del código QR en su lugar."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modo de los botones",
+        "description": "Elija cómo funcionan los botones de este interruptor. Puede que haya que adaptar las automatizaciones que usan sus eventos.\n\n- **Simple**: una acción por botón. Se ejecuta en cuanto se pulsa. El más fiable.\n- **Corto + largo**: dos acciones por botón: una pulsación corta (menos de 1 s) o una pulsación larga (1 s o más). La acción se ejecuta al soltar el botón.\n- **Corto + mantener**: una pulsación corta ejecuta una acción. Mantener el botón controla algo de forma continua, como el brillo o el volumen. El mantenimiento empieza tras 1 s y termina al soltar.\n- **Antiguo**: los eventos de las versiones anteriores a 2026.11. Solo aparece mientras este interruptor lo usa.\n\nCorto + largo y Corto + mantener necesitan recibir el soltado. Si se pierde, la acción se pierde, y con Corto + mantener un mantenimiento puede durar hasta 8 segundos. Más receptores Bluetooth cerca del interruptor lo hacen poco frecuente (ver Solución de problemas en la documentación).",
+        "data": {
+          "button_mode": "Modo de los botones"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: elija un modo de botones",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Elegir un modo de botones para {name}",
+            "description": "{name} usa el modo **Antiguo** de versiones anteriores. Sus automatizaciones siguen funcionando, pero este modo se eliminará en una versión futura. Elija un nuevo modo y después adapte las automatizaciones que usan este interruptor:\n\n| Antiguo | Simple | Corto + largo | Corto + mantener |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Simple**: una acción por botón. Se ejecuta en cuanto se pulsa. El más fiable.\n- **Corto + largo**: dos acciones por botón: una pulsación corta (menos de 1 s) o una pulsación larga (1 s o más). La acción se ejecuta al soltar el botón.\n- **Corto + mantener**: una pulsación corta ejecuta una acción. Mantener el botón controla algo de forma continua, como el brillo o el volumen. El mantenimiento empieza tras 1 s y termina al soltar.\n\nEn los nuevos modos, active las automatizaciones con **Evento recibido** en las entidades de los botones (A0, A1, B0, B1). Los sensores «A0 event» se eliminan. raw_press y raw_release están en las entidades «A0 raw», desactivadas por defecto. Para conservar el modo Antiguo por ahora, ignore esta reparación.",
+            "data": {
+              "button_mode": "Modo de los botones"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Este interruptor ya no existe."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simple",
+        "short_long": "Corto + largo",
+        "short_hold": "Corto + mantener",
+        "legacy": "Antiguo (versiones anteriores)"
+      }
     }
   }
 }

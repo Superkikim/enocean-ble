@@ -39,6 +39,13 @@
       "bluetooth_confirm": {
         "title": "Confirmer l'appareil EnOcean BLE",
         "description": "Le switch EnOcean avec l'adresse {mac} a été commissionné avec succès.\n\n⚠️ Appuyez sur un autre bouton pour désactiver le mode commissioning, puis cliquez sur Soumettre."
+      },
+      "button_mode": {
+        "title": "Mode des boutons",
+        "description": "Choisissez comment fonctionnent les boutons de {name}. Vous pourrez le changer plus tard avec le bouton Configurer.\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "data": {
+          "button_mode": "Mode des boutons"
+        }
       }
     },
     "progress": {
@@ -58,6 +65,46 @@
       "qr_key_invalid": "La clé de ce QR code ne correspond pas aux télégrammes reçus de ce switch. Il a peut-être été reconfiguré (par exemple par un autre système).",
       "qr_no_telegram": "Aucun télégramme n'a encore été reçu de ce switch. Appuyez sur un de ses boutons, puis réessayez.",
       "scan_https_required": "Le scan par caméra nécessite que Home Assistant soit accessible en HTTPS. Saisissez plutôt le texte du QR code."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mode des boutons",
+        "description": "Choisissez comment fonctionnent les boutons de ce switch. Les automatisations qui utilisent ses événements devront peut-être être adaptées.\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n- **Ancien** : les événements des versions antérieures à 2026.11. Proposé seulement tant que ce switch l'utilise.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "data": {
+          "button_mode": "Mode des boutons"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name} : choisissez un mode de boutons",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Choisir un mode de boutons pour {name}",
+            "description": "{name} utilise le mode **Ancien** des versions précédentes. Vos automatisations continuent de fonctionner, mais ce mode sera supprimé dans une version future. Choisissez un nouveau mode, puis adaptez les automatisations qui utilisent ce switch :\n\n| Ancien | Simple | Court + long | Court + maintien |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n\nDans les nouveaux modes, déclenchez les automatisations avec **Événement reçu** sur les entités des boutons (A0, A1, B0, B1). Les capteurs « A0 event » sont supprimés. raw_press et raw_release sont sur les entités « A0 raw », désactivées par défaut. Pour garder le mode Ancien pour l'instant, ignorez cette réparation.",
+            "data": {
+              "button_mode": "Mode des boutons"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Ce switch n'existe plus."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simple",
+        "short_long": "Court + long",
+        "short_hold": "Court + maintien",
+        "legacy": "Ancien (versions précédentes)"
+      }
     }
   }
 }

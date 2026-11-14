@@ -39,6 +39,13 @@
       "bluetooth_confirm": {
         "title": "Conferma dispositivo EnOcean BLE",
         "description": "Lo switch EnOcean con indirizzo {mac} è stato commissionato con successo.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
+      },
+      "button_mode": {
+        "title": "Modalità dei pulsanti",
+        "description": "Scegli come funzionano i pulsanti di {name}. Potrai cambiarlo in seguito con il pulsante Configura.\n\n- **Semplice**: un'azione per pulsante. Parte appena si preme. La più affidabile.\n- **Breve + lunga**: due azioni per pulsante: una pressione breve (meno di 1 s) o una pressione lunga (1 s o più). L'azione parte al rilascio del pulsante.\n- **Breve + tenuta**: una pressione breve esegue un'azione. Tenere premuto il pulsante regola qualcosa in modo continuo, come la luminosità o il volume. La tenuta inizia dopo 1 s e termina al rilascio.\n\nBreve + lunga e Breve + tenuta devono ricevere il rilascio. Se va perso, l'azione è persa, e con Breve + tenuta una tenuta può durare fino a 8 secondi. Più ricevitori Bluetooth vicino all'interruttore lo rendono raro (vedi Risoluzione dei problemi nella documentazione).",
+        "data": {
+          "button_mode": "Modalità dei pulsanti"
+        }
       }
     },
     "progress": {
@@ -58,6 +65,46 @@
       "qr_key_invalid": "La chiave di questo codice QR non corrisponde ai telegrammi ricevuti da questo interruttore. Potrebbe essere stato riconfigurato (ad esempio da un altro sistema).",
       "qr_no_telegram": "Non è ancora stato ricevuto alcun telegramma da questo interruttore. Premi uno dei suoi tasti, poi riprova.",
       "scan_https_required": "La scansione con la fotocamera richiede che Home Assistant sia raggiungibile tramite HTTPS. Inserisci invece il testo del codice QR."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modalità dei pulsanti",
+        "description": "Scegli come funzionano i pulsanti di questo interruttore. Le automazioni che usano i suoi eventi potrebbero dover essere adattate.\n\n- **Semplice**: un'azione per pulsante. Parte appena si preme. La più affidabile.\n- **Breve + lunga**: due azioni per pulsante: una pressione breve (meno di 1 s) o una pressione lunga (1 s o più). L'azione parte al rilascio del pulsante.\n- **Breve + tenuta**: una pressione breve esegue un'azione. Tenere premuto il pulsante regola qualcosa in modo continuo, come la luminosità o il volume. La tenuta inizia dopo 1 s e termina al rilascio.\n- **Precedente**: gli eventi delle versioni precedenti alla 2026.11. Elencata solo finché questo interruttore la usa.\n\nBreve + lunga e Breve + tenuta devono ricevere il rilascio. Se va perso, l'azione è persa, e con Breve + tenuta una tenuta può durare fino a 8 secondi. Più ricevitori Bluetooth vicino all'interruttore lo rendono raro (vedi Risoluzione dei problemi nella documentazione).",
+        "data": {
+          "button_mode": "Modalità dei pulsanti"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: scegli una modalità dei pulsanti",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Scegli una modalità dei pulsanti per {name}",
+            "description": "{name} usa la modalità **Precedente** delle versioni precedenti. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Semplice**: un'azione per pulsante. Parte appena si preme. La più affidabile.\n- **Breve + lunga**: due azioni per pulsante: una pressione breve (meno di 1 s) o una pressione lunga (1 s o più). L'azione parte al rilascio del pulsante.\n- **Breve + tenuta**: una pressione breve esegue un'azione. Tenere premuto il pulsante regola qualcosa in modo continuo, come la luminosità o il volume. La tenuta inizia dopo 1 s e termina al rilascio.\n\nNelle nuove modalità, attiva le automazioni con **Evento ricevuto** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"A0 event\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 raw\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, ignora questa riparazione.",
+            "data": {
+              "button_mode": "Modalità dei pulsanti"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Questo interruttore non esiste più."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Semplice",
+        "short_long": "Breve + lunga",
+        "short_hold": "Breve + tenuta",
+        "legacy": "Precedente (versioni precedenti)"
+      }
     }
   }
 }

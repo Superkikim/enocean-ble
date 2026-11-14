@@ -9,26 +9,30 @@ from typing import Any
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import button_mode
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_MAC_ADDRESS,
+    ATTR_PRESS_LOST,
+    ATTR_REASON,
     ATTR_RECEIVER,
     ATTR_RSSI,
     ATTR_SEQUENCE_COUNTER,
     BUTTON_ENTITY_DESCRIPTIONS,
-    CONF_MAC_ADDRESS,
-    DOMAIN,
-    INTEGRATION_NAME,
+    MODE_EVENT_TYPES,
+    RAW_EVENT_TYPES,
     SIGNAL_BUTTON_EVENT,
-    SUPPORTED_EVENT_TYPES,
 )
+from .entity import switch_device_info
 
 _LOGGER = logging.getLogger(__name__)
+
+# Optional data some events carry (hold_release reason, raw_release press_lost).
+_OPTIONAL_EVENT_DATA = (ATTR_REASON, ATTR_PRESS_LOST)
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,74 +53,53 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up EnOcean BLE event entities."""
+    """Set up one event entity per button, plus one raw event entity per button."""
+    mode = button_mode(entry)
     _LOGGER.debug(
-        "event_platform_setup entry_id=%s unique_id=%s button_count=%s",
+        "event_platform_setup entry_id=%s unique_id=%s mode=%s button_count=%s",
         entry.entry_id,
         entry.unique_id,
+        mode,
         len(BUTTONS),
     )
-    async_add_entities(EnOceanBleButtonEventEntity(entry, button) for button in BUTTONS)
+    entities: list[EventEntity] = [
+        EnOceanBleButtonEventEntity(entry, button, MODE_EVENT_TYPES[mode]) for button in BUTTONS
+    ]
+    entities.extend(EnOceanBleRawEventEntity(entry, button) for button in BUTTONS)
+    async_add_entities(entities)
 
 
 class EnOceanBleButtonEventEntity(EventEntity):
-    """Event entity for one physical EnOcean BLE rocker button."""
+    """Event entity for one rocker button: the actions of the switch's button mode."""
 
     _attr_has_entity_name = True
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = sorted(SUPPORTED_EVENT_TYPES)
 
-    def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
+    def __init__(
+        self, entry: ConfigEntry, button: ButtonDescription, event_types: list[str]
+    ) -> None:
         """Initialize the event entity."""
         self._entry = entry
         self._button_code = button.code
         self._attr_name = button.name
         self._attr_unique_id = f"{entry.unique_id}_{button.code.lower()}"
+        self._attr_event_types = list(event_types)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Describe the parent EnOcean device."""
-        mac_address = self._entry.data[CONF_MAC_ADDRESS]
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            connections={(dr.CONNECTION_BLUETOOTH, mac_address)},
-            name=self._entry.title,
-            manufacturer="EnOcean",
-            model=INTEGRATION_NAME,
-        )
+        return switch_device_info(self._entry)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to parsed telegram events for this config entry."""
+        """Subscribe to the events of this button."""
         signal = SIGNAL_BUTTON_EVENT.format(entry_id=self._entry.entry_id, button=self._button_code)
-        _LOGGER.debug(
-            "event_entity_attached entry_id=%s unique_id=%s button=%s signal=%s",
-            self._entry.entry_id,
-            self.unique_id,
-            self._button_code,
-            signal,
-        )
         self.async_on_remove(async_dispatcher_connect(self.hass, signal, self._async_handle_button_event))
 
     @callback
     def _async_handle_button_event(self, payload: dict[str, Any]) -> None:
-        """Forward event updates to this button entity."""
-        _LOGGER.debug(
-            "event_entity_payload_received entry_id=%s unique_id=%s button=%s payload=%s",
-            self._entry.entry_id,
-            self.unique_id,
-            self._button_code,
-            payload,
-        )
-
+        """Trigger the entity for the event types it declares, ignore the others."""
         event_type = payload.get(ATTR_EVENT_TYPE)
-        if not isinstance(event_type, str):
-            _LOGGER.debug(
-                "event_entity_payload_ignored entry_id=%s unique_id=%s button=%s reason=invalid_event_type payload_event_type=%s",
-                self._entry.entry_id,
-                self.unique_id,
-                self._button_code,
-                event_type,
-            )
+        if not isinstance(event_type, str) or event_type not in self.event_types:
             return
 
         event_data = {
@@ -125,11 +108,11 @@ class EnOceanBleButtonEventEntity(EventEntity):
             ATTR_MAC_ADDRESS: payload.get(ATTR_MAC_ADDRESS),
             ATTR_RECEIVER: payload.get(ATTR_RECEIVER),
         }
+        event_data.update({key: payload[key] for key in _OPTIONAL_EVENT_DATA if key in payload})
         _LOGGER.debug(
-            "event_entity_trigger entry_id=%s unique_id=%s button=%s event_type=%s event_data=%s",
+            "event_entity_trigger entry_id=%s unique_id=%s event_type=%s event_data=%s",
             self._entry.entry_id,
             self.unique_id,
-            self._button_code,
             event_type,
             event_data,
         )
@@ -138,19 +121,24 @@ class EnOceanBleButtonEventEntity(EventEntity):
             self.async_write_ha_state()
         except Exception:
             _LOGGER.exception(
-                "event_entity_trigger_failed entry_id=%s unique_id=%s button=%s entity_id=%s event_type=%s payload=%s",
+                "event_entity_trigger_failed entry_id=%s unique_id=%s entity_id=%s event_type=%s",
                 self._entry.entry_id,
                 self.unique_id,
-                self._button_code,
                 self.entity_id,
                 event_type,
-                payload,
             )
-            return
-        _LOGGER.debug(
-            "event_entity_state_written entry_id=%s unique_id=%s button=%s event_type=%s",
-            self._entry.entry_id,
-            self.unique_id,
-            self._button_code,
-            event_type,
-        )
+
+
+class EnOceanBleRawEventEntity(EnOceanBleButtonEventEntity):
+    """Raw telegrams of one button (press and release as received), in every mode.
+
+    Disabled by default: for users who build their own logic.
+    """
+
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
+        """Initialize the raw event entity."""
+        super().__init__(entry, button, RAW_EVENT_TYPES)
+        self._attr_name = f"{button.name} raw"
+        self._attr_unique_id = f"{entry.unique_id}_{button.code.lower()}_raw"

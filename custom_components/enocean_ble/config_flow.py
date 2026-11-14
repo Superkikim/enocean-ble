@@ -14,16 +14,23 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import EVENT_DATA_ENTRY_FLOW_PROGRESSED, FlowResultType
 
+from . import button_mode
 from .const import (
+    BUTTON_MODES,
+    CONF_BUTTON_MODE,
     CONF_MAC_ADDRESS,
     CONF_SECURITY_KEY,
     DOMAIN,
     ENOCEAN_MAC_PREFIX,
     ENOCEAN_MANUFACTURER_ID,
+    MODE_LEGACY,
+    MODE_SIMPLE,
     STATUS_BIT_ENERGY_BOW,
 )
+from .mode_selector import button_mode_selector
 from .parser import OnboardingData, parse_commissioning_telegram
 from .qr_onboarding import ERROR_NO_TELEGRAM, QrValidationError, validate_qr_for_device
 from .qr_scan import CONF_QR_CODE, async_scan_url, async_setup_scan, device_payloads
@@ -75,6 +82,14 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._scan_notify_task: asyncio.Task[None] | None = None
         # Why the scanned QR code was rejected, shown until the user moves on.
         self._scan_error: str | None = None
+        # How the switch was added (scan, text, commissioning), for the logs.
+        self._add_method: str = "commissioning"
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> EnOceanBleOptionsFlow:
+        """Change the button mode of a switch."""
+        return EnOceanBleOptionsFlow()
 
     def async_remove(self) -> None:
         """Cleanup when flow is aborted/cancelled/finished by HA."""
@@ -188,7 +203,9 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = err.code
                 self._log_qr_rejected(step="qr_text", code=err.code)
             else:
-                return self._create_entry_from_qr(onboarding, method="text")
+                self._pending_security_key = onboarding.security_key_hex
+                self._add_method = "text"
+                return await self.async_step_button_mode()
 
         return self.async_show_form(
             step_id="qr_text",
@@ -239,13 +256,8 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="qr_scan_done",
                 description_placeholders=self._name_placeholders(),
             )
-        return self._create_entry_from_qr(
-            OnboardingData(
-                mac_address=self._pending_mac,
-                security_key_hex=self._pending_security_key,
-            ),
-            method="scan",
-        )
+        self._add_method = "scan"
+        return await self.async_step_button_mode()
 
     async def async_step_qr_scan_error(
         self, user_input: dict[str, Any] | None = None
@@ -303,30 +315,49 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             payloads.append(self._discovery_payload)
         return validate_qr_for_device(raw, mac_address=self._pending_mac, payloads=payloads)
 
-    def _create_entry_from_qr(self, onboarding: OnboardingData, *, method: str) -> ConfigFlowResult:
-        """Create the config entry from a validated QR code."""
-        self._pending_security_key = onboarding.security_key_hex
+    async def async_step_button_mode(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Last step for every method: choose the button mode, then add the switch."""
+        if self._pending_mac is None or self._pending_security_key is None:
+            return self.async_abort(reason="no_bluetooth_discovery")
+        if user_input is None:
+            return self.async_show_form(
+                step_id="button_mode",
+                # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
+                data_schema=vol.Schema(  # type: ignore[arg-type,unused-ignore]
+                    {vol.Required(CONF_BUTTON_MODE, default=MODE_SIMPLE): button_mode_selector(BUTTON_MODES)}
+                ),
+                description_placeholders=self._name_placeholders(),
+            )
+        mode = user_input.get(CONF_BUTTON_MODE)
+        if mode not in BUTTON_MODES:
+            mode = MODE_SIMPLE
         self._entry_created = True
-        title = self._pending_title or onboarding.mac_address
+        title = self._pending_title or self._pending_mac
         self._trace_event(
             "FLOW_CREATE_ENTRY",
-            step=f"qr_{method}",
-            note="QR code validated against the discovered switch; entry is being created.",
+            step="button_mode",
+            note="Switch validated; entry is being created.",
             title=title,
+            method=self._add_method,
+            button_mode=mode,
         )
         _LOGGER.info(
-            "%s QR_CREATE_ENTRY flow_id=%s mac=%s method=%s",
+            "%s CREATE_ENTRY flow_id=%s mac=%s method=%s button_mode=%s",
             FLOW_TAG,
             getattr(self, "flow_id", "unknown"),
-            onboarding.mac_address,
-            method,
+            self._pending_mac,
+            self._add_method,
+            mode,
         )
         return self.async_create_entry(
             title=title,
             data={
-                CONF_MAC_ADDRESS: onboarding.mac_address,
-                CONF_SECURITY_KEY: onboarding.security_key_hex,
+                CONF_MAC_ADDRESS: self._pending_mac,
+                CONF_SECURITY_KEY: self._pending_security_key,
             },
+            options={CONF_BUTTON_MODE: mode},
         )
 
     def _log_qr_rejected(self, *, step: str, code: str) -> None:
@@ -400,20 +431,8 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._pending_mac,
             self._pending_title,
         )
-        self._entry_created = True
-        self._trace_event(
-            "FLOW_CREATE_ENTRY",
-            step="bluetooth_confirm",
-            note="Commissioning succeeded and config entry is being created.",
-            title=self._pending_title or self._pending_mac or DOMAIN,
-        )
-        return self.async_create_entry(
-            title=self._pending_title or self._pending_mac or DOMAIN,
-            data={
-                CONF_MAC_ADDRESS: self._pending_mac,
-                CONF_SECURITY_KEY: self._pending_security_key,
-            },
-        )
+        self._add_method = "commissioning"
+        return await self.async_step_button_mode()
 
     async def _async_run_stage(
         self,
@@ -960,6 +979,26 @@ class EnOceanBleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             FLOW_TAG,
             getattr(self, "flow_id", "unknown"),
             self._pending_mac,
+        )
+
+
+class EnOceanBleOptionsFlow(config_entries.OptionsFlow):
+    """Change the button mode of a switch (the Configure button)."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Show the modes; Legacy stays listed only while the switch still uses it."""
+        current = button_mode(self.config_entry)
+        if user_input is not None:
+            return self.async_create_entry(
+                data={**self.config_entry.options, CONF_BUTTON_MODE: user_input[CONF_BUTTON_MODE]}
+            )
+        modes = [*BUTTON_MODES, MODE_LEGACY] if current == MODE_LEGACY else BUTTON_MODES
+        return self.async_show_form(
+            step_id="init",
+            # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
+            data_schema=vol.Schema(  # type: ignore[arg-type,unused-ignore]
+                {vol.Required(CONF_BUTTON_MODE, default=current): button_mode_selector(modes)}
+            ),
         )
 
 

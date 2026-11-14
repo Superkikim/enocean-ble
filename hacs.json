@@ -1,6 +1,5 @@
 {
   "name": "EnOcean BLE Switches",
   "render_readme": true,
-  "country": ["CH", "DE", "FR", "US"],
   "homeassistant": "2025.1.0"
 }

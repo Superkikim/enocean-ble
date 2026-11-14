@@ -39,6 +39,13 @@
       "bluetooth_confirm": {
         "title": "Confirmar dispositivo EnOcean BLE",
         "description": "O interruptor EnOcean com endereço {mac} foi comissionado com sucesso.\n\n⚠️ Pressione outro botão para desativar o modo de comissionamento e depois clique em Enviar."
+      },
+      "button_mode": {
+        "title": "Modo dos botões",
+        "description": "Escolha como funcionam os botões de {name}. Você pode mudar isso depois com o botão Configurar.\n\n- **Simples**: uma ação por botão. Ela é executada assim que você pressiona. O mais confiável.\n- **Curto + longo**: duas ações por botão: um toque curto (menos de 1 s) ou um toque longo (1 s ou mais). A ação é executada ao soltar o botão.\n- **Curto + segurar**: um toque curto executa uma ação. Segurar o botão controla algo continuamente, como o brilho ou o volume. Segurar começa após 1 s e para ao soltar.\n\nCurto + longo e Curto + segurar precisam receber o soltar. Se ele for perdido, a ação é perdida, e com Curto + segurar segurar pode durar até 8 segundos. Mais receptores Bluetooth perto do interruptor tornam isso raro (veja Solução de problemas na documentação).",
+        "data": {
+          "button_mode": "Modo dos botões"
+        }
       }
     },
     "progress": {
@@ -58,6 +65,46 @@
       "qr_key_invalid": "A chave deste código QR não corresponde aos telegramas recebidos deste interruptor. Ele pode ter sido reconfigurado (por exemplo, por outro sistema).",
       "qr_no_telegram": "Nenhum telegrama foi recebido deste interruptor ainda. Pressione um dos botões e tente novamente.",
       "scan_https_required": "O escaneamento com a câmera exige que o Home Assistant esteja acessível por HTTPS. Digite o texto do código QR em vez disso."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modo dos botões",
+        "description": "Escolha como funcionam os botões deste interruptor. As automações que usam seus eventos podem precisar ser ajustadas.\n\n- **Simples**: uma ação por botão. Ela é executada assim que você pressiona. O mais confiável.\n- **Curto + longo**: duas ações por botão: um toque curto (menos de 1 s) ou um toque longo (1 s ou mais). A ação é executada ao soltar o botão.\n- **Curto + segurar**: um toque curto executa uma ação. Segurar o botão controla algo continuamente, como o brilho ou o volume. Segurar começa após 1 s e para ao soltar.\n- **Antigo**: os eventos das versões anteriores à 2026.11. Só aparece enquanto este interruptor o usa.\n\nCurto + longo e Curto + segurar precisam receber o soltar. Se ele for perdido, a ação é perdida, e com Curto + segurar segurar pode durar até 8 segundos. Mais receptores Bluetooth perto do interruptor tornam isso raro (veja Solução de problemas na documentação).",
+        "data": {
+          "button_mode": "Modo dos botões"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: escolha um modo dos botões",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "Escolha um modo dos botões para {name}",
+            "description": "{name} usa o modo **Antigo** das versões anteriores. Suas automações continuam funcionando, mas este modo será removido em uma versão futura. Escolha um novo modo e depois ajuste as automações que usam este interruptor:\n\n| Antigo | Simples | Curto + longo | Curto + segurar |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Simples**: uma ação por botão. Ela é executada assim que você pressiona. O mais confiável.\n- **Curto + longo**: duas ações por botão: um toque curto (menos de 1 s) ou um toque longo (1 s ou mais). A ação é executada ao soltar o botão.\n- **Curto + segurar**: um toque curto executa uma ação. Segurar o botão controla algo continuamente, como o brilho ou o volume. Segurar começa após 1 s e para ao soltar.\n\nNos novos modos, acione as automações com **Evento recebido** nas entidades dos botões (A0, A1, B0, B1). Os sensores \"A0 event\" são removidos. raw_press e raw_release ficam nas entidades \"A0 raw\", desativadas por padrão. Para manter o modo Antigo por enquanto, ignore este reparo.",
+            "data": {
+              "button_mode": "Modo dos botões"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Este interruptor não existe mais."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simples",
+        "short_long": "Curto + longo",
+        "short_hold": "Curto + segurar",
+        "legacy": "Antigo (versões anteriores)"
+      }
     }
   }
 }

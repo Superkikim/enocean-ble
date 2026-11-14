@@ -4,8 +4,8 @@
 
 Commission one EnOcean BLE switch from Bluetooth discovery and create one config entry with:
 
-- `mac_address`
-- `security_key`
+- data: `mac_address`, `security_key`
+- options: `button_mode` (`simple`, `short_long` or `short_hold`)
 
 ## Current Flow (Implemented)
 
@@ -24,7 +24,7 @@ Bluetooth discovery (press any button on it).
 ### From the QR code
 
 `qr_text` (form, field `qr_code`)
-- Validates the text with `qr_onboarding.validate_qr_for_device()`, then creates the entry.
+- Validates the text with `qr_onboarding.validate_qr_for_device()`, then goes to `button_mode`.
 
 `qr_scan` (external step)
 - Opens the scan page `/api/enocean_ble/qr_scan/<flow_id>` (`qr_scan.py`,
@@ -37,7 +37,7 @@ Bluetooth discovery (press any button on it).
   either way; on error it returns `400 {"code": …}`, shown on the phone with "go back to Home
   Assistant" (no rescan from the page).
 - `qr_scan` then ends with `external_step_done` -> `qr_scan_done` (valid) or `qr_scan_error`.
-- `qr_scan_done` (form): "QR code validated", Submit creates the entry.
+- `qr_scan_done` (form): "QR code validated", Submit goes to `button_mode`.
 - `qr_scan_error` (form): shows the error, Submit goes back to `bluetooth_method`.
 - The phone app is in the background while the scan page is open (it opens in the browser) and
   may miss the one "flow progressed" event Home Assistant fires. The flow repeats it every 3 s
@@ -64,7 +64,22 @@ The scan page design is adapted from hass-pronote (delphiki/hass-pronote#229, MI
 
 4. `bluetooth_confirm` (explicit submit)
 - Shows final confirmation once commissioning data is ready.
-- User presses `Submit` to create the config entry.
+- User presses `Submit` to go to `button_mode`.
+
+### Button mode (every method)
+
+`button_mode` (form, field `button_mode`, default `simple`)
+- Last step of the three methods. Submit creates the config entry with the chosen mode in its
+  options. Reloading the form has no effect.
+
+## Options and repair
+
+- Options flow (`Configure`): `init` form to change `button_mode`. `legacy` is listed only while
+  the switch still uses it. The entry update listener reloads the switch when the mode changes.
+- Entries created before 2026.11 have no `button_mode`: they run in `legacy` mode (the old events
+  and the `A0 event` sensors) and get a fixable repair issue `legacy_button_mode_<entry_id>`.
+  Its fix flow (`repairs.py`) sets the chosen mode; the issue is removed when the mode is not
+  Legacy any more, or when the switch is deleted.
 
 ## Important Behavior
 
