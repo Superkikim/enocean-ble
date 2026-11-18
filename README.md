@@ -206,6 +206,11 @@ Switches added before version 2026.11 keep their old events (`press`, `release`,
 
 - **Legacy is preselected** (marked as default). Leave it selected, or ignore the repair, to keep
   the Legacy mode for now: the repair then does not come back.
+- The repair lists the **automations and scripts that use the switch**, to help you decide. They
+  are found from their triggers, conditions, actions and targets, and from the text of their
+  configuration (an entity written inside a template). Entity names built dynamically in a
+  template, or reached through a zone or label, cannot be detected. Legacy stays the default
+  even when nothing is found: you choose.
 - Choose Simple, Short + long or Short + hold to switch. You can change the mode of any switch
   later with its `Configure` button.
 

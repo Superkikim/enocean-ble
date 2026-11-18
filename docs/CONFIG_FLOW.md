@@ -79,7 +79,10 @@ The scan page design is adapted from hass-pronote (delphiki/hass-pronote#229, MI
 - Entries created before 2026.11 have no `button_mode`: they run in `legacy` mode (the old events
   and the `A0 event` sensors) and get a fixable repair issue `legacy_button_mode_<entry_id>`.
   Its fix flow (`repairs.py`) sets the chosen mode; the issue is removed when the mode is not
-  Legacy any more, or when the switch is deleted.
+  Legacy any more, or when the switch is deleted. When the dialog opens, `usage.py` lists the
+  automations and scripts using the switch (HA references to its entities or device, plus a text
+  search of their `raw_config` for the Legacy sensor ids and `enocean_ble`) in the `{usage}`
+  placeholder. Legacy stays preselected whether or not anything is found.
 
 ## Important Behavior
 
