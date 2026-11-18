@@ -89,12 +89,13 @@ class EnOceanBleButtonEventSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = sorted(SUPPORTED_EVENT_TYPES)
     _attr_native_value: str | None = None
+    _attr_translation_key = "button_event"
 
     def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
         """Initialize the sensor entity."""
         self._entry = entry
         self._button_code = button.code
-        self._attr_name = f"{button.name} event"
+        self._attr_translation_placeholders = {"button": button.code}
         self._attr_unique_id = _legacy_sensor_unique_id(entry, button.code)
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
@@ -135,12 +136,11 @@ class _EnOceanBleDiagnosticSensor(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
     _key: str
-    _name: str
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the sensor entity."""
         self._entry = entry
-        self._attr_name = self._name
+        self._attr_translation_key = self._key
         self._attr_unique_id = f"{entry.unique_id}_{self._key}"
 
     @property
@@ -171,7 +171,6 @@ class EnOceanBleSignalSensor(_EnOceanBleDiagnosticSensor):
     """Signal strength of the last telegram."""
 
     _key = "signal"
-    _name = "Signal"
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -184,7 +183,6 @@ class EnOceanBleLastSeenSensor(_EnOceanBleDiagnosticSensor):
     """Time of the last telegram."""
 
     _key = "last_seen"
-    _name = "Last seen"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def _update_from(self, data: dict[str, Any]) -> None:
@@ -196,7 +194,6 @@ class EnOceanBleReceiverSensor(_EnOceanBleDiagnosticSensor):
     """Bluetooth adapter or proxy that delivered the last telegram first."""
 
     _key = "receiver"
-    _name = "Receiver"
 
     def _update_from(self, data: dict[str, Any]) -> None:
         self._attr_native_value = data.get("last_receiver")
@@ -206,7 +203,6 @@ class EnOceanBleLostMessagesSensor(_EnOceanBleDiagnosticSensor):
     """Telegrams no receiver got, found from gaps in the sequence counter."""
 
     _key = "lost_messages"
-    _name = "Lost messages"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def _update_from(self, data: dict[str, Any]) -> None:

@@ -74,6 +74,7 @@ class EnOceanBleButtonEventEntity(EventEntity):
 
     _attr_has_entity_name = True
     _attr_device_class = EventDeviceClass.BUTTON
+    _attr_translation_key: str | None = None
 
     def __init__(
         self, entry: ConfigEntry, button: ButtonDescription, event_types: list[str]
@@ -81,7 +82,8 @@ class EnOceanBleButtonEventEntity(EventEntity):
         """Initialize the event entity."""
         self._entry = entry
         self._button_code = button.code
-        self._attr_name = button.name
+        if self._attr_translation_key is None:
+            self._attr_name = button.name
         self._attr_unique_id = f"{entry.unique_id}_{button.code.lower()}"
         self._attr_event_types = list(event_types)
 
@@ -136,9 +138,10 @@ class EnOceanBleRawEventEntity(EnOceanBleButtonEventEntity):
     """
 
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "raw"
 
     def __init__(self, entry: ConfigEntry, button: ButtonDescription) -> None:
         """Initialize the raw event entity."""
         super().__init__(entry, button, RAW_EVENT_TYPES)
-        self._attr_name = f"{button.name} raw"
+        self._attr_translation_placeholders = {"button": button.code}
         self._attr_unique_id = f"{entry.unique_id}_{button.code.lower()}_raw"
