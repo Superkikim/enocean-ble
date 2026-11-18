@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 
 from .const import BUTTON_MODES, CONF_BUTTON_MODE, MODE_LEGACY
 from .mode_selector import button_mode_selector
+from .usage import find_switch_users
 
 
 class LegacyButtonModeRepairFlow(RepairsFlow):
@@ -47,7 +48,11 @@ class LegacyButtonModeRepairFlow(RepairsFlow):
                         )
                     }
                 ),
-                description_placeholders={"name": entry.title},
+                description_placeholders={
+                    "name": entry.title,
+                    # Computed when the dialog opens, so it is always up to date.
+                    "usage": "\n".join(find_switch_users(self.hass, entry)) or "—",
+                },
             )
         # The options change reloads the switch in its new mode (update listener).
         self.hass.config_entries.async_update_entry(

@@ -338,10 +338,11 @@ async def test_repair_sets_the_chosen_mode() -> None:
     flow = LegacyButtonModeRepairFlow("entry")
     flow.hass = hass
     # Home Assistant opens the repair with the issue data as "user input".
-    result = await flow.async_step_init({"entry_id": "entry"})
+    with patch("custom_components.enocean_ble.repairs.find_switch_users", return_value=[]):
+        result = await flow.async_step_init({"entry_id": "entry"})
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert result["description_placeholders"] == {"name": "Sud Top"}
+    assert result["description_placeholders"] == {"name": "Sud Top", "usage": "—"}
     selector = next(iter(_schema_fields(result).values()))
     assert selector.config["options"] == ["simple", "short_long", "short_hold", "legacy"]
     assert selector.config["translation_key"] == "button_mode_repair"
@@ -393,3 +394,83 @@ def test_legacy_switch_gets_a_repair_issue_and_new_modes_remove_it() -> None:
     assert create.call_args.kwargs["is_fixable"] is True
     assert create.call_args.kwargs["translation_placeholders"] == {"name": "Sud Top"}
     assert delete.call_args.args[1:] == (DOMAIN, "legacy_button_mode_entry")
+
+
+# --- Automations and scripts that use a switch -----------------------------------------
+
+
+def _component(*items: SimpleNamespace) -> SimpleNamespace:
+    return SimpleNamespace(entities=list(items))
+
+
+def _item(entity_id: str, name: str, **kwargs: Any) -> SimpleNamespace:
+    values: dict[str, Any] = {
+        "entity_id": entity_id,
+        "name": name,
+        "referenced_entities": set(),
+        "referenced_devices": set(),
+        "raw_config": {},
+    }
+    values.update(kwargs)
+    return SimpleNamespace(**values)
+
+
+def _find_users(automations: list[SimpleNamespace], scripts: list[SimpleNamespace]) -> list[str]:
+    from custom_components.enocean_ble import usage
+
+    registry_entries = [
+        SimpleNamespace(
+            entity_id="sensor.sud_top_a0_event", domain="sensor", unique_id="mac_a0_event", device_id="dev"
+        ),
+        SimpleNamespace(entity_id="event.sud_top_a0", domain="event", unique_id="mac_a0", device_id="dev"),
+    ]
+    hass = SimpleNamespace(data={"automation": _component(*automations), "script": _component(*scripts)})
+    entry = SimpleNamespace(entry_id="entry")
+    with (
+        patch.object(usage.er, "async_get", return_value=MagicMock()),
+        patch.object(usage.er, "async_entries_for_config_entry", return_value=registry_entries),
+    ):
+        return usage.find_switch_users(hass, entry)  # type: ignore[arg-type]
+
+
+def test_users_found_by_reference_device_and_template_text() -> None:
+    users = _find_users(
+        [
+            _item("automation.structured", "Structured", referenced_entities={"sensor.sud_top_a0_event"}),
+            _item("automation.by_device", "By device", referenced_devices={"dev"}),
+            _item(
+                "automation.template",
+                "Template",
+                raw_config={"actions": [{"if": "{{ states('sensor.sud_top_a0_event') }}"}]},
+            ),
+            _item(
+                "automation.integration",
+                "Integration",
+                raw_config={"v": "{{ integration_entities('enocean_ble') }}"},
+            ),
+            _item("automation.other", "Other", referenced_entities={"light.kitchen"}),
+        ],
+        [_item("script.uses_it", "Uses it", referenced_entities={"sensor.sud_top_a0_event"})],
+    )
+    assert users == [
+        "- By device (`automation.by_device`)",
+        "- Integration (`automation.integration`)",
+        "- Structured (`automation.structured`)",
+        "- Template (`automation.template`)",
+        "- Uses it (`script.uses_it`)",
+    ]
+
+
+def test_no_users_found() -> None:
+    assert _find_users([_item("automation.other", "Other")], []) == []
+
+
+def test_users_search_survives_a_missing_component() -> None:
+    from custom_components.enocean_ble import usage
+
+    hass = SimpleNamespace(data={})
+    with (
+        patch.object(usage.er, "async_get", return_value=MagicMock()),
+        patch.object(usage.er, "async_entries_for_config_entry", return_value=[]),
+    ):
+        assert usage.find_switch_users(hass, SimpleNamespace(entry_id="e")) == []  # type: ignore[arg-type]
