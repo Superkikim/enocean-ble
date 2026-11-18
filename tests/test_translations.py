@@ -35,8 +35,8 @@ def _keys(data: dict[str, Any], prefix: str = "") -> set[str]:
     return keys
 
 
-def test_all_ten_languages_are_present() -> None:
-    assert [f.stem for f in FILES] == ["cs", "de", "en", "es", "fr", "it", "nl", "pl", "pt-BR", "sv"]
+def test_all_languages_are_present() -> None:
+    assert [f.stem for f in FILES] == ["cs", "de", "en", "es", "fr", "it", "nl", "pl", "pt-BR", "pt", "sv"]
 
 
 @pytest.mark.parametrize("path", FILES, ids=lambda p: p.stem)
