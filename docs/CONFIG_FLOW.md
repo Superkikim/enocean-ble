@@ -81,8 +81,9 @@ The scan page design is adapted from hass-pronote (delphiki/hass-pronote#229, MI
   Its fix flow (`repairs.py`) sets the chosen mode; the issue is removed when the mode is not
   Legacy any more, or when the switch is deleted. When the dialog opens, `usage.py` lists the
   automations and scripts using the switch (HA references to its entities or device, plus a text
-  search of their `raw_config` for the Legacy sensor ids and `enocean_ble`) in the `{usage}`
-  placeholder. Legacy stays preselected whether or not anything is found.
+  search of their `raw_config` for the Legacy sensor ids and `enocean_ble`). Step `confirm` shows
+  them in the `{usage}` placeholder; step `confirm_unused` says nothing was found. Legacy stays
+  preselected in both.
 
 ## Important Behavior
 
