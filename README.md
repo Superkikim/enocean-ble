@@ -96,9 +96,10 @@ later with the `Configure` button of the switch.
 | **Short + hold** | `short_press`, `hold_press`, `hold_release` | short: on release before 1 s. hold: at 1 s, while held. hold_release: on release | the action is lost, or a hold runs for up to 8 s |
 
 - **Simple**: one reliable action per button, for example toggle a light or a scene.
-- **Short + long**: two different actions per button, for example two scenes.
-- **Short + hold**: a short press toggles something, holding adjusts it continuously (brightness,
-  volume…).
+- **Short + long**: two different actions per button, for example two scenes. A press under 1 s
+  is short, a press of 1 s or more is long.
+- **Short + hold**: a short press (under 1 s) toggles something, holding (1 s or more) adjusts it
+  continuously (brightness, volume…).
 
 The actions of a mode never add up: a long press or a hold never also triggers `short_press`.
 
@@ -126,7 +127,9 @@ sensors show how many telegrams were lost.
 | `Receiver` | Bluetooth adapter or proxy that received the last telegram first | disabled |
 | `Lost messages` | telegrams no receiver got, counted from gaps in the switch's sequence counter | disabled |
 
-Disabled entities can be enabled on the device page of the switch.
+Disabled entities can be enabled on the device page of the switch. Their names (`A0 raw`,
+`Signal`, `Last seen`, `Receiver`, `Lost messages`) follow the language of Home Assistant; the
+button entities are always `A0`, `A1`, `B0`, `B1`, like the buttons of the switch.
 
 Event data: `button`, `rssi`, `receiver`, `sequence_counter`, `mac_address`. `hold_release` also has
 `reason` (`release`, `timeout` or `next_telegram`), `raw_release` has `press_lost`.
@@ -199,8 +202,14 @@ Before Home Assistant 2026.7, trigger on the state of the event entity and check
 Switches added before version 2026.11 keep their old events (`press`, `release`,
 `single_press`, `long_press`, `long_release`, `orphan_release`, `release_timeout`) and their
 `A0 event` … `B1 event` sensors, so existing automations keep working. A repair in
-`Settings` → `Repairs` asks you to choose a new mode. Legacy mode will be removed in a future
-version. What each Legacy event becomes:
+`Settings` → `Repairs` asks you to choose a mode for each of these switches:
+
+- **Legacy is preselected** (marked as default). Leave it selected, or ignore the repair, to keep
+  the Legacy mode for now: the repair then does not come back.
+- Choose Simple, Short + long or Short + hold to switch. You can change the mode of any switch
+  later with its `Configure` button.
+
+Legacy mode will be removed in a future version. What each Legacy event becomes:
 
 | Legacy | Simple | Short + long | Short + hold |
 |---|---|---|---|
