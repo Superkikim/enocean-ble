@@ -11,12 +11,12 @@ from homeassistant.helpers.selector import (
 )
 
 
-def button_mode_selector(modes: list[str]) -> Any:
-    """Radio list of button modes; labels come from the "button_mode" translations."""
+def button_mode_selector(modes: list[str], translation_key: str = "button_mode") -> Any:
+    """Radio list of button modes; labels come from the ``translation_key`` translations."""
     return SelectSelector(
         SelectSelectorConfig(
             options=list(modes),
             mode=SelectSelectorMode.LIST,
-            translation_key="button_mode",
+            translation_key=translation_key,
         )
     )

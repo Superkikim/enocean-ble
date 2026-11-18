@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     # Type only: not exported by every supported Home Assistant version.
     from homeassistant.components.repairs import RepairsFlowResult
 
-from .const import BUTTON_MODES, CONF_BUTTON_MODE, MODE_SIMPLE
+from .const import BUTTON_MODES, CONF_BUTTON_MODE, MODE_LEGACY
 from .mode_selector import button_mode_selector
 
 
@@ -42,8 +42,8 @@ class LegacyButtonModeRepairFlow(RepairsFlow):
                 # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
                 data_schema=vol.Schema(  # type: ignore[arg-type,unused-ignore]
                     {
-                        vol.Required(CONF_BUTTON_MODE, default=MODE_SIMPLE): button_mode_selector(
-                            BUTTON_MODES
+                        vol.Required(CONF_BUTTON_MODE, default=MODE_LEGACY): button_mode_selector(
+                            [*BUTTON_MODES, MODE_LEGACY], "button_mode_repair"
                         )
                     }
                 ),

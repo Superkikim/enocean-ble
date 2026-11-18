@@ -153,7 +153,7 @@ def button_mode(entry: Any) -> str:
     options = getattr(entry, "options", None)
     get = getattr(options, "get", None)
     mode = get(CONF_BUTTON_MODE) if callable(get) else None
-    return mode if isinstance(mode, str) and mode in BUTTON_MODES else MODE_LEGACY
+    return mode if isinstance(mode, str) and mode in [*BUTTON_MODES, MODE_LEGACY] else MODE_LEGACY
 
 
 def _legacy_issue_id(entry: Any) -> str:
@@ -164,7 +164,9 @@ def _async_update_legacy_issue(hass: Any, entry: Any, mode: str) -> None:
     """Ask the user to choose a button mode while a switch is in Legacy mode."""
     from homeassistant.helpers import issue_registry as ir
 
-    if mode == MODE_LEGACY:
+    # Choosing Legacy in the repair or in the options stores it: no repair any more.
+    chosen = CONF_BUTTON_MODE in (getattr(entry, "options", None) or {})
+    if mode == MODE_LEGACY and not chosen:
         ir.async_create_issue(
             hass,
             DOMAIN,

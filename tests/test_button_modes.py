@@ -274,6 +274,7 @@ def test_button_mode_of_switches_added_before_2026_11_is_legacy() -> None:
     assert button_mode(SimpleNamespace(options={})) == "legacy"
     assert button_mode(SimpleNamespace(options={CONF_BUTTON_MODE: "short_hold"})) == "short_hold"
     assert button_mode(SimpleNamespace(options={CONF_BUTTON_MODE: "unknown"})) == "legacy"
+    assert button_mode(SimpleNamespace(options={CONF_BUTTON_MODE: "legacy"})) == "legacy"
 
 
 @pytest.mark.parametrize("mode", ["simple", "short_long", "short_hold", "legacy"])
@@ -298,6 +299,13 @@ def test_button_entities_declare_only_the_events_of_their_mode(mode: str) -> Non
     assert triggered[0][1]["reason"] == "release"
 
 
+def _schema_fields(result: Any) -> dict[Any, Any]:
+    schema = result["data_schema"]
+    assert schema is not None
+    fields: dict[Any, Any] = schema.schema
+    return fields
+
+
 async def _options_form(mode: str | None) -> Any:
     flow = EnOceanBleOptionsFlow()
     options = {CONF_BUTTON_MODE: mode} if mode else {}
@@ -307,11 +315,11 @@ async def _options_form(mode: str | None) -> Any:
 
 async def test_options_list_legacy_only_while_the_switch_uses_it() -> None:
     result, _ = await _options_form(None)
-    options = result["data_schema"].schema
+    options = _schema_fields(result)
     selector = next(iter(options.values()))
     assert selector.config["options"] == ["simple", "short_long", "short_hold", "legacy"]
     result, _ = await _options_form("short_long")
-    selector = next(iter(result["data_schema"].schema.values()))
+    selector = next(iter(_schema_fields(result).values()))
     assert selector.config["options"] == ["simple", "short_long", "short_hold"]
 
 
@@ -334,6 +342,10 @@ async def test_repair_sets_the_chosen_mode() -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {"name": "Sud Top"}
+    selector = next(iter(_schema_fields(result).values()))
+    assert selector.config["options"] == ["simple", "short_long", "short_hold", "legacy"]
+    assert selector.config["translation_key"] == "button_mode_repair"
+    assert next(iter(_schema_fields(result))).default() == "legacy"
     result = await flow.async_step_confirm({CONF_BUTTON_MODE: "short_long"})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     hass.config_entries.async_update_entry.assert_called_once_with(
@@ -362,8 +374,15 @@ async def test_switch_reloads_only_when_its_mode_changes() -> None:
     hass.config_entries.async_reload.assert_awaited_once_with("entry")
 
 
+def test_legacy_chosen_on_purpose_has_no_repair_issue() -> None:
+    entry = SimpleNamespace(entry_id="entry", title="Sud Top", options={CONF_BUTTON_MODE: "legacy"})
+    with patch("homeassistant.helpers.issue_registry.async_create_issue") as create:
+        integration._async_update_legacy_issue(MagicMock(), entry, "legacy")
+    create.assert_not_called()
+
+
 def test_legacy_switch_gets_a_repair_issue_and_new_modes_remove_it() -> None:
-    entry = SimpleNamespace(entry_id="entry", title="Sud Top")
+    entry = SimpleNamespace(entry_id="entry", title="Sud Top", options={})
     with (
         patch("homeassistant.helpers.issue_registry.async_create_issue") as create,
         patch("homeassistant.helpers.issue_registry.async_delete_issue") as delete,
