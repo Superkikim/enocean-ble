@@ -403,7 +403,8 @@ def _process_advertisement(
     receiver = _receiver_name(hass, getattr(service_info, "source", None))
     gap = parsed.sequence_counter - last_sequence if last_sequence >= 0 else None
     _update_diagnostics(hass, entry, entry_data, gap=gap, rssi=service_info.rssi, receiver=receiver)
-    for button in parsed.buttons:
+    # Legacy mode has its own press/release events: raw ones would be extra events on the bus.
+    for button in () if entry_data.get("mode", MODE_LEGACY) == MODE_LEGACY else parsed.buttons:
         common = {
             "hass": hass,
             "entry": entry,
