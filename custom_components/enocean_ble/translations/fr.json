@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Simple: une action par bouton, part à l'appui. Le plus fiable.",
-        "short_long": "Court + long: appui court ou long, part au relâchement.",
-        "short_hold": "Court + maintien: appui court, ou maintien pour régler en continu.",
+        "short_long": "Court + long: appui court (<1 s) ou long (>1 s), part au relâchement.",
+        "short_hold": "Court + maintien: appui court (<1 s), ou maintien (>1 s) pour régler en continu.",
         "legacy": "Ancien: événements des versions précédentes, supprimé dans une version future."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Simple: une action par bouton, part à l'appui. Le plus fiable.",
-        "short_long": "Court + long: appui court ou long, part au relâchement.",
-        "short_hold": "Court + maintien: appui court, ou maintien pour régler en continu.",
+        "short_long": "Court + long: appui court (<1 s) ou long (>1 s), part au relâchement.",
+        "short_hold": "Court + maintien: appui court (<1 s), ou maintien (>1 s) pour régler en continu.",
         "legacy": "Ancien (défaut): événements des versions précédentes, supprimé dans une version future."
       }
     }

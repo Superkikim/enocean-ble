@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Simple: una acción por botón, al pulsar. El más fiable.",
-        "short_long": "Corto + largo: pulsación corta o larga, al soltar.",
-        "short_hold": "Corto + mantener: pulsación corta, o mantener para ajustar de forma continua.",
+        "short_long": "Corto + largo: pulsación corta (<1 s) o larga (>1 s), al soltar.",
+        "short_hold": "Corto + mantener: pulsación corta (<1 s), o mantener (>1 s) para ajustar de forma continua.",
         "legacy": "Antiguo: eventos de versiones anteriores, se eliminará en una versión futura."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Simple: una acción por botón, al pulsar. El más fiable.",
-        "short_long": "Corto + largo: pulsación corta o larga, al soltar.",
-        "short_hold": "Corto + mantener: pulsación corta, o mantener para ajustar de forma continua.",
+        "short_long": "Corto + largo: pulsación corta (<1 s) o larga (>1 s), al soltar.",
+        "short_hold": "Corto + mantener: pulsación corta (<1 s), o mantener (>1 s) para ajustar de forma continua.",
         "legacy": "Antiguo (predeterminado): eventos de versiones anteriores, se eliminará en una versión futura."
       }
     }

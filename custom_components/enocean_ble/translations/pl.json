@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Prosty: jedna akcja na przycisk, po naciśnięciu. Najbardziej niezawodny.",
-        "short_long": "Krótkie + długie: krótkie lub długie naciśnięcie, po zwolnieniu.",
-        "short_hold": "Krótkie + przytrzymanie: krótkie naciśnięcie lub przytrzymanie do płynnej regulacji.",
+        "short_long": "Krótkie + długie: krótkie (<1 s) lub długie naciśnięcie (>1 s), po zwolnieniu.",
+        "short_hold": "Krótkie + przytrzymanie: krótkie naciśnięcie (<1 s) lub przytrzymanie (>1 s) do płynnej regulacji.",
         "legacy": "Starszy: zdarzenia poprzednich wersji, zostanie usunięty w przyszłej wersji."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Prosty: jedna akcja na przycisk, po naciśnięciu. Najbardziej niezawodny.",
-        "short_long": "Krótkie + długie: krótkie lub długie naciśnięcie, po zwolnieniu.",
-        "short_hold": "Krótkie + przytrzymanie: krótkie naciśnięcie lub przytrzymanie do płynnej regulacji.",
+        "short_long": "Krótkie + długie: krótkie (<1 s) lub długie naciśnięcie (>1 s), po zwolnieniu.",
+        "short_hold": "Krótkie + przytrzymanie: krótkie naciśnięcie (<1 s) lub przytrzymanie (>1 s) do płynnej regulacji.",
         "legacy": "Starszy (domyślny): zdarzenia poprzednich wersji, zostanie usunięty w przyszłej wersji."
       }
     }

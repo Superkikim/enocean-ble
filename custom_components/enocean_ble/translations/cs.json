@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Jednoduchý: jedna akce na tlačítko, po stisku. Nejspolehlivější.",
-        "short_long": "Krátký + dlouhý: krátký nebo dlouhý stisk, po uvolnění.",
-        "short_hold": "Krátký + držení: krátký stisk, nebo držení pro plynulé nastavení.",
+        "short_long": "Krátký + dlouhý: krátký (<1 s) nebo dlouhý stisk (>1 s), po uvolnění.",
+        "short_hold": "Krátký + držení: krátký stisk (<1 s), nebo držení (>1 s) pro plynulé nastavení.",
         "legacy": "Starý: události dřívějších verzí, bude odstraněn v budoucí verzi."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Jednoduchý: jedna akce na tlačítko, po stisku. Nejspolehlivější.",
-        "short_long": "Krátký + dlouhý: krátký nebo dlouhý stisk, po uvolnění.",
-        "short_hold": "Krátký + držení: krátký stisk, nebo držení pro plynulé nastavení.",
+        "short_long": "Krátký + dlouhý: krátký (<1 s) nebo dlouhý stisk (>1 s), po uvolnění.",
+        "short_hold": "Krátký + držení: krátký stisk (<1 s), nebo držení (>1 s) pro plynulé nastavení.",
         "legacy": "Starý (výchozí): události dřívějších verzí, bude odstraněn v budoucí verzi."
       }
     }

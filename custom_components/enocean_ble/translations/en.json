@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Simple: one action per button, runs on press. Most reliable.",
-        "short_long": "Short + long: short or long press, runs on release.",
-        "short_hold": "Short + hold: short press, or hold to adjust continuously.",
+        "short_long": "Short + long: short press (<1 s) or long press (>1 s), runs on release.",
+        "short_hold": "Short + hold: short press (<1 s), or hold (>1 s) to adjust continuously.",
         "legacy": "Legacy: events of earlier versions, removed in a future version."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Simple: one action per button, runs on press. Most reliable.",
-        "short_long": "Short + long: short or long press, runs on release.",
-        "short_hold": "Short + hold: short press, or hold to adjust continuously.",
+        "short_long": "Short + long: short press (<1 s) or long press (>1 s), runs on release.",
+        "short_hold": "Short + hold: short press (<1 s), or hold (>1 s) to adjust continuously.",
         "legacy": "Legacy (default): events of earlier versions, removed in a future version."
       }
     }

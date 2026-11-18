@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Eenvoudig: één actie per knop, bij het indrukken. Het betrouwbaarst.",
-        "short_long": "Kort + lang: kort of lang drukken, bij het loslaten.",
-        "short_hold": "Kort + vasthouden: kort drukken, of vasthouden om doorlopend te regelen.",
+        "short_long": "Kort + lang: kort (<1 s) of lang drukken (>1 s), bij het loslaten.",
+        "short_hold": "Kort + vasthouden: kort drukken (<1 s), of vasthouden (>1 s) om doorlopend te regelen.",
         "legacy": "Oud: events van eerdere versies, wordt in een toekomstige versie verwijderd."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Eenvoudig: één actie per knop, bij het indrukken. Het betrouwbaarst.",
-        "short_long": "Kort + lang: kort of lang drukken, bij het loslaten.",
-        "short_hold": "Kort + vasthouden: kort drukken, of vasthouden om doorlopend te regelen.",
+        "short_long": "Kort + lang: kort (<1 s) of lang drukken (>1 s), bij het loslaten.",
+        "short_hold": "Kort + vasthouden: kort drukken (<1 s), of vasthouden (>1 s) om doorlopend te regelen.",
         "legacy": "Oud (standaard): events van eerdere versies, wordt in een toekomstige versie verwijderd."
       }
     }

@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
-        "short_long": "Kurz + lang: kurzer oder langer Druck, beim Loslassen.",
-        "short_hold": "Kurz + halten: kurzer Druck, oder Halten für fortlaufende Steuerung.",
+        "short_long": "Kurz + lang: kurzer (<1 s) oder langer Druck (>1 s), beim Loslassen.",
+        "short_hold": "Kurz + halten: kurzer Druck (<1 s), oder Halten (>1 s) für fortlaufende Steuerung.",
         "legacy": "Alt: Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
-        "short_long": "Kurz + lang: kurzer oder langer Druck, beim Loslassen.",
-        "short_hold": "Kurz + halten: kurzer Druck, oder Halten für fortlaufende Steuerung.",
+        "short_long": "Kurz + lang: kurzer (<1 s) oder langer Druck (>1 s), beim Loslassen.",
+        "short_hold": "Kurz + halten: kurzer Druck (<1 s), oder Halten (>1 s) für fortlaufende Steuerung.",
         "legacy": "Alt (Standard): Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     }

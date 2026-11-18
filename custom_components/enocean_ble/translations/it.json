@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Semplice: un'azione per pulsante, alla pressione. La più affidabile.",
-        "short_long": "Breve + lunga: pressione breve o lunga, al rilascio.",
-        "short_hold": "Breve + tenuta: pressione breve, o tenuta per regolare in modo continuo.",
+        "short_long": "Breve + lunga: pressione breve (<1 s) o lunga (>1 s), al rilascio.",
+        "short_hold": "Breve + tenuta: pressione breve (<1 s), o tenuta (>1 s) per regolare in modo continuo.",
         "legacy": "Precedente: eventi delle versioni precedenti, rimossa in una versione futura."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Semplice: un'azione per pulsante, alla pressione. La più affidabile.",
-        "short_long": "Breve + lunga: pressione breve o lunga, al rilascio.",
-        "short_hold": "Breve + tenuta: pressione breve, o tenuta per regolare in modo continuo.",
+        "short_long": "Breve + lunga: pressione breve (<1 s) o lunga (>1 s), al rilascio.",
+        "short_hold": "Breve + tenuta: pressione breve (<1 s), o tenuta (>1 s) per regolare in modo continuo.",
         "legacy": "Precedente (predefinito): eventi delle versioni precedenti, rimossa in una versione futura."
       }
     }

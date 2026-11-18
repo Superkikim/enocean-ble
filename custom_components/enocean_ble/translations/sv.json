@@ -101,16 +101,16 @@
     "button_mode": {
       "options": {
         "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
-        "short_long": "Kort + lång: kort eller långt tryck, vid släpp.",
-        "short_hold": "Kort + håll: kort tryck, eller håll för att justera kontinuerligt.",
+        "short_long": "Kort + lång: kort (<1 s) eller långt tryck (>1 s), vid släpp.",
+        "short_hold": "Kort + håll: kort tryck (<1 s), eller håll (>1 s) för att justera kontinuerligt.",
         "legacy": "Äldre: händelser från tidigare versioner, tas bort i en framtida version."
       }
     },
     "button_mode_repair": {
       "options": {
         "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
-        "short_long": "Kort + lång: kort eller långt tryck, vid släpp.",
-        "short_hold": "Kort + håll: kort tryck, eller håll för att justera kontinuerligt.",
+        "short_long": "Kort + lång: kort (<1 s) eller långt tryck (>1 s), vid släpp.",
+        "short_hold": "Kort + håll: kort tryck (<1 s), eller håll (>1 s) för att justera kontinuerligt.",
         "legacy": "Äldre (standard): händelser från tidigare versioner, tas bort i en framtida version."
       }
     }
