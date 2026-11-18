@@ -338,11 +338,12 @@ async def test_repair_sets_the_chosen_mode() -> None:
     flow = LegacyButtonModeRepairFlow("entry")
     flow.hass = hass
     # Home Assistant opens the repair with the issue data as "user input".
-    with patch("custom_components.enocean_ble.repairs.find_switch_users", return_value=[]):
+    users = ["- Toggle (`automation.toggle`)"]
+    with patch("custom_components.enocean_ble.repairs.find_switch_users", return_value=users):
         result = await flow.async_step_init({"entry_id": "entry"})
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
-    assert result["description_placeholders"] == {"name": "Sud Top", "usage": "—"}
+    assert result["description_placeholders"] == {"name": "Sud Top", "usage": users[0]}
     selector = next(iter(_schema_fields(result).values()))
     assert selector.config["options"] == ["simple", "short_long", "short_hold", "legacy"]
     assert selector.config["translation_key"] == "button_mode_repair"
@@ -352,6 +353,21 @@ async def test_repair_sets_the_chosen_mode() -> None:
     hass.config_entries.async_update_entry.assert_called_once_with(
         entry, options={CONF_BUTTON_MODE: "short_long"}
     )
+
+
+async def test_repair_without_users_keeps_legacy_preselected() -> None:
+    entry = SimpleNamespace(entry_id="entry", title="Sud Top", options={})
+    hass = MagicMock()
+    hass.config_entries.async_get_entry.return_value = entry
+    flow = LegacyButtonModeRepairFlow("entry")
+    flow.hass = hass
+    with patch("custom_components.enocean_ble.repairs.find_switch_users", return_value=[]):
+        result = await flow.async_step_init({"entry_id": "entry"})
+    assert result["step_id"] == "confirm_unused"
+    assert next(iter(_schema_fields(result))).default() == "legacy"
+    result = await flow.async_step_confirm_unused({CONF_BUTTON_MODE: "simple"})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    hass.config_entries.async_update_entry.assert_called_once_with(entry, options={CONF_BUTTON_MODE: "simple"})
 
 
 async def test_repair_of_a_removed_switch_aborts() -> None:

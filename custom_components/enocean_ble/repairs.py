@@ -38,8 +38,11 @@ class LegacyButtonModeRepairFlow(RepairsFlow):
         if entry is None:
             return self.async_abort(reason="entry_not_found")
         if user_input is None:
+            # Computed when the dialog opens, so it is always up to date.
+            users = find_switch_users(self.hass, entry)
             return self.async_show_form(
-                step_id="confirm",
+                # Two texts: with the list of what was found, or saying nothing was found.
+                step_id="confirm" if users else "confirm_unused",
                 # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
                 data_schema=vol.Schema(  # type: ignore[arg-type,unused-ignore]
                     {
@@ -48,17 +51,19 @@ class LegacyButtonModeRepairFlow(RepairsFlow):
                         )
                     }
                 ),
-                description_placeholders={
-                    "name": entry.title,
-                    # Computed when the dialog opens, so it is always up to date.
-                    "usage": "\n".join(find_switch_users(self.hass, entry)) or "—",
-                },
+                description_placeholders={"name": entry.title, "usage": "\n".join(users)},
             )
         # The options change reloads the switch in its new mode (update listener).
         self.hass.config_entries.async_update_entry(
             entry, options={**entry.options, CONF_BUTTON_MODE: user_input[CONF_BUTTON_MODE]}
         )
         return self.async_create_entry(data={})
+
+    async def async_step_confirm_unused(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
+        """Same choice, when no automation or script using the switch was found."""
+        return await self.async_step_confirm(user_input)
 
 
 async def async_create_fix_flow(
