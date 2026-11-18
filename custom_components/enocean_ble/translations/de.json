@@ -42,7 +42,7 @@
       },
       "button_mode": {
         "title": "Tastenmodus",
-        "description": "Wählen Sie, wie die Tasten von {name} funktionieren. Sie können es später über die Schaltfläche Konfigurieren ändern.\n\n- **Einfach**: eine Aktion pro Taste. Sie wird sofort beim Drücken ausgelöst. Am zuverlässigsten.\n- **Kurz + lang**: zwei Aktionen pro Taste: kurzer Druck (unter 1 s) oder langer Druck (1 s oder mehr). Die Aktion wird beim Loslassen ausgelöst.\n- **Kurz + halten**: ein kurzer Druck löst eine Aktion aus. Gedrückt halten steuert etwas fortlaufend, z. B. Helligkeit oder Lautstärke. Das Halten beginnt nach 1 s und endet beim Loslassen.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
+        "description": "Wählen Sie, wie die Tasten von {name} funktionieren. Sie können es später über die Schaltfläche Konfigurieren ändern.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
         "data": {
           "button_mode": "Tastenmodus"
         }
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Tastenmodus",
-        "description": "Wählen Sie, wie die Tasten dieses Schalters funktionieren. Automationen, die seine Ereignisse verwenden, müssen eventuell angepasst werden.\n\n- **Einfach**: eine Aktion pro Taste. Sie wird sofort beim Drücken ausgelöst. Am zuverlässigsten.\n- **Kurz + lang**: zwei Aktionen pro Taste: kurzer Druck (unter 1 s) oder langer Druck (1 s oder mehr). Die Aktion wird beim Loslassen ausgelöst.\n- **Kurz + halten**: ein kurzer Druck löst eine Aktion aus. Gedrückt halten steuert etwas fortlaufend, z. B. Helligkeit oder Lautstärke. Das Halten beginnt nach 1 s und endet beim Loslassen.\n- **Alt**: die Ereignisse der Versionen vor 2026.11. Nur aufgeführt, solange dieser Schalter ihn verwendet.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
+        "description": "Wählen Sie, wie die Tasten dieses Schalters funktionieren. Automationen, die seine Ereignisse verwenden, müssen eventuell angepasst werden.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
         "data": {
           "button_mode": "Tastenmodus"
         }
@@ -85,7 +85,7 @@
         "step": {
           "confirm": {
             "title": "Tastenmodus für {name} wählen",
-            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Ihre Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wählen Sie einen neuen Modus und passen Sie dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Einfach**: eine Aktion pro Taste. Sie wird sofort beim Drücken ausgelöst. Am zuverlässigsten.\n- **Kurz + lang**: zwei Aktionen pro Taste: kurzer Druck (unter 1 s) oder langer Druck (1 s oder mehr). Die Aktion wird beim Loslassen ausgelöst.\n- **Kurz + halten**: ein kurzer Druck löst eine Aktion aus. Gedrückt halten steuert etwas fortlaufend, z. B. Helligkeit oder Lautstärke. Das Halten beginnt nach 1 s und endet beim Loslassen.\n\nIn den neuen Modi lösen Sie Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 event“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 raw“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, ignorieren Sie diese Reparatur.",
+            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Ihre Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wählen Sie einen neuen Modus und passen Sie dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi lösen Sie Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 event“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 raw“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, ignorieren Sie diese Reparatur.",
             "data": {
               "button_mode": "Tastenmodus"
             }
@@ -100,10 +100,18 @@
   "selector": {
     "button_mode": {
       "options": {
-        "simple": "Einfach",
-        "short_long": "Kurz + lang",
-        "short_hold": "Kurz + halten",
-        "legacy": "Alt (frühere Versionen)"
+        "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
+        "short_long": "Kurz + lang: kurzer oder langer Druck, beim Loslassen.",
+        "short_hold": "Kurz + halten: kurzer Druck, oder Halten für fortlaufende Steuerung.",
+        "legacy": "Alt: Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
+        "short_long": "Kurz + lang: kurzer oder langer Druck, beim Loslassen.",
+        "short_hold": "Kurz + halten: kurzer Druck, oder Halten für fortlaufende Steuerung.",
+        "legacy": "Alt (Standard): Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     }
   }

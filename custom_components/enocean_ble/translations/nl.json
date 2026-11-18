@@ -42,7 +42,7 @@
       },
       "button_mode": {
         "title": "Knopmodus",
-        "description": "Kies hoe de knoppen van {name} werken. Je kunt dit later wijzigen met de knop Configureren.\n\n- **Eenvoudig**: één actie per knop. Die start zodra je drukt. Het betrouwbaarst.\n- **Kort + lang**: twee acties per knop: kort drukken (minder dan 1 s) of lang drukken (1 s of meer). De actie start bij het loslaten van de knop.\n- **Kort + vasthouden**: kort drukken start één actie. De knop vasthouden regelt iets doorlopend, zoals helderheid of volume. Vasthouden begint na 1 s en stopt bij het loslaten.\n\nKort + lang en Kort + vasthouden moeten het loslaten ontvangen. Gaat dat verloren, dan gaat de actie verloren, en met Kort + vasthouden kan vasthouden tot 8 seconden duren. Meer Bluetooth-ontvangers bij de schakelaar maken dit zeldzaam (zie Probleemoplossing in de documentatie).",
+        "description": "Kies hoe de knoppen van {name} werken. Je kunt dit later wijzigen met de knop Configureren.\n\nKort + lang en Kort + vasthouden moeten het loslaten ontvangen. Gaat dat verloren, dan gaat de actie verloren, en met Kort + vasthouden kan vasthouden tot 8 seconden duren. Meer Bluetooth-ontvangers bij de schakelaar maken dit zeldzaam (zie Probleemoplossing in de documentatie).",
         "data": {
           "button_mode": "Knopmodus"
         }
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Knopmodus",
-        "description": "Kies hoe de knoppen van deze schakelaar werken. Automatiseringen die zijn events gebruiken, moeten mogelijk worden aangepast.\n\n- **Eenvoudig**: één actie per knop. Die start zodra je drukt. Het betrouwbaarst.\n- **Kort + lang**: twee acties per knop: kort drukken (minder dan 1 s) of lang drukken (1 s of meer). De actie start bij het loslaten van de knop.\n- **Kort + vasthouden**: kort drukken start één actie. De knop vasthouden regelt iets doorlopend, zoals helderheid of volume. Vasthouden begint na 1 s en stopt bij het loslaten.\n- **Oud**: de events van versies vóór 2026.11. Alleen getoond zolang deze schakelaar hem gebruikt.\n\nKort + lang en Kort + vasthouden moeten het loslaten ontvangen. Gaat dat verloren, dan gaat de actie verloren, en met Kort + vasthouden kan vasthouden tot 8 seconden duren. Meer Bluetooth-ontvangers bij de schakelaar maken dit zeldzaam (zie Probleemoplossing in de documentatie).",
+        "description": "Kies hoe de knoppen van deze schakelaar werken. Automatiseringen die zijn events gebruiken, moeten mogelijk worden aangepast.\n\nKort + lang en Kort + vasthouden moeten het loslaten ontvangen. Gaat dat verloren, dan gaat de actie verloren, en met Kort + vasthouden kan vasthouden tot 8 seconden duren. Meer Bluetooth-ontvangers bij de schakelaar maken dit zeldzaam (zie Probleemoplossing in de documentatie).",
         "data": {
           "button_mode": "Knopmodus"
         }
@@ -85,7 +85,7 @@
         "step": {
           "confirm": {
             "title": "Kies een knopmodus voor {name}",
-            "description": "{name} gebruikt de **Oude** modus van eerdere versies. Je automatiseringen blijven werken, maar deze modus wordt in een toekomstige versie verwijderd. Kies een nieuwe modus en pas daarna de automatiseringen aan die deze schakelaar gebruiken:\n\n| Oud | Eenvoudig | Kort + lang | Kort + vasthouden |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Eenvoudig**: één actie per knop. Die start zodra je drukt. Het betrouwbaarst.\n- **Kort + lang**: twee acties per knop: kort drukken (minder dan 1 s) of lang drukken (1 s of meer). De actie start bij het loslaten van de knop.\n- **Kort + vasthouden**: kort drukken start één actie. De knop vasthouden regelt iets doorlopend, zoals helderheid of volume. Vasthouden begint na 1 s en stopt bij het loslaten.\n\nStart in de nieuwe modi automatiseringen met **Event ontvangen** op de knopentiteiten (A0, A1, B0, B1). De sensoren \"A0 event\" worden verwijderd. raw_press en raw_release staan op de entiteiten \"A0 raw\", standaard uitgeschakeld. Negeer deze reparatie om de oude modus voorlopig te houden.",
+            "description": "{name} gebruikt de **Oude** modus van eerdere versies. Je automatiseringen blijven werken, maar deze modus wordt in een toekomstige versie verwijderd. Kies een nieuwe modus en pas daarna de automatiseringen aan die deze schakelaar gebruiken:\n\n| Oud | Eenvoudig | Kort + lang | Kort + vasthouden |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nStart in de nieuwe modi automatiseringen met **Event ontvangen** op de knopentiteiten (A0, A1, B0, B1). De sensoren \"A0 event\" worden verwijderd. raw_press en raw_release staan op de entiteiten \"A0 raw\", standaard uitgeschakeld. Negeer deze reparatie om de oude modus voorlopig te houden.",
             "data": {
               "button_mode": "Knopmodus"
             }
@@ -100,10 +100,18 @@
   "selector": {
     "button_mode": {
       "options": {
-        "simple": "Eenvoudig",
-        "short_long": "Kort + lang",
-        "short_hold": "Kort + vasthouden",
-        "legacy": "Oud (eerdere versies)"
+        "simple": "Eenvoudig: één actie per knop, bij het indrukken. Het betrouwbaarst.",
+        "short_long": "Kort + lang: kort of lang drukken, bij het loslaten.",
+        "short_hold": "Kort + vasthouden: kort drukken, of vasthouden om doorlopend te regelen.",
+        "legacy": "Oud: events van eerdere versies, wordt in een toekomstige versie verwijderd."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Eenvoudig: één actie per knop, bij het indrukken. Het betrouwbaarst.",
+        "short_long": "Kort + lang: kort of lang drukken, bij het loslaten.",
+        "short_hold": "Kort + vasthouden: kort drukken, of vasthouden om doorlopend te regelen.",
+        "legacy": "Oud (standaard): events van eerdere versies, wordt in een toekomstige versie verwijderd."
       }
     }
   }

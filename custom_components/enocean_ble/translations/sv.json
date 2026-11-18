@@ -42,7 +42,7 @@
       },
       "button_mode": {
         "title": "Knappläge",
-        "description": "Välj hur knapparna på {name} fungerar. Du kan ändra det senare med knappen Konfigurera.\n\n- **Enkel**: en åtgärd per knapp. Den körs så fort du trycker. Mest tillförlitlig.\n- **Kort + lång**: två åtgärder per knapp: ett kort tryck (under 1 s) eller ett långt tryck (1 s eller mer). Åtgärden körs när du släpper knappen.\n- **Kort + håll**: ett kort tryck kör en åtgärd. Att hålla in knappen styr något kontinuerligt, till exempel ljusstyrka eller volym. Hållet börjar efter 1 s och slutar när du släpper.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "description": "Välj hur knapparna på {name} fungerar. Du kan ändra det senare med knappen Konfigurera.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
         "data": {
           "button_mode": "Knappläge"
         }
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Knappläge",
-        "description": "Välj hur knapparna på den här brytaren fungerar. Automatiseringar som använder dess händelser kan behöva anpassas.\n\n- **Enkel**: en åtgärd per knapp. Den körs så fort du trycker. Mest tillförlitlig.\n- **Kort + lång**: två åtgärder per knapp: ett kort tryck (under 1 s) eller ett långt tryck (1 s eller mer). Åtgärden körs när du släpper knappen.\n- **Kort + håll**: ett kort tryck kör en åtgärd. Att hålla in knappen styr något kontinuerligt, till exempel ljusstyrka eller volym. Hållet börjar efter 1 s och slutar när du släpper.\n- **Äldre**: händelserna i versioner före 2026.11. Visas bara så länge den här brytaren använder det.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "description": "Välj hur knapparna på den här brytaren fungerar. Automatiseringar som använder dess händelser kan behöva anpassas.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
         "data": {
           "button_mode": "Knappläge"
         }
@@ -85,7 +85,7 @@
         "step": {
           "confirm": {
             "title": "Välj ett knappläge för {name}",
-            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Enkel**: en åtgärd per knapp. Den körs så fort du trycker. Mest tillförlitlig.\n- **Kort + lång**: två åtgärder per knapp: ett kort tryck (under 1 s) eller ett långt tryck (1 s eller mer). Åtgärden körs när du släpper knappen.\n- **Kort + håll**: ett kort tryck kör en åtgärd. Att hålla in knappen styr något kontinuerligt, till exempel ljusstyrka eller volym. Hållet börjar efter 1 s och slutar när du släpper.\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 event\" tas bort. raw_press och raw_release finns på entiteterna \"A0 raw\", inaktiverade som standard. Ignorera den här reparationen för att behålla det Äldre läget tills vidare.",
+            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 event\" tas bort. raw_press och raw_release finns på entiteterna \"A0 raw\", inaktiverade som standard. Ignorera den här reparationen för att behålla det Äldre läget tills vidare.",
             "data": {
               "button_mode": "Knappläge"
             }
@@ -100,10 +100,18 @@
   "selector": {
     "button_mode": {
       "options": {
-        "simple": "Enkel",
-        "short_long": "Kort + lång",
-        "short_hold": "Kort + håll",
-        "legacy": "Äldre (tidigare versioner)"
+        "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
+        "short_long": "Kort + lång: kort eller långt tryck, vid släpp.",
+        "short_hold": "Kort + håll: kort tryck, eller håll för att justera kontinuerligt.",
+        "legacy": "Äldre: händelser från tidigare versioner, tas bort i en framtida version."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
+        "short_long": "Kort + lång: kort eller långt tryck, vid släpp.",
+        "short_hold": "Kort + håll: kort tryck, eller håll för att justera kontinuerligt.",
+        "legacy": "Äldre (standard): händelser från tidigare versioner, tas bort i en framtida version."
       }
     }
   }

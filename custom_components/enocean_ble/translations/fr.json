@@ -42,7 +42,7 @@
       },
       "button_mode": {
         "title": "Mode des boutons",
-        "description": "Choisissez comment fonctionnent les boutons de {name}. Vous pourrez le changer plus tard avec le bouton Configurer.\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "description": "Choisissez comment fonctionnent les boutons de {name}. Vous pourrez le changer plus tard avec le bouton Configurer.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
         "data": {
           "button_mode": "Mode des boutons"
         }
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Mode des boutons",
-        "description": "Choisissez comment fonctionnent les boutons de ce switch. Les automatisations qui utilisent ses événements devront peut-être être adaptées.\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n- **Ancien** : les événements des versions antérieures à 2026.11. Proposé seulement tant que ce switch l'utilise.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "description": "Choisissez comment fonctionnent les boutons de ce switch. Les automatisations qui utilisent ses événements devront peut-être être adaptées.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
         "data": {
           "button_mode": "Mode des boutons"
         }
@@ -85,7 +85,7 @@
         "step": {
           "confirm": {
             "title": "Choisir un mode de boutons pour {name}",
-            "description": "{name} utilise le mode **Ancien** des versions précédentes. Vos automatisations continuent de fonctionner, mais ce mode sera supprimé dans une version future. Choisissez un nouveau mode, puis adaptez les automatisations qui utilisent ce switch :\n\n| Ancien | Simple | Court + long | Court + maintien |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Simple** : une action par bouton. Elle part dès l'appui. Le plus fiable.\n- **Court + long** : deux actions par bouton : un appui court (moins de 1 s) ou un appui long (1 s ou plus). L'action part au relâchement du bouton.\n- **Court + maintien** : un appui court lance une action. Maintenir le bouton règle quelque chose en continu, comme la luminosité ou le volume. Le maintien commence après 1 s et s'arrête au relâchement.\n\nDans les nouveaux modes, déclenchez les automatisations avec **Événement reçu** sur les entités des boutons (A0, A1, B0, B1). Les capteurs « A0 event » sont supprimés. raw_press et raw_release sont sur les entités « A0 raw », désactivées par défaut. Pour garder le mode Ancien pour l'instant, ignorez cette réparation.",
+            "description": "{name} utilise le mode **Ancien** des versions précédentes. Vos automatisations continuent de fonctionner, mais ce mode sera supprimé dans une version future. Choisissez un nouveau mode, puis adaptez les automatisations qui utilisent ce switch :\n\n| Ancien | Simple | Court + long | Court + maintien |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nDans les nouveaux modes, déclenchez les automatisations avec **Événement reçu** sur les entités des boutons (A0, A1, B0, B1). Les capteurs « A0 event » sont supprimés. raw_press et raw_release sont sur les entités « A0 raw », désactivées par défaut. Pour garder le mode Ancien pour l'instant, ignorez cette réparation.",
             "data": {
               "button_mode": "Mode des boutons"
             }
@@ -100,10 +100,18 @@
   "selector": {
     "button_mode": {
       "options": {
-        "simple": "Simple",
-        "short_long": "Court + long",
-        "short_hold": "Court + maintien",
-        "legacy": "Ancien (versions précédentes)"
+        "simple": "Simple: une action par bouton, part à l'appui. Le plus fiable.",
+        "short_long": "Court + long: appui court ou long, part au relâchement.",
+        "short_hold": "Court + maintien: appui court, ou maintien pour régler en continu.",
+        "legacy": "Ancien: événements des versions précédentes, supprimé dans une version future."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Simple: une action par bouton, part à l'appui. Le plus fiable.",
+        "short_long": "Court + long: appui court ou long, part au relâchement.",
+        "short_hold": "Court + maintien: appui court, ou maintien pour régler en continu.",
+        "legacy": "Ancien (défaut): événements des versions précédentes, supprimé dans une version future."
       }
     }
   }

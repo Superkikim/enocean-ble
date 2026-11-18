@@ -42,7 +42,7 @@
       },
       "button_mode": {
         "title": "Režim tlačítek",
-        "description": "Zvolte, jak fungují tlačítka {name}. Později to můžete změnit tlačítkem Nastavit.\n\n- **Jednoduchý**: jedna akce na tlačítko. Spustí se hned po stisku. Nejspolehlivější.\n- **Krátký + dlouhý**: dvě akce na tlačítko: krátký stisk (pod 1 s) nebo dlouhý stisk (1 s a déle). Akce se spustí po uvolnění tlačítka.\n- **Krátký + držení**: krátký stisk spustí jednu akci. Držení tlačítka plynule ovládá něco, například jas nebo hlasitost. Držení začíná po 1 s a končí uvolněním.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
+        "description": "Zvolte, jak fungují tlačítka {name}. Později to můžete změnit tlačítkem Nastavit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
         "data": {
           "button_mode": "Režim tlačítek"
         }
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Režim tlačítek",
-        "description": "Zvolte, jak fungují tlačítka tohoto vypínače. Automatizace, které používají jeho události, může být nutné upravit.\n\n- **Jednoduchý**: jedna akce na tlačítko. Spustí se hned po stisku. Nejspolehlivější.\n- **Krátký + dlouhý**: dvě akce na tlačítko: krátký stisk (pod 1 s) nebo dlouhý stisk (1 s a déle). Akce se spustí po uvolnění tlačítka.\n- **Krátký + držení**: krátký stisk spustí jednu akci. Držení tlačítka plynule ovládá něco, například jas nebo hlasitost. Držení začíná po 1 s a končí uvolněním.\n- **Starý**: události verzí před 2026.11. Zobrazen jen, dokud ho tento vypínač používá.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
+        "description": "Zvolte, jak fungují tlačítka tohoto vypínače. Automatizace, které používají jeho události, může být nutné upravit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
         "data": {
           "button_mode": "Režim tlačítek"
         }
@@ -85,7 +85,7 @@
         "step": {
           "confirm": {
             "title": "Zvolte režim tlačítek pro {name}",
-            "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento vypínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Jednoduchý**: jedna akce na tlačítko. Spustí se hned po stisku. Nejspolehlivější.\n- **Krátký + dlouhý**: dvě akce na tlačítko: krátký stisk (pod 1 s) nebo dlouhý stisk (1 s a déle). Akce se spustí po uvolnění tlačítka.\n- **Krátký + držení**: krátký stisk spustí jednu akci. Držení tlačítka plynule ovládá něco, například jas nebo hlasitost. Držení začíná po 1 s a končí uvolněním.\n\nV nových režimech spouštějte automatizace spouštěčem **Událost přijata** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 event“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 raw“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, tuto opravu ignorujte.",
+            "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento vypínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nV nových režimech spouštějte automatizace spouštěčem **Událost přijata** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 event“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 raw“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, tuto opravu ignorujte.",
             "data": {
               "button_mode": "Režim tlačítek"
             }
@@ -100,10 +100,18 @@
   "selector": {
     "button_mode": {
       "options": {
-        "simple": "Jednoduchý",
-        "short_long": "Krátký + dlouhý",
-        "short_hold": "Krátký + držení",
-        "legacy": "Starý (dřívější verze)"
+        "simple": "Jednoduchý: jedna akce na tlačítko, po stisku. Nejspolehlivější.",
+        "short_long": "Krátký + dlouhý: krátký nebo dlouhý stisk, po uvolnění.",
+        "short_hold": "Krátký + držení: krátký stisk, nebo držení pro plynulé nastavení.",
+        "legacy": "Starý: události dřívějších verzí, bude odstraněn v budoucí verzi."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Jednoduchý: jedna akce na tlačítko, po stisku. Nejspolehlivější.",
+        "short_long": "Krátký + dlouhý: krátký nebo dlouhý stisk, po uvolnění.",
+        "short_hold": "Krátký + držení: krátký stisk, nebo držení pro plynulé nastavení.",
+        "legacy": "Starý (výchozí): události dřívějších verzí, bude odstraněn v budoucí verzi."
       }
     }
   }
