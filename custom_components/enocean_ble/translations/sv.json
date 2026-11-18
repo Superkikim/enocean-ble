@@ -83,7 +83,7 @@
       "title": "{name}: välj ett knappläge",
       "fix_flow": {
         "step": {
-          "init": {
+          "confirm": {
             "title": "Välj ett knappläge för {name}",
             "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Enkel**: en åtgärd per knapp. Den körs så fort du trycker. Mest tillförlitlig.\n- **Kort + lång**: två åtgärder per knapp: ett kort tryck (under 1 s) eller ett långt tryck (1 s eller mer). Åtgärden körs när du släpper knappen.\n- **Kort + håll**: ett kort tryck kör en åtgärd. Att hålla in knappen styr något kontinuerligt, till exempel ljusstyrka eller volym. Hållet börjar efter 1 s och slutar när du släpper.\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 event\" tas bort. raw_press och raw_release finns på entiteterna \"A0 raw\", inaktiverade som standard. Ignorera den här reparationen för att behålla det Äldre läget tills vidare.",
             "data": {

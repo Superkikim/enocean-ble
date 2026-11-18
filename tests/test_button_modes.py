@@ -329,10 +329,12 @@ async def test_repair_sets_the_chosen_mode() -> None:
     hass.config_entries.async_get_entry.return_value = entry
     flow = LegacyButtonModeRepairFlow("entry")
     flow.hass = hass
-    result = await flow.async_step_init()
+    # Home Assistant opens the repair with the issue data as "user input".
+    result = await flow.async_step_init({"entry_id": "entry"})
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {"name": "Sud Top"}
-    result = await flow.async_step_init({CONF_BUTTON_MODE: "short_long"})
+    result = await flow.async_step_confirm({CONF_BUTTON_MODE: "short_long"})
     assert result["type"] == FlowResultType.CREATE_ENTRY
     hass.config_entries.async_update_entry.assert_called_once_with(
         entry, options={CONF_BUTTON_MODE: "short_long"}

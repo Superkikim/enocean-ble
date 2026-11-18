@@ -26,13 +26,19 @@ class LegacyButtonModeRepairFlow(RepairsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> RepairsFlowResult:
+        """Open the repair: Home Assistant passes the issue data here, not an answer."""
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> RepairsFlowResult:
         """Show the modes, with what each Legacy event becomes."""
         entry = self.hass.config_entries.async_get_entry(self._entry_id)
         if entry is None:
             return self.async_abort(reason="entry_not_found")
         if user_input is None:
             return self.async_show_form(
-                step_id="init",
+                step_id="confirm",
                 # HA 2026.x maps voluptuous onto probatio at runtime; only the type stubs differ.
                 data_schema=vol.Schema(  # type: ignore[arg-type,unused-ignore]
                     {

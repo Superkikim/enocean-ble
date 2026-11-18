@@ -83,7 +83,7 @@
       "title": "{name}: zvolte režim tlačítek",
       "fix_flow": {
         "step": {
-          "init": {
+          "confirm": {
             "title": "Zvolte režim tlačítek pro {name}",
             "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento vypínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Jednoduchý**: jedna akce na tlačítko. Spustí se hned po stisku. Nejspolehlivější.\n- **Krátký + dlouhý**: dvě akce na tlačítko: krátký stisk (pod 1 s) nebo dlouhý stisk (1 s a déle). Akce se spustí po uvolnění tlačítka.\n- **Krátký + držení**: krátký stisk spustí jednu akci. Držení tlačítka plynule ovládá něco, například jas nebo hlasitost. Držení začíná po 1 s a končí uvolněním.\n\nV nových režimech spouštějte automatizace spouštěčem **Událost přijata** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 event“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 raw“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, tuto opravu ignorujte.",
             "data": {

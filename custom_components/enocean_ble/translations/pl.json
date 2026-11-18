@@ -83,7 +83,7 @@
       "title": "{name}: wybierz tryb przycisków",
       "fix_flow": {
         "step": {
-          "init": {
+          "confirm": {
             "title": "Wybierz tryb przycisków dla {name}",
             "description": "{name} używa trybu **Starszego** z poprzednich wersji. Twoje automatyzacje nadal działają, ale ten tryb zostanie usunięty w przyszłej wersji. Wybierz nowy tryb, a następnie dostosuj automatyzacje korzystające z tego przełącznika:\n\n| Starszy | Prosty | Krótkie + długie | Krótkie + przytrzymanie |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\n- **Prosty**: jedna akcja na przycisk. Uruchamia się od razu po naciśnięciu. Najbardziej niezawodny.\n- **Krótkie + długie**: dwie akcje na przycisk: krótkie naciśnięcie (poniżej 1 s) lub długie naciśnięcie (1 s lub dłużej). Akcja uruchamia się po zwolnieniu przycisku.\n- **Krótkie + przytrzymanie**: krótkie naciśnięcie uruchamia jedną akcję. Przytrzymanie przycisku steruje czymś w sposób ciągły, np. jasnością lub głośnością. Przytrzymanie zaczyna się po 1 s i kończy po zwolnieniu.\n\nW nowych trybach uruchamiaj automatyzacje wyzwalaczem **Odebrano zdarzenie** na encjach przycisków (A0, A1, B0, B1). Czujniki „A0 event” zostają usunięte. raw_press i raw_release są na encjach „A0 raw”, domyślnie wyłączonych. Aby na razie zachować tryb Starszy, zignoruj tę naprawę.",
             "data": {
