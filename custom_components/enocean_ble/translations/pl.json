@@ -33,12 +33,12 @@
         "description": "Zeskanowany kod QR nie pozwala dodać przełącznika {name} ({mac}). Kliknij Prześlij, aby ponownie wybrać sposób dodania, lub zamknij to okno."
       },
       "commissioning": {
-        "title": "Automatyczne commissioning EnOcean BLE",
-        "description": "Włącz auto-commissioning dla {name}:\n\n1. Przytrzymaj przycisk 1 przez 7 sekund\n2. Naciśnij krótko przycisk 1\n3. Ponownie przytrzymaj przycisk 1 przez 7 sekund\n\nMasz 2 minuty. W razie potrzeby spróbuj ponownie."
+        "title": "Automatyczny commissioning EnOcean BLE",
+        "description": "Włącz automatyczny commissioning dla {name}:\n\n1. Przytrzymaj przycisk 1 przez 7 sekund\n2. Naciśnij krótko przycisk 1\n3. Ponownie przytrzymaj przycisk 1 przez 7 sekund\n\nMasz 2 minuty. W razie potrzeby spróbuj ponownie."
       },
       "bluetooth_confirm": {
         "title": "Potwierdź urządzenie EnOcean BLE",
-        "description": "Przełącznik EnOcean o adresie {mac} został pomyślnie skonfigurowany.\n\n⚠️ Naciśnij inny przycisk, aby wyłączyć tryb commissioning, a następnie kliknij Prześlij."
+        "description": "Commissioning przełącznika EnOcean o adresie {mac} zakończył się powodzeniem.\n\n⚠️ Naciśnij inny przycisk, aby wyłączyć tryb commissioning, a następnie kliknij Prześlij."
       },
       "button_mode": {
         "title": "Tryb przycisków",
@@ -85,7 +85,14 @@
         "step": {
           "confirm": {
             "title": "Wybierz tryb przycisków dla {name}",
-            "description": "{name} używa trybu **Starszego** z poprzednich wersji. Twoje automatyzacje nadal działają, ale ten tryb zostanie usunięty w przyszłej wersji. Wybierz nowy tryb, a następnie dostosuj automatyzacje korzystające z tego przełącznika:\n\n| Starszy | Prosty | Krótkie + długie | Krótkie + przytrzymanie |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nW nowych trybach uruchamiaj automatyzacje wyzwalaczem **Odebrano zdarzenie** na encjach przycisków (A0, A1, B0, B1). Czujniki „A0 event” zostają usunięte. raw_press i raw_release są na encjach „A0 raw”, domyślnie wyłączonych. Aby na razie zachować tryb Starszy, pozostaw zaznaczony **Starszy**.\n\nZnalezione dla tego przełącznika (nazw zapisanych w szablonach lub tworzonych dynamicznie nie da się wykryć, sprawdź też własne):\n\n{usage}",
+            "description": "{name} używa trybu **Starszego** z poprzednich wersji. Twoje automatyzacje nadal działają, ale ten tryb zostanie usunięty w przyszłej wersji. Wybierz nowy tryb, a następnie dostosuj automatyzacje korzystające z tego przełącznika:\n\n| Starszy | Prosty | Krótkie + długie | Krótkie + przytrzymanie |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nW nowych trybach uruchamiaj automatyzacje wyzwalaczem **Odebrano zdarzenie** na encjach przycisków (A0, A1, B0, B1). Czujniki „A0 zdarzenie” zostają usunięte. raw_press i raw_release są na encjach „A0 surowe”, domyślnie wyłączonych. Aby na razie zachować tryb Starszy, pozostaw zaznaczony **Starszy**.\n\nAutomatyzacje i skrypty, które używają tego przełącznika:\n\n{usage}\n\nNie wykryto: nazw encji tworzonych dynamicznie w szablonie oraz celów według obszaru lub etykiety. Sprawdź je samodzielnie.",
+            "data": {
+              "button_mode": "Tryb przycisków"
+            }
+          },
+          "confirm_unused": {
+            "title": "Wybierz tryb przycisków dla {name}",
+            "description": "{name} używa trybu **Starszego** z poprzednich wersji. Twoje automatyzacje nadal działają, ale ten tryb zostanie usunięty w przyszłej wersji. Wybierz nowy tryb, a następnie dostosuj automatyzacje korzystające z tego przełącznika:\n\n| Starszy | Prosty | Krótkie + długie | Krótkie + przytrzymanie |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nW nowych trybach uruchamiaj automatyzacje wyzwalaczem **Odebrano zdarzenie** na encjach przycisków (A0, A1, B0, B1). Czujniki „A0 zdarzenie” zostają usunięte. raw_press i raw_release są na encjach „A0 surowe”, domyślnie wyłączonych. Aby na razie zachować tryb Starszy, pozostaw zaznaczony **Starszy**.\n\nNie znaleziono żadnej automatyzacji ani skryptu używającego tego przełącznika. Nie wykryto: nazw encji tworzonych dynamicznie w szablonie oraz celów według obszaru lub etykiety. Sprawdź je samodzielnie.",
             "data": {
               "button_mode": "Tryb przycisków"
             }

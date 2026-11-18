@@ -7,7 +7,7 @@
         "menu_options": {
           "qr_scan": "Skanna QR-koden med kameran",
           "qr_text": "Ange QR-kodens text",
-          "commissioning": "Manuell commissioning (knappsekvens)"
+          "commissioning": "Manuell driftsättning (knappsekvens)"
         }
       },
       "qr_text": {
@@ -33,16 +33,16 @@
         "description": "Den skannade QR-koden kan inte användas för att lägga till brytaren {name} ({mac}). Klicka på Skicka för att välja igen hur den ska läggas till, eller stäng dialogen."
       },
       "commissioning": {
-        "title": "EnOcean BLE automatisk provisionering",
-        "description": "Aktivera automatisk provisionering på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
+        "title": "Automatisk driftsättning av EnOcean BLE",
+        "description": "Aktivera automatisk driftsättning på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
       },
       "bluetooth_confirm": {
         "title": "Bekräfta EnOcean BLE-enhet",
-        "description": "EnOcean-brytaren med adress {mac} har provisionerats.\n\n⚠️ Tryck på en annan knapp för att stänga av commissioning-läget och klicka sedan på Skicka."
+        "description": "EnOcean-brytaren med adress {mac} har driftsatts.\n\n⚠️ Tryck på en annan knapp för att stänga av driftsättningsläget och klicka sedan på Skicka."
       },
       "button_mode": {
         "title": "Knappläge",
-        "description": "Välj hur knapparna på {name} fungerar. Du kan ändra det senare med knappen Konfigurera.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "description": "Välj hur knapparna på {name} fungerar. Du kan ändra det senare med knappen Konfigurera.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan knappen räknas som nedhållen i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
         "data": {
           "button_mode": "Knappläge"
         }
@@ -58,8 +58,8 @@
       "discovery_required": "Tryck på valfri knapp på brytaren: den visas då som en upptäckt enhet under Inställningar → Enheter och tjänster, där du kan lägga till den."
     },
     "error": {
-      "commissioning_not_detected": "Ingen commissioning-telegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först reset-varningen i dokumentationen.",
-      "invalid_commissioning": "Ett commissioning-telegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs reset-varningen i dokumentationen innan du återställer.",
+      "commissioning_not_detected": "Inget driftsättningstelegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först varningen om återställning i dokumentationen.",
+      "invalid_commissioning": "Ett driftsättningstelegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs varningen om återställning i dokumentationen innan du återställer.",
       "invalid_qr": "Ingen EnOcean-brytaradress (30SE215…) och säkerhetsnyckel på 32 tecken (+Z…) hittades i den här texten.",
       "qr_mac_mismatch": "Den här QR-koden tillhör en annan brytare än den som upptäcktes.",
       "qr_key_invalid": "Nyckeln i den här QR-koden matchar inte de telegram som tagits emot från brytaren. Den kan ha konfigurerats om (till exempel av ett annat system).",
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Knappläge",
-        "description": "Välj hur knapparna på den här brytaren fungerar. Automatiseringar som använder dess händelser kan behöva anpassas.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan ett håll pågå i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "description": "Välj hur knapparna på den här brytaren fungerar. Automatiseringar som använder dess händelser kan behöva anpassas.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan knappen räknas som nedhållen i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
         "data": {
           "button_mode": "Knappläge"
         }
@@ -85,7 +85,14 @@
         "step": {
           "confirm": {
             "title": "Välj ett knappläge för {name}",
-            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 event\" tas bort. raw_press och raw_release finns på entiteterna \"A0 raw\", inaktiverade som standard. Låt **Äldre** vara valt för att behålla det äldre läget tills vidare.\n\nHittat som använder den här strömbrytaren (namn skrivna i mallar eller byggda dynamiskt kan inte upptäckas, kontrollera också dina egna):\n\n{usage}",
+            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 händelse\" tas bort. raw_press och raw_release finns på entiteterna \"A0 rå\", inaktiverade som standard. Låt **Äldre** vara valt för att behålla det äldre läget tills vidare.\n\nAutomatiseringar och skript som använder den här brytaren:\n\n{usage}\n\nUpptäcks inte: entitetsnamn som byggs dynamiskt i en mall, och mål via område eller etikett. Kontrollera dem själv.",
+            "data": {
+              "button_mode": "Knappläge"
+            }
+          },
+          "confirm_unused": {
+            "title": "Välj ett knappläge för {name}",
+            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 händelse\" tas bort. raw_press och raw_release finns på entiteterna \"A0 rå\", inaktiverade som standard. Låt **Äldre** vara valt för att behålla det äldre läget tills vidare.\n\nIngen automatisering eller skript som använder den här brytaren hittades. Upptäcks inte: entitetsnamn som byggs dynamiskt i en mall, och mål via område eller etikett. Kontrollera dem själv.",
             "data": {
               "button_mode": "Knappläge"
             }

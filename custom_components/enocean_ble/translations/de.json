@@ -7,7 +7,7 @@
         "menu_options": {
           "qr_scan": "QR-Code mit der Kamera scannen",
           "qr_text": "Text des QR-Codes eingeben",
-          "commissioning": "Manuelles Commissioning (Tastenfolge)"
+          "commissioning": "Manuelle Inbetriebnahme (Tastenfolge)"
         }
       },
       "qr_text": {
@@ -33,16 +33,16 @@
         "description": "Mit dem gescannten QR-Code kann der Schalter {name} ({mac}) nicht hinzugefügt werden. Klicke auf Senden, um erneut zu wählen, wie er hinzugefügt wird, oder schließe diesen Dialog."
       },
       "commissioning": {
-        "title": "EnOcean BLE Auto-Kommissionierung",
-        "description": "Auto-Kommissionierung für {name} aktivieren:\n\n1. Taste 1 für 7 Sekunden gedrückt halten\n2. Taste 1 kurz drücken\n3. Taste 1 erneut für 7 Sekunden gedrückt halten\n\nSie haben 2 Minuten. Bei Bedarf erneut versuchen."
+        "title": "Automatische Inbetriebnahme EnOcean BLE",
+        "description": "Aktiviere die automatische Inbetriebnahme für {name}:\n\n1. Taste 1 für 7 Sekunden gedrückt halten\n2. Taste 1 kurz drücken\n3. Taste 1 erneut für 7 Sekunden gedrückt halten\n\nDu hast 2 Minuten. Versuche es bei Bedarf erneut."
       },
       "bluetooth_confirm": {
         "title": "EnOcean BLE-Gerät bestätigen",
-        "description": "EnOcean-Schalter mit Adresse {mac} wurde erfolgreich kommissioniert.\n\n⚠️ Drücken Sie eine andere Taste, um den Kommissionierungsmodus zu beenden, und klicken Sie dann auf Senden."
+        "description": "Der EnOcean-Schalter mit der Adresse {mac} wurde erfolgreich in Betrieb genommen.\n\n⚠️ Drücke eine andere Taste, um den Inbetriebnahmemodus zu beenden, und klicke dann auf Senden."
       },
       "button_mode": {
         "title": "Tastenmodus",
-        "description": "Wählen Sie, wie die Tasten von {name} funktionieren. Sie können es später über die Schaltfläche Konfigurieren ändern.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
+        "description": "Wähle, wie die Tasten von {name} funktionieren. Du kannst es später über die Schaltfläche Konfigurieren ändern.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
         "data": {
           "button_mode": "Tastenmodus"
         }
@@ -58,8 +58,8 @@
       "discovery_required": "Drücke eine beliebige Taste am Schalter: Er erscheint dann als erkanntes Gerät unter Einstellungen → Geräte & Dienste, wo du ihn hinzufügen kannst."
     },
     "error": {
-      "commissioning_not_detected": "Innerhalb von 2 Minuten wurde kein Kommissionierungs-Telegramm empfangen. Versuchen Sie es erneut. Wenn es nach mehreren Versuchen weiterhin nicht funktioniert, können Sie einen Werksreset versuchen. Lesen Sie vorher den Reset-Hinweis in der Dokumentation.",
-      "invalid_commissioning": "Ein Kommissionierungs-Telegramm wurde empfangen, konnte aber nicht validiert werden. Versuchen Sie es erneut. Wenn dies weiterhin fehlschlägt, lesen Sie vor einem Reset den Hinweis in der Dokumentation.",
+      "commissioning_not_detected": "Innerhalb von 2 Minuten wurde kein Inbetriebnahme-Telegramm empfangen. Versuche es erneut. Wenn es nach mehreren Versuchen weiterhin nicht funktioniert, kannst du einen Werksreset versuchen. Lies vorher den Reset-Hinweis in der Dokumentation.",
+      "invalid_commissioning": "Ein Inbetriebnahme-Telegramm wurde empfangen, konnte aber nicht validiert werden. Versuche es erneut. Wenn dies weiterhin fehlschlägt, lies vor einem Reset den Hinweis in der Dokumentation.",
       "invalid_qr": "In diesem Text wurden keine EnOcean-Schalteradresse (30SE215…) und kein 32-stelliger Sicherheitsschlüssel (+Z…) gefunden.",
       "qr_mac_mismatch": "Dieser QR-Code gehört zu einem anderen Schalter als dem erkannten.",
       "qr_key_invalid": "Der Schlüssel in diesem QR-Code passt nicht zu den Telegrammen dieses Schalters. Er wurde möglicherweise neu konfiguriert (z. B. von einem anderen System).",
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Tastenmodus",
-        "description": "Wählen Sie, wie die Tasten dieses Schalters funktionieren. Automationen, die seine Ereignisse verwenden, müssen eventuell angepasst werden.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
+        "description": "Wähle, wie die Tasten dieses Schalters funktionieren. Automationen, die seine Ereignisse verwenden, müssen eventuell angepasst werden.\n\nKurz + lang und Kurz + halten müssen das Loslassen empfangen. Geht es verloren, geht die Aktion verloren, und bei Kurz + halten kann ein Halten bis zu 8 Sekunden dauern. Mehr Bluetooth-Empfänger in der Nähe des Schalters machen das selten (siehe Fehlerbehebung in der Dokumentation).",
         "data": {
           "button_mode": "Tastenmodus"
         }
@@ -85,7 +85,14 @@
         "step": {
           "confirm": {
             "title": "Tastenmodus für {name} wählen",
-            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Ihre Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wählen Sie einen neuen Modus und passen Sie dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi lösen Sie Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 event“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 raw“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, lassen Sie **Alt** ausgewählt.\n\nMit diesem Schalter gefunden (in Vorlagen geschriebene oder dynamisch gebildete Namen lassen sich nicht erkennen, prüfen Sie also auch Ihre eigenen):\n\n{usage}",
+            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, lass **Alt** ausgewählt.\n\nAutomationen und Skripte, die diesen Schalter verwenden:\n\n{usage}\n\nNicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
+            "data": {
+              "button_mode": "Tastenmodus"
+            }
+          },
+          "confirm_unused": {
+            "title": "Tastenmodus für {name} wählen",
+            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, lass **Alt** ausgewählt.\n\nEs wurde keine Automation und kein Skript gefunden, das diesen Schalter verwendet. Nicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
             "data": {
               "button_mode": "Tastenmodus"
             }

@@ -33,7 +33,7 @@
         "description": "The scanned QR code cannot be used to add switch {name} ({mac}). Click Submit to choose how to add it again, or close this dialog."
       },
       "commissioning": {
-        "title": "EnOcean BLE Auto-Commissioning",
+        "title": "EnOcean BLE auto-commissioning",
         "description": "Activate auto-commissioning on {name}:\n\n1. Hold button 1 for 7 seconds\n2. Press button 1 briefly\n3. Hold button 1 again for 7 seconds\n\nYou have 2 minutes. Retry if needed."
       },
       "bluetooth_confirm": {
@@ -85,7 +85,14 @@
         "step": {
           "confirm": {
             "title": "Choose a button mode for {name}",
-            "description": "{name} uses the **Legacy** mode of earlier versions. Your automations keep working, but this mode will be removed in a future version. Choose a new mode, then update the automations that use this switch:\n\n| Legacy | Simple | Short + long | Short + hold |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn the new modes, trigger automations with **Event received** on the button entities (A0, A1, B0, B1). The \"A0 event\" sensors are removed. raw_press and raw_release are on the \"A0 raw\" entities, disabled by default. To keep the Legacy mode for now, leave **Legacy** selected.\n\nFound using this switch (names written inside templates or built dynamically cannot be detected, so check your own too):\n\n{usage}",
+            "description": "{name} uses the **Legacy** mode of earlier versions. Your automations keep working, but this mode will be removed in a future version. Choose a new mode, then update the automations that use this switch:\n\n| Legacy | Simple | Short + long | Short + hold |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn the new modes, trigger automations with **Event received** on the button entities (A0, A1, B0, B1). The \"A0 event\" sensors are removed. raw_press and raw_release are on the \"A0 raw\" entities, disabled by default. To keep the Legacy mode for now, leave **Legacy** selected.\n\nAutomations and scripts that use this switch:\n\n{usage}\n\nNot detected: entity names built dynamically in a template, and targets by area or label. Check those yourself.",
+            "data": {
+              "button_mode": "Button mode"
+            }
+          },
+          "confirm_unused": {
+            "title": "Choose a button mode for {name}",
+            "description": "{name} uses the **Legacy** mode of earlier versions. Your automations keep working, but this mode will be removed in a future version. Choose a new mode, then update the automations that use this switch:\n\n| Legacy | Simple | Short + long | Short + hold |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn the new modes, trigger automations with **Event received** on the button entities (A0, A1, B0, B1). The \"A0 event\" sensors are removed. raw_press and raw_release are on the \"A0 raw\" entities, disabled by default. To keep the Legacy mode for now, leave **Legacy** selected.\n\nNo automation or script using this switch was found. Not detected: entity names built dynamically in a template, and targets by area or label. Check those yourself.",
             "data": {
               "button_mode": "Button mode"
             }

@@ -7,7 +7,7 @@
         "menu_options": {
           "qr_scan": "Scansiona il codice QR con la fotocamera",
           "qr_text": "Inserisci il testo del codice QR",
-          "commissioning": "Commissioning manuale (sequenza di tasti)"
+          "commissioning": "Commissioning manuale (sequenza di pulsanti)"
         }
       },
       "qr_text": {
@@ -38,7 +38,7 @@
       },
       "bluetooth_confirm": {
         "title": "Conferma dispositivo EnOcean BLE",
-        "description": "Lo switch EnOcean con indirizzo {mac} è stato commissionato con successo.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
+        "description": "Il commissioning dell'interruttore EnOcean con indirizzo {mac} è riuscito.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
       },
       "button_mode": {
         "title": "Modalità dei pulsanti",
@@ -55,7 +55,7 @@
       "no_bluetooth_discovery": "Questa configurazione deve partire da un dispositivo Bluetooth rilevato.",
       "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15).",
       "already_configured": "Questo interruttore è già configurato.",
-      "discovery_required": "Premi un tasto qualsiasi dell'interruttore: comparirà come dispositivo rilevato in Impostazioni → Dispositivi e servizi, da cui puoi aggiungerlo."
+      "discovery_required": "Premi un pulsante qualsiasi dell'interruttore: comparirà come dispositivo rilevato in Impostazioni → Dispositivi e servizi, da cui puoi aggiungerlo."
     },
     "error": {
       "commissioning_not_detected": "Nessun telegramma di commissioning ricevuto entro 2 minuti. Riprova. Se continua a non funzionare dopo più tentativi, puoi provare un reset di fabbrica. Leggi prima il disclaimer sul reset nella documentazione.",
@@ -63,7 +63,7 @@
       "invalid_qr": "In questo testo non sono stati trovati un indirizzo di interruttore EnOcean (30SE215…) e una chiave di sicurezza di 32 caratteri (+Z…).",
       "qr_mac_mismatch": "Questo codice QR appartiene a un interruttore diverso da quello rilevato.",
       "qr_key_invalid": "La chiave di questo codice QR non corrisponde ai telegrammi ricevuti da questo interruttore. Potrebbe essere stato riconfigurato (ad esempio da un altro sistema).",
-      "qr_no_telegram": "Non è ancora stato ricevuto alcun telegramma da questo interruttore. Premi uno dei suoi tasti, poi riprova.",
+      "qr_no_telegram": "Non è ancora stato ricevuto alcun telegramma da questo interruttore. Premi uno dei suoi pulsanti, poi riprova.",
       "scan_https_required": "La scansione con la fotocamera richiede che Home Assistant sia raggiungibile tramite HTTPS. Inserisci invece il testo del codice QR."
     }
   },
@@ -85,7 +85,14 @@
         "step": {
           "confirm": {
             "title": "Scegli una modalità dei pulsanti per {name}",
-            "description": "{name} usa la modalità **Precedente** delle versioni precedenti. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNelle nuove modalità, attiva le automazioni con **Evento ricevuto** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"A0 event\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 raw\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, lascia selezionato **Precedente**.\n\nTrovato con questo interruttore (i nomi scritti nei template o costruiti dinamicamente non possono essere rilevati, controlla anche i tuoi):\n\n{usage}",
+            "description": "{name} usa la modalità **Precedente** delle versioni passate. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNelle nuove modalità, attiva le automazioni con **Event received** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"Evento A0\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 grezzo\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, lascia selezionato **Precedente**.\n\nAutomazioni e script che usano questo interruttore:\n\n{usage}\n\nNon rilevati: nomi di entità costruiti dinamicamente in un template e destinazioni per area o etichetta. Controllali tu.",
+            "data": {
+              "button_mode": "Modalità dei pulsanti"
+            }
+          },
+          "confirm_unused": {
+            "title": "Scegli una modalità dei pulsanti per {name}",
+            "description": "{name} usa la modalità **Precedente** delle versioni passate. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNelle nuove modalità, attiva le automazioni con **Event received** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"Evento A0\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 grezzo\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, lascia selezionato **Precedente**.\n\nNon è stata trovata nessuna automazione né script che usi questo interruttore. Non rilevati: nomi di entità costruiti dinamicamente in un template e destinazioni per area o etichetta. Controllali tu.",
             "data": {
               "button_mode": "Modalità dei pulsanti"
             }
@@ -135,7 +142,7 @@
         "name": "Messaggi persi"
       },
       "button_event": {
-        "name": "{button} evento"
+        "name": "Evento {button}"
       }
     }
   }

@@ -7,7 +7,7 @@
         "menu_options": {
           "qr_scan": "Naskenovat QR kód kamerou",
           "qr_text": "Zadat text QR kódu",
-          "commissioning": "Ruční commissioning (sekvence tlačítek)"
+          "commissioning": "Ruční uvedení do provozu (sekvence tlačítek)"
         }
       },
       "qr_text": {
@@ -38,11 +38,11 @@
       },
       "bluetooth_confirm": {
         "title": "Potvrdit zařízení EnOcean BLE",
-        "description": "Přepínač EnOcean s adresou {mac} byl úspěšně uveden do provozu.\n\n⚠️ Stiskněte jiné tlačítko pro vypnutí režimu commissioning a poté klikněte na Odeslat."
+        "description": "Spínač EnOcean s adresou {mac} byl úspěšně uveden do provozu.\n\n⚠️ Stiskněte jiné tlačítko pro vypnutí režimu uvádění do provozu a poté klikněte na Odeslat."
       },
       "button_mode": {
         "title": "Režim tlačítek",
-        "description": "Zvolte, jak fungují tlačítka {name}. Později to můžete změnit tlačítkem Nastavit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
+        "description": "Zvolte, jak fungují tlačítka {name}. Později to můžete změnit tlačítkem Nastavit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u spínače to činí vzácným (viz Řešení problémů v dokumentaci).",
         "data": {
           "button_mode": "Režim tlačítek"
         }
@@ -58,8 +58,8 @@
       "discovery_required": "Stiskněte libovolné tlačítko spínače: objeví se jako nalezené zařízení v Nastavení → Zařízení a služby, odkud ho můžete přidat."
     },
     "error": {
-      "commissioning_not_detected": "Během 2 minut nebyl přijat commissioning telegram. Zkuste to znovu. Pokud to po více pokusech stále nefunguje, můžete zkusit tovární reset. Nejprve si přečtěte upozornění k resetu v dokumentaci.",
-      "invalid_commissioning": "Byl přijat commissioning telegram, ale nepodařilo se jej ověřit. Zkuste to znovu. Pokud to opakovaně selhává, před resetem si přečtěte upozornění v dokumentaci.",
+      "commissioning_not_detected": "Během 2 minut nebyl přijat telegram pro uvedení do provozu. Zkuste to znovu. Pokud to po více pokusech stále nefunguje, můžete zkusit tovární reset. Nejprve si přečtěte upozornění k resetu v dokumentaci.",
+      "invalid_commissioning": "Byl přijat telegram pro uvedení do provozu, ale nepodařilo se jej ověřit. Zkuste to znovu. Pokud to opakovaně selhává, před resetem si přečtěte upozornění v dokumentaci.",
       "invalid_qr": "V tomto textu nebyla nalezena adresa spínače EnOcean (30SE215…) ani 32znakový bezpečnostní klíč (+Z…).",
       "qr_mac_mismatch": "Tento QR kód patří jinému spínači, než který byl nalezen.",
       "qr_key_invalid": "Klíč v tomto QR kódu neodpovídá telegramům přijatým z tohoto spínače. Mohl být překonfigurován (například jiným systémem).",
@@ -71,7 +71,7 @@
     "step": {
       "init": {
         "title": "Režim tlačítek",
-        "description": "Zvolte, jak fungují tlačítka tohoto vypínače. Automatizace, které používají jeho události, může být nutné upravit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u vypínače to činí vzácným (viz Řešení problémů v dokumentaci).",
+        "description": "Zvolte, jak fungují tlačítka tohoto spínače. Automatizace, které používají jeho události, může být nutné upravit.\n\nKrátký + dlouhý a Krátký + držení potřebují přijmout uvolnění. Pokud se ztratí, akce se ztratí a u režimu Krátký + držení může držení trvat až 8 sekund. Více přijímačů Bluetooth u spínače to činí vzácným (viz Řešení problémů v dokumentaci).",
         "data": {
           "button_mode": "Režim tlačítek"
         }
@@ -85,14 +85,21 @@
         "step": {
           "confirm": {
             "title": "Zvolte režim tlačítek pro {name}",
-            "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento vypínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nV nových režimech spouštějte automatizace spouštěčem **Událost přijata** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 event“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 raw“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, nechte vybrané **Starý**.\n\nNalezeno u tohoto spínače (názvy v šablonách nebo sestavené dynamicky nelze zjistit, zkontrolujte i vlastní):\n\n{usage}",
+            "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento spínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nV nových režimech spouštějte automatizace spouštěčem **Přijatá událost** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 událost“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 surové“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, nechte vybrané **Starý**.\n\nAutomatizace a skripty, které tento spínač používají:\n\n{usage}\n\nNezjistí se: názvy entit sestavené dynamicky v šabloně a cíle podle oblasti nebo štítku. Zkontrolujte je sami.",
+            "data": {
+              "button_mode": "Režim tlačítek"
+            }
+          },
+          "confirm_unused": {
+            "title": "Zvolte režim tlačítek pro {name}",
+            "description": "{name} používá **Starý** režim dřívějších verzí. Vaše automatizace dál fungují, ale tento režim bude v budoucí verzi odstraněn. Zvolte nový režim a pak upravte automatizace, které tento spínač používají:\n\n| Starý | Jednoduchý | Krátký + dlouhý | Krátký + držení |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nV nových režimech spouštějte automatizace spouštěčem **Přijatá událost** na entitách tlačítek (A0, A1, B0, B1). Senzory „A0 událost“ jsou odstraněny. raw_press a raw_release jsou na entitách „A0 surové“, ve výchozím stavu vypnutých. Chcete-li zatím ponechat Starý režim, nechte vybrané **Starý**.\n\nNebyla nalezena žádná automatizace ani skript, který tento spínač používá. Nezjistí se: názvy entit sestavené dynamicky v šabloně a cíle podle oblasti nebo štítku. Zkontrolujte je sami.",
             "data": {
               "button_mode": "Režim tlačítek"
             }
           }
         },
         "abort": {
-          "entry_not_found": "Tento vypínač už neexistuje."
+          "entry_not_found": "Tento spínač už neexistuje."
         }
       }
     }
