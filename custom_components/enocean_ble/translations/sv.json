@@ -114,5 +114,29 @@
         "legacy": "Äldre (standard): händelser från tidigare versioner, tas bort i en framtida version."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} rå"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Senast sedd"
+      },
+      "receiver": {
+        "name": "Mottagare"
+      },
+      "lost_messages": {
+        "name": "Förlorade meddelanden"
+      },
+      "button_event": {
+        "name": "{button} händelse"
+      }
+    }
   }
 }

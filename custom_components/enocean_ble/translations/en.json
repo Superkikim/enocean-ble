@@ -114,5 +114,29 @@
         "legacy": "Legacy (default): events of earlier versions, removed in a future version."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} raw"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "receiver": {
+        "name": "Receiver"
+      },
+      "lost_messages": {
+        "name": "Lost messages"
+      },
+      "button_event": {
+        "name": "{button} event"
+      }
+    }
   }
 }

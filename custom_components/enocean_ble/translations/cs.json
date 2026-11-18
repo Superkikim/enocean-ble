@@ -114,5 +114,29 @@
         "legacy": "Starý (výchozí): události dřívějších verzí, bude odstraněn v budoucí verzi."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} surové"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signál"
+      },
+      "last_seen": {
+        "name": "Naposledy viděn"
+      },
+      "receiver": {
+        "name": "Přijímač"
+      },
+      "lost_messages": {
+        "name": "Ztracené zprávy"
+      },
+      "button_event": {
+        "name": "{button} událost"
+      }
+    }
   }
 }

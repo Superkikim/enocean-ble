@@ -114,5 +114,29 @@
         "legacy": "Oud (standaard): events van eerdere versies, wordt in een toekomstige versie verwijderd."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} ruw"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signaal"
+      },
+      "last_seen": {
+        "name": "Laatst gezien"
+      },
+      "receiver": {
+        "name": "Ontvanger"
+      },
+      "lost_messages": {
+        "name": "Verloren berichten"
+      },
+      "button_event": {
+        "name": "{button} event"
+      }
+    }
   }
 }

@@ -114,5 +114,29 @@
         "legacy": "Antiguo (predeterminado): eventos de versiones anteriores, se eliminará en una versión futura."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} sin procesar"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Señal"
+      },
+      "last_seen": {
+        "name": "Visto por última vez"
+      },
+      "receiver": {
+        "name": "Receptor"
+      },
+      "lost_messages": {
+        "name": "Mensajes perdidos"
+      },
+      "button_event": {
+        "name": "{button} evento"
+      }
+    }
   }
 }

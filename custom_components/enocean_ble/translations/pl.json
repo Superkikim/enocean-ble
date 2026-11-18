@@ -114,5 +114,29 @@
         "legacy": "Starszy (domyślny): zdarzenia poprzednich wersji, zostanie usunięty w przyszłej wersji."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} surowe"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Sygnał"
+      },
+      "last_seen": {
+        "name": "Ostatnio widziany"
+      },
+      "receiver": {
+        "name": "Odbiornik"
+      },
+      "lost_messages": {
+        "name": "Utracone wiadomości"
+      },
+      "button_event": {
+        "name": "{button} zdarzenie"
+      }
+    }
   }
 }

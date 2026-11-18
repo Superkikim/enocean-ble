@@ -114,5 +114,29 @@
         "legacy": "Alt (Standard): Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} roh"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Zuletzt gesehen"
+      },
+      "receiver": {
+        "name": "Empfänger"
+      },
+      "lost_messages": {
+        "name": "Verlorene Nachrichten"
+      },
+      "button_event": {
+        "name": "{button} Ereignis"
+      }
+    }
   }
 }

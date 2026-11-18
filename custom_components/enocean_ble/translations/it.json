@@ -114,5 +114,29 @@
         "legacy": "Precedente (predefinito): eventi delle versioni precedenti, rimossa in una versione futura."
       }
     }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} grezzo"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Segnale"
+      },
+      "last_seen": {
+        "name": "Ultimo contatto"
+      },
+      "receiver": {
+        "name": "Ricevitore"
+      },
+      "lost_messages": {
+        "name": "Messaggi persi"
+      },
+      "button_event": {
+        "name": "{button} evento"
+      }
+    }
   }
 }
