@@ -85,14 +85,14 @@
         "step": {
           "confirm": {
             "title": "Tastenmodus für {name} wählen",
-            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, lass **Alt** ausgewählt.\n\nAutomationen und Skripte, die diesen Schalter verwenden:\n\n{usage}\n\nNicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
+            "description": "{name} verwendet den **Legacy**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Legacy | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Legacy-Modus vorerst zu behalten, lass **Legacy** ausgewählt.\n\nAutomationen und Skripte, die diesen Schalter verwenden:\n\n{usage}\n\nNicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
             "data": {
               "button_mode": "Tastenmodus"
             }
           },
           "confirm_unused": {
             "title": "Tastenmodus für {name} wählen",
-            "description": "{name} verwendet den **Alt**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Alt | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Alt-Modus vorerst zu behalten, lass **Alt** ausgewählt.\n\nEs wurde keine Automation und kein Skript gefunden, das diesen Schalter verwendet. Nicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
+            "description": "{name} verwendet den **Legacy**-Modus früherer Versionen. Deine Automationen funktionieren weiter, aber dieser Modus wird in einer zukünftigen Version entfernt. Wähle einen neuen Modus und passe dann die Automationen an, die diesen Schalter verwenden:\n\n| Legacy | Einfach | Kurz + lang | Kurz + halten |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn den neuen Modi löst du Automationen mit **Ereignis empfangen** auf den Tasten-Entitäten (A0, A1, B0, B1) aus. Die Sensoren „A0 Ereignis“ werden entfernt. raw_press und raw_release befinden sich auf den Entitäten „A0 roh“, standardmäßig deaktiviert. Um den Legacy-Modus vorerst zu behalten, lass **Legacy** ausgewählt.\n\nEs wurde keine Automation und kein Skript gefunden, das diesen Schalter verwendet. Nicht erkannt: in einer Vorlage dynamisch gebildete Entitätsnamen sowie Ziele über Bereich oder Label. Prüfe diese selbst.",
             "data": {
               "button_mode": "Tastenmodus"
             }
@@ -110,7 +110,7 @@
         "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
         "short_long": "Kurz + lang: kurzer (<1 s) oder langer Druck (>1 s), beim Loslassen.",
         "short_hold": "Kurz + halten: kurzer Druck (<1 s), oder Halten (>1 s) für fortlaufende Steuerung.",
-        "legacy": "Alt: Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
+        "legacy": "Legacy: Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     },
     "button_mode_repair": {
@@ -118,7 +118,7 @@
         "simple": "Einfach: eine Aktion pro Taste, beim Drücken. Am zuverlässigsten.",
         "short_long": "Kurz + lang: kurzer (<1 s) oder langer Druck (>1 s), beim Loslassen.",
         "short_hold": "Kurz + halten: kurzer Druck (<1 s), oder Halten (>1 s) für fortlaufende Steuerung.",
-        "legacy": "Alt (Standard): Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
+        "legacy": "Legacy (Standard): Ereignisse früherer Versionen, wird in einer künftigen Version entfernt."
       }
     }
   },
