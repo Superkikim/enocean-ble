@@ -443,8 +443,8 @@ def _find_users(automations: list[SimpleNamespace], scripts: list[SimpleNamespac
     hass = SimpleNamespace(data={"automation": _component(*automations), "script": _component(*scripts)})
     entry = SimpleNamespace(entry_id="entry")
     with (
-        patch.object(usage.er, "async_get", return_value=MagicMock()),
-        patch.object(usage.er, "async_entries_for_config_entry", return_value=registry_entries),
+        patch("homeassistant.helpers.entity_registry.async_get", return_value=MagicMock()),
+        patch("homeassistant.helpers.entity_registry.async_entries_for_config_entry", return_value=registry_entries),
     ):
         return usage.find_switch_users(hass, entry)  # type: ignore[arg-type]
 
@@ -486,7 +486,7 @@ def test_users_search_survives_a_missing_component() -> None:
 
     hass = SimpleNamespace(data={})
     with (
-        patch.object(usage.er, "async_get", return_value=MagicMock()),
-        patch.object(usage.er, "async_entries_for_config_entry", return_value=[]),
+        patch("homeassistant.helpers.entity_registry.async_get", return_value=MagicMock()),
+        patch("homeassistant.helpers.entity_registry.async_entries_for_config_entry", return_value=[]),
     ):
         assert usage.find_switch_users(hass, SimpleNamespace(entry_id="e")) == []  # type: ignore[arg-type]
