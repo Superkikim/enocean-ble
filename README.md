@@ -95,6 +95,22 @@ later with the `Configure` button of the switch.
 | **Short + long** | `short_press`, `long_press` | when you release: under 1 s → short, 1 s or more → long | the action is lost, never a wrong one |
 | **Short + hold** | `short_press`, `hold_press`, `hold_release` | short: on release before 1 s. hold: at 1 s, while held. hold_release: on release | the action is lost, or a hold runs for up to 8 s |
 
+This page uses the English mode names. Home Assistant shows them in its language:
+
+| Language | Simple | Short + long | Short + hold | Legacy |
+|---|---|---|---|---|
+| cs | Jednoduchý | Krátký + dlouhý | Krátký + držení | Starý |
+| de | Einfach | Kurz + lang | Kurz + halten | Legacy |
+| en | Simple | Short + long | Short + hold | Legacy |
+| es | Simple | Corto + largo | Corto + mantener | Antiguo |
+| fr | Simple | Court + long | Court + maintien | Ancien |
+| it | Semplice | Breve + lunga | Breve + tenuta | Precedente |
+| nl | Eenvoudig | Kort + lang | Kort + vasthouden | Oud |
+| pl | Prosty | Krótkie + długie | Krótkie + przytrzymanie | Starszy |
+| pt | Simples | Curto + longo | Curto + manter | Antigo |
+| pt-BR | Simples | Curto + longo | Curto + segurar | Antigo |
+| sv | Enkel | Kort + lång | Kort + håll | Äldre |
+
 - **Simple**: one reliable action per button, for example toggle a light or a scene.
 - **Short + long**: two different actions per button, for example two scenes. A press under 1 s
   is short, a press of 1 s or more is long.
