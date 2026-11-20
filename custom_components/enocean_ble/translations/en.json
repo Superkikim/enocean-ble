@@ -1,25 +1,149 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Add EnOcean BLE switch",
+        "description": "Switch {name} ({mac}) was discovered. How do you want to add it?\n\nThe QR code is on the label of the EnOcean module, behind the rocker.",
+        "menu_options": {
+          "qr_scan": "Scan the QR code with the camera",
+          "qr_text": "Enter the QR code text",
+          "commissioning": "Manual commissioning (button sequence)"
+        }
+      },
+      "qr_text": {
+        "title": "Enter the QR code text",
+        "description": "Type or paste the text of the QR code on the module label of {name}. Only two parts are needed: the address after 30S (12 characters, {mac} without the colons) and the key after +Z (32 characters). The rest of the text is ignored and can be left out.",
+        "data": {
+          "qr_code": "QR code text"
+        },
+        "data_description": {
+          "qr_code": "Example: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (only 30S… and +Z… are used)"
+        }
+      },
+      "qr_scan": {
+        "title": "Scan the QR code",
+        "description": "Open the scan page and aim at the QR code on the module label of {name}. On a computer, the page shows a QR code to open it on your phone. This dialog continues by itself once the QR code has been scanned."
+      },
+      "qr_scan_done": {
+        "title": "QR code validated",
+        "description": "The QR code matches switch {name} ({mac}). Click Submit to add it."
+      },
+      "qr_scan_error": {
+        "title": "QR code rejected",
+        "description": "The scanned QR code cannot be used to add switch {name} ({mac}). Click Submit to choose how to add it again, or close this dialog."
+      },
       "commissioning": {
-        "title": "EnOcean BLE Auto-Commissioning",
+        "title": "EnOcean BLE auto-commissioning",
         "description": "Activate auto-commissioning on {name}:\n\n1. Hold button 1 for 7 seconds\n2. Press button 1 briefly\n3. Hold button 1 again for 7 seconds\n\nYou have 2 minutes. Retry if needed."
       },
       "bluetooth_confirm": {
         "title": "Confirm EnOcean BLE Device",
         "description": "EnOcean switch with address {mac} was commissioned successfully.\n\n⚠️ Press another button to disable commissioning mode, then click Submit."
+      },
+      "button_mode": {
+        "title": "Button mode",
+        "description": "Choose how the buttons of {name} work. You can change it later with the Configure button.\n\nShort + long and Short + hold need the release to be received. If it is lost, the action is lost, and with Short + hold a hold can run for up to 8 seconds. More Bluetooth receivers near the switch make this rare (see Troubleshooting in the documentation).",
+        "data": {
+          "button_mode": "Button mode"
+        }
       }
     },
     "progress": {
       "waiting_commissioning": "Hold button 1 for 7 seconds, then press button 1 briefly, and hold again for 7 seconds."
     },
     "abort": {
+      "already_configured": "This switch is already configured.",
       "no_bluetooth_discovery": "This setup must start from a discovered Bluetooth device.",
-      "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15)."
+      "not_enocean_prefix": "This discovered device does not use the EnOcean BLE MAC prefix (E2:15).",
+      "discovery_required": "Press any button on the switch: it then appears as a discovered device in Settings → Devices & services, where you can add it."
     },
     "error": {
+      "invalid_qr": "No EnOcean switch address (30SE215…) and 32-character security key (+Z…) were found in this text.",
       "commissioning_not_detected": "No commissioning telegram was received within 2 minutes. Try again. If it still does not work after multiple attempts, you can try a factory reset. Please read the reset disclaimer in the documentation first.",
-      "invalid_commissioning": "A commissioning telegram was received but could not be validated. Try again. If this keeps failing, review the factory reset disclaimer in the documentation before resetting."
+      "invalid_commissioning": "A commissioning telegram was received but could not be validated. Try again. If this keeps failing, review the factory reset disclaimer in the documentation before resetting.",
+      "qr_mac_mismatch": "This QR code belongs to another switch than the one that was discovered.",
+      "qr_key_invalid": "The key in this QR code does not match the telegrams received from this switch. It may have been reconfigured (for example by another system).",
+      "qr_no_telegram": "No telegram has been received from this switch yet. Press one of its buttons, then try again.",
+      "scan_https_required": "Scanning with the camera needs Home Assistant to be reachable over HTTPS. Enter the QR code text instead."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Button mode",
+        "description": "Choose how the buttons of this switch work. Automations that use its events may need to be updated.\n\nShort + long and Short + hold need the release to be received. If it is lost, the action is lost, and with Short + hold a hold can run for up to 8 seconds. More Bluetooth receivers near the switch make this rare (see Troubleshooting in the documentation).",
+        "data": {
+          "button_mode": "Button mode"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: choose a button mode",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Choose a button mode for {name}",
+            "description": "{name} uses the **Legacy** mode of earlier versions. Your automations keep working, but this mode will be removed in a future version. Choose a new mode, then update the automations that use this switch:\n\n| Legacy | Simple | Short + long | Short + hold |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn the new modes, trigger automations with **Event received** on the button entities (A0, A1, B0, B1). The \"A0 event\" sensors are removed. raw_press and raw_release are on the \"A0 raw\" entities, disabled by default. To keep the Legacy mode for now, leave **Legacy** selected.\n\nAutomations and scripts that use this switch:\n\n{usage}\n\nNot detected: entity names built dynamically in a template, and targets by area or label. Check those yourself.",
+            "data": {
+              "button_mode": "Button mode"
+            }
+          },
+          "confirm_unused": {
+            "title": "Choose a button mode for {name}",
+            "description": "{name} uses the **Legacy** mode of earlier versions. Your automations keep working, but this mode will be removed in a future version. Choose a new mode, then update the automations that use this switch:\n\n| Legacy | Simple | Short + long | Short + hold |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nIn the new modes, trigger automations with **Event received** on the button entities (A0, A1, B0, B1). The \"A0 event\" sensors are removed. raw_press and raw_release are on the \"A0 raw\" entities, disabled by default. To keep the Legacy mode for now, leave **Legacy** selected.\n\nNo automation or script using this switch was found. Not detected: entity names built dynamically in a template, and targets by area or label. Check those yourself.",
+            "data": {
+              "button_mode": "Button mode"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "This switch no longer exists."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simple: one action per button, runs on press. Most reliable.",
+        "short_long": "Short + long: short press (<1 s) or long press (>1 s), runs on release.",
+        "short_hold": "Short + hold: short press (<1 s), or hold (>1 s) to adjust continuously.",
+        "legacy": "Legacy: events of earlier versions, removed in a future version."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Simple: one action per button, runs on press. Most reliable.",
+        "short_long": "Short + long: short press (<1 s) or long press (>1 s), runs on release.",
+        "short_hold": "Short + hold: short press (<1 s), or hold (>1 s) to adjust continuously.",
+        "legacy": "Legacy (default): events of earlier versions, removed in a future version."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} raw"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "receiver": {
+        "name": "Receiver"
+      },
+      "lost_messages": {
+        "name": "Lost messages"
+      },
+      "button_event": {
+        "name": "{button} event"
+      }
     }
   }
 }

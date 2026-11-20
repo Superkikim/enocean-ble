@@ -1,8 +1,7 @@
 ruff==0.13.2
 mypy==1.18.2
-pytest==8.0.2
-pytest-asyncio==0.23.5
-pytest-homeassistant-custom-component==0.13.109
-cryptography==42.0.5
+pytest==9.0.3
+pytest-asyncio==1.4.0
+pytest-homeassistant-custom-component==0.13.375
 pyserial==3.5
 pre-commit==4.3.0

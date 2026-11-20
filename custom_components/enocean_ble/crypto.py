@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hmac
+
 from cryptography.hazmat.primitives.ciphers.aead import AESCCM
 
 from .const import ENOCEAN_MANUFACTURER_ID, MIC_LENGTH
@@ -77,4 +79,4 @@ def verify_mic(
     except ValueError:
         return False
 
-    return expected == mic
+    return hmac.compare_digest(expected, mic)

@@ -1,13 +1,51 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Aggiungi interruttore EnOcean BLE",
+        "description": "È stato rilevato l'interruttore {name} ({mac}). Come vuoi aggiungerlo?\n\nIl codice QR si trova sull'etichetta del modulo EnOcean, dietro il bilanciere.",
+        "menu_options": {
+          "qr_scan": "Scansiona il codice QR con la fotocamera",
+          "qr_text": "Inserisci il testo del codice QR",
+          "commissioning": "Commissioning manuale (sequenza di pulsanti)"
+        }
+      },
+      "qr_text": {
+        "title": "Inserisci il testo del codice QR",
+        "description": "Digita o incolla il testo del codice QR sull'etichetta del modulo di {name}. Servono solo due parti: l'indirizzo dopo 30S (12 caratteri, {mac} senza i due punti) e la chiave dopo +Z (32 caratteri). Il resto del testo viene ignorato e può essere omesso.",
+        "data": {
+          "qr_code": "Testo del codice QR"
+        },
+        "data_description": {
+          "qr_code": "Esempio: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (si usano solo 30S… e +Z…)"
+        }
+      },
+      "qr_scan": {
+        "title": "Scansiona il codice QR",
+        "description": "Apri la pagina di scansione e inquadra il codice QR sull'etichetta del modulo di {name}. Su un computer, la pagina mostra un codice QR per aprirla sul telefono. Questa finestra prosegue da sola appena il codice QR viene scansionato."
+      },
+      "qr_scan_done": {
+        "title": "Codice QR convalidato",
+        "description": "Il codice QR corrisponde all'interruttore {name} ({mac}). Fai clic su Invia per aggiungerlo."
+      },
+      "qr_scan_error": {
+        "title": "Codice QR rifiutato",
+        "description": "Il codice QR scansionato non permette di aggiungere l'interruttore {name} ({mac}). Fai clic su Invia per scegliere di nuovo come aggiungerlo, oppure chiudi questa finestra."
+      },
       "commissioning": {
         "title": "Auto-commissioning EnOcean BLE",
         "description": "Attiva l'auto-commissioning su {name}:\n\n1. Tieni premuto il pulsante 1 per 7 secondi\n2. Premi brevemente il pulsante 1\n3. Tieni di nuovo premuto il pulsante 1 per 7 secondi\n\nHai 2 minuti. Riprova se necessario."
       },
       "bluetooth_confirm": {
         "title": "Conferma dispositivo EnOcean BLE",
-        "description": "Lo switch EnOcean con indirizzo {mac} è stato commissionato con successo.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
+        "description": "Il commissioning dell'interruttore EnOcean con indirizzo {mac} è riuscito.\n\n⚠️ Premi un altro pulsante per disattivare la modalità di commissioning, poi fai clic su Invia."
+      },
+      "button_mode": {
+        "title": "Modalità dei pulsanti",
+        "description": "Scegli come funzionano i pulsanti di {name}. Potrai cambiarlo in seguito con il pulsante Configura.\n\nBreve + lunga e Breve + tenuta devono ricevere il rilascio. Se va perso, l'azione è persa, e con Breve + tenuta una tenuta può durare fino a 8 secondi. Più ricevitori Bluetooth vicino all'interruttore lo rendono raro (vedi Risoluzione dei problemi nella documentazione).",
+        "data": {
+          "button_mode": "Modalità dei pulsanti"
+        }
       }
     },
     "progress": {
@@ -15,11 +53,97 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Questa configurazione deve partire da un dispositivo Bluetooth rilevato.",
-      "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "Questo dispositivo rilevato non usa il prefisso MAC EnOcean BLE (E2:15).",
+      "already_configured": "Questo interruttore è già configurato.",
+      "discovery_required": "Premi un pulsante qualsiasi dell'interruttore: comparirà come dispositivo rilevato in Impostazioni → Dispositivi e servizi, da cui puoi aggiungerlo."
     },
     "error": {
       "commissioning_not_detected": "Nessun telegramma di commissioning ricevuto entro 2 minuti. Riprova. Se continua a non funzionare dopo più tentativi, puoi provare un reset di fabbrica. Leggi prima il disclaimer sul reset nella documentazione.",
-      "invalid_commissioning": "È stato ricevuto un telegramma di commissioning, ma non è stato possibile validarlo. Riprova. Se continua a fallire, leggi il disclaimer sul reset nella documentazione prima di resettare."
+      "invalid_commissioning": "È stato ricevuto un telegramma di commissioning, ma non è stato possibile validarlo. Riprova. Se continua a fallire, leggi il disclaimer sul reset nella documentazione prima di resettare.",
+      "invalid_qr": "In questo testo non sono stati trovati un indirizzo di interruttore EnOcean (30SE215…) e una chiave di sicurezza di 32 caratteri (+Z…).",
+      "qr_mac_mismatch": "Questo codice QR appartiene a un interruttore diverso da quello rilevato.",
+      "qr_key_invalid": "La chiave di questo codice QR non corrisponde ai telegrammi ricevuti da questo interruttore. Potrebbe essere stato riconfigurato (ad esempio da un altro sistema).",
+      "qr_no_telegram": "Non è ancora stato ricevuto alcun telegramma da questo interruttore. Premi uno dei suoi pulsanti, poi riprova.",
+      "scan_https_required": "La scansione con la fotocamera richiede che Home Assistant sia raggiungibile tramite HTTPS. Inserisci invece il testo del codice QR."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modalità dei pulsanti",
+        "description": "Scegli come funzionano i pulsanti di questo interruttore. Le automazioni che usano i suoi eventi potrebbero dover essere adattate.\n\nBreve + lunga e Breve + tenuta devono ricevere il rilascio. Se va perso, l'azione è persa, e con Breve + tenuta una tenuta può durare fino a 8 secondi. Più ricevitori Bluetooth vicino all'interruttore lo rendono raro (vedi Risoluzione dei problemi nella documentazione).",
+        "data": {
+          "button_mode": "Modalità dei pulsanti"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: scegli una modalità dei pulsanti",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Scegli una modalità dei pulsanti per {name}",
+            "description": "{name} usa la modalità **Precedente** delle versioni passate. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNelle nuove modalità, attiva le automazioni con **Event received** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"A0 evento\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 grezzo\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, lascia selezionato **Precedente**.\n\nAutomazioni e script che usano questo interruttore:\n\n{usage}\n\nNon rilevati: nomi di entità costruiti dinamicamente in un template e destinazioni per area o etichetta. Controllali tu.",
+            "data": {
+              "button_mode": "Modalità dei pulsanti"
+            }
+          },
+          "confirm_unused": {
+            "title": "Scegli una modalità dei pulsanti per {name}",
+            "description": "{name} usa la modalità **Precedente** delle versioni passate. Le tue automazioni continuano a funzionare, ma questa modalità sarà rimossa in una versione futura. Scegli una nuova modalità, poi adatta le automazioni che usano questo interruttore:\n\n| Precedente | Semplice | Breve + lunga | Breve + tenuta |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNelle nuove modalità, attiva le automazioni con **Event received** sulle entità dei pulsanti (A0, A1, B0, B1). I sensori \"A0 evento\" vengono rimossi. raw_press e raw_release sono sulle entità \"A0 grezzo\", disattivate per impostazione predefinita. Per mantenere per ora la modalità Precedente, lascia selezionato **Precedente**.\n\nNon è stata trovata nessuna automazione né script che usi questo interruttore. Non rilevati: nomi di entità costruiti dinamicamente in un template e destinazioni per area o etichetta. Controllali tu.",
+            "data": {
+              "button_mode": "Modalità dei pulsanti"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Questo interruttore non esiste più."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Semplice: un'azione per pulsante, alla pressione. La più affidabile.",
+        "short_long": "Breve + lunga: pressione breve (<1 s) o lunga (>1 s), al rilascio.",
+        "short_hold": "Breve + tenuta: pressione breve (<1 s), o tenuta (>1 s) per regolare in modo continuo.",
+        "legacy": "Precedente: eventi delle versioni precedenti, rimossa in una versione futura."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Semplice: un'azione per pulsante, alla pressione. La più affidabile.",
+        "short_long": "Breve + lunga: pressione breve (<1 s) o lunga (>1 s), al rilascio.",
+        "short_hold": "Breve + tenuta: pressione breve (<1 s), o tenuta (>1 s) per regolare in modo continuo.",
+        "legacy": "Precedente (predefinito): eventi delle versioni precedenti, rimossa in una versione futura."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} grezzo"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Segnale"
+      },
+      "last_seen": {
+        "name": "Ultimo contatto"
+      },
+      "receiver": {
+        "name": "Ricevitore"
+      },
+      "lost_messages": {
+        "name": "Messaggi persi"
+      },
+      "button_event": {
+        "name": "{button} evento"
+      }
     }
   }
 }

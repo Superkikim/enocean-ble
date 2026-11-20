@@ -1,0 +1,149 @@
+{
+  "config": {
+    "step": {
+      "bluetooth_method": {
+        "title": "Adicionar interruptor EnOcean BLE",
+        "description": "Foi descoberto o interruptor {name} ({mac}). Como pretende adicioná-lo?\n\nO código QR está na etiqueta do módulo EnOcean, atrás da tecla.",
+        "menu_options": {
+          "qr_scan": "Digitalizar o código QR com a câmara",
+          "qr_text": "Introduzir o texto do código QR",
+          "commissioning": "Comissionamento manual (sequência de botões)"
+        }
+      },
+      "qr_text": {
+        "title": "Introduzir o texto do código QR",
+        "description": "Escreva ou cole o texto do código QR da etiqueta do módulo de {name}. Só são necessárias duas partes: o endereço a seguir a 30S (12 caracteres, {mac} sem os dois pontos) e a chave a seguir a +Z (32 caracteres). O resto do texto é ignorado e pode ser omitido.",
+        "data": {
+          "qr_code": "Texto do código QR"
+        },
+        "data_description": {
+          "qr_code": "Exemplo: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (só são usados 30S… e +Z…)"
+        }
+      },
+      "qr_scan": {
+        "title": "Digitalizar o código QR",
+        "description": "Abra a página de digitalização e aponte para o código QR da etiqueta do módulo de {name}. Num computador, a página mostra um código QR para a abrir no telemóvel. Esta janela continua sozinha assim que o código QR for digitalizado."
+      },
+      "qr_scan_done": {
+        "title": "Código QR validado",
+        "description": "O código QR corresponde ao interruptor {name} ({mac}). Clique em Submeter para o adicionar."
+      },
+      "qr_scan_error": {
+        "title": "Código QR recusado",
+        "description": "O código QR digitalizado não permite adicionar o interruptor {name} ({mac}). Clique em Submeter para escolher novamente como o adicionar, ou feche esta janela."
+      },
+      "commissioning": {
+        "title": "Comissionamento automático EnOcean BLE",
+        "description": "Ative o comissionamento automático em {name}:\n\n1. Mantenha o botão 1 premido durante 7 segundos\n2. Prima brevemente o botão 1\n3. Mantenha novamente o botão 1 premido durante 7 segundos\n\nTem 2 minutos. Tente novamente se necessário."
+      },
+      "bluetooth_confirm": {
+        "title": "Confirmar dispositivo EnOcean BLE",
+        "description": "O interruptor EnOcean com o endereço {mac} foi comissionado com sucesso.\n\n⚠️ Prima outro botão para desativar o modo de comissionamento e depois clique em Submeter."
+      },
+      "button_mode": {
+        "title": "Modo dos botões",
+        "description": "Escolha como funcionam os botões de {name}. Pode alterá-lo mais tarde com o botão Configurar.\n\nCurto + longo e Curto + manter precisam de receber o soltar do botão. Se se perder, a ação perde-se, e com Curto + manter o botão pode ser considerado premido durante até 8 segundos. Mais recetores Bluetooth perto do interruptor tornam isto raro (veja Resolução de problemas na documentação).",
+        "data": {
+          "button_mode": "Modo dos botões"
+        }
+      }
+    },
+    "progress": {
+      "waiting_commissioning": "Mantenha o botão 1 premido durante 7 segundos, depois prima-o brevemente e mantenha-o novamente premido durante 7 segundos."
+    },
+    "abort": {
+      "already_configured": "Este interruptor já está configurado.",
+      "no_bluetooth_discovery": "Esta configuração tem de ser iniciada a partir de um dispositivo Bluetooth descoberto.",
+      "not_enocean_prefix": "Este dispositivo descoberto não usa o prefixo MAC EnOcean BLE (E2:15).",
+      "discovery_required": "Prima qualquer botão do interruptor: aparecerá como dispositivo descoberto em Definições → Dispositivos e serviços, onde o pode adicionar."
+    },
+    "error": {
+      "invalid_qr": "Não foi encontrado neste texto nenhum endereço de interruptor EnOcean (30SE215…) nem nenhuma chave de segurança de 32 caracteres (+Z…).",
+      "commissioning_not_detected": "Não foi recebido nenhum telegrama de comissionamento em 2 minutos. Tente novamente. Se continuar a não funcionar após várias tentativas, pode tentar uma reposição de fábrica. Leia primeiro o aviso sobre a reposição na documentação.",
+      "invalid_commissioning": "Foi recebido um telegrama de comissionamento, mas não foi possível validá-lo. Tente novamente. Se continuar a falhar, leia o aviso sobre a reposição na documentação antes de repor.",
+      "qr_mac_mismatch": "Este código QR pertence a outro interruptor, diferente do descoberto.",
+      "qr_key_invalid": "A chave deste código QR não corresponde aos telegramas recebidos deste interruptor. Pode ter sido reconfigurado (por exemplo, por outro sistema).",
+      "qr_no_telegram": "Ainda não foi recebido nenhum telegrama deste interruptor. Prima um dos botões e tente novamente.",
+      "scan_https_required": "A digitalização com a câmara exige que o Home Assistant esteja acessível por HTTPS. Introduza antes o texto do código QR."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modo dos botões",
+        "description": "Escolha como funcionam os botões deste interruptor. As automatizações que usam os seus eventos podem ter de ser adaptadas.\n\nCurto + longo e Curto + manter precisam de receber o soltar do botão. Se se perder, a ação perde-se, e com Curto + manter o botão pode ser considerado premido durante até 8 segundos. Mais recetores Bluetooth perto do interruptor tornam isto raro (veja Resolução de problemas na documentação).",
+        "data": {
+          "button_mode": "Modo dos botões"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: escolha um modo dos botões",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Escolha um modo dos botões para {name}",
+            "description": "{name} usa o modo **Antigo** das versões anteriores. As suas automatizações continuam a funcionar, mas este modo será removido numa versão futura. Escolha um novo modo e depois adapte as automatizações que usam este interruptor:\n\n| Antigo | Simples | Curto + longo | Curto + manter |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNos novos modos, acione as automatizações com **Evento recebido** nas entidades dos botões (A0, A1, B0, B1). Os sensores \"A0 evento\" são removidos. raw_press e raw_release estão nas entidades \"A0 bruto\", desativadas por predefinição. Para manter o modo Antigo por agora, deixe **Antigo** selecionado.\n\nAutomatizações e scripts que usam este interruptor:\n\n{usage}\n\nNão detetados: nomes de entidades construídos dinamicamente num modelo e destinos por área ou etiqueta. Verifique-os.",
+            "data": {
+              "button_mode": "Modo dos botões"
+            }
+          },
+          "confirm_unused": {
+            "title": "Escolha um modo dos botões para {name}",
+            "description": "{name} usa o modo **Antigo** das versões anteriores. As suas automatizações continuam a funcionar, mas este modo será removido numa versão futura. Escolha um novo modo e depois adapte as automatizações que usam este interruptor:\n\n| Antigo | Simples | Curto + longo | Curto + manter |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nNos novos modos, acione as automatizações com **Evento recebido** nas entidades dos botões (A0, A1, B0, B1). Os sensores \"A0 evento\" são removidos. raw_press e raw_release estão nas entidades \"A0 bruto\", desativadas por predefinição. Para manter o modo Antigo por agora, deixe **Antigo** selecionado.\n\nNão foi encontrada nenhuma automatização nem nenhum script que use este interruptor. Não detetados: nomes de entidades construídos dinamicamente num modelo e destinos por área ou etiqueta. Verifique-os.",
+            "data": {
+              "button_mode": "Modo dos botões"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Este interruptor já não existe."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simples: uma ação por botão, ao premir. O mais fiável.",
+        "short_long": "Curto + longo: pressão curta (<1 s) ou longa (>1 s), ao soltar.",
+        "short_hold": "Curto + manter: pressão curta (<1 s), ou manter (>1 s) para ajustar continuamente.",
+        "legacy": "Antigo: eventos das versões anteriores, será removido numa versão futura."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Simples: uma ação por botão, ao premir. O mais fiável.",
+        "short_long": "Curto + longo: pressão curta (<1 s) ou longa (>1 s), ao soltar.",
+        "short_hold": "Curto + manter: pressão curta (<1 s), ou manter (>1 s) para ajustar continuamente.",
+        "legacy": "Antigo (predefinido): eventos das versões anteriores, será removido numa versão futura."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} bruto"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Sinal"
+      },
+      "last_seen": {
+        "name": "Visto pela última vez"
+      },
+      "receiver": {
+        "name": "Recetor"
+      },
+      "lost_messages": {
+        "name": "Mensagens perdidas"
+      },
+      "button_event": {
+        "name": "{button} evento"
+      }
+    }
+  }
+}

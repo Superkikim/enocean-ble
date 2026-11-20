@@ -6,7 +6,9 @@ energy-harvesting switches (PTM 215B/PTM 216B).
 It provides:
 - Bluetooth discovery + guided commissioning flow
 - Secure telegram parsing (MIC verification)
-- Button events as native Home Assistant `event` entities
+- Button events as native Home Assistant `event` entities, in the button mode you choose:
+  one action per button, short + long press, or short press + hold (for dimming)
+- Diagnostic sensors: signal, last seen, receiver, lost messages
 
 ## Supported Devices
 
@@ -15,261 +17,233 @@ It provides:
 
 ## Installation
 
-### HACS (recommended)
-1. HACS -> `Integrations` -> `...` -> `Custom repositories`
-2. Add this repository URL, category: `Integration`
-3. Install `EnOcean BLE`
-4. Restart Home Assistant
+### Marketplace (Home Assistant 2026.11 and later)
+1. Settings -> `Marketplace`
+2. Search for `EnOcean BLE Switches` and install it
+3. Restart Home Assistant
+
+### HACS (Home Assistant before 2026.11)
+1. HACS -> search for `EnOcean BLE Switches` (no custom repository needed)
+2. Download it
+3. Restart Home Assistant
 
 ### Manual
 1. Copy [`custom_components/enocean_ble`](custom_components/enocean_ble) to your HA `custom_components` directory
 2. Restart Home Assistant
-3. Settings -> Devices & Services -> `Add Integration` -> `EnOcean BLE`
+3. Add your switches as described below
 
 ## Add Your Device
 
-1. Press any button on the switch — it will appear as a discovered device in Home Assistant.
-2. Click `Add` when it appears.
-3. Follow the sequence on button 1:
+1. Press any button on the switch — it will appear as a discovered device in Home Assistant
+   (Settings -> Devices & Services).
+2. Click `Add` when it appears, then choose how to add it:
+   - **Scan the QR code with the camera**
+   - **Enter the QR code text**
+   - **Manual commissioning (button sequence)**
+3. Choose the [button mode](#button-modes) of the switch.
+
+Switches are always added from their discovery: this guarantees the switch is present, and lets the
+integration check the QR code against a telegram really received from it.
+
+### From the QR code (scan or text)
+
+The QR code on the PTM 215B/216B module label (behind the rocker) contains the switch address and
+its security key, for example `30SE215…+Z…+30P…`. No button sequence is needed, which also makes
+it the way to add OEM switches whose radio commissioning is disabled (for example Busch-Jaeger
+6716 UBT and Jung BLE switches).
+
+- **Scan:** a scan page opens. On a phone it uses the camera (it can also read a photo of the
+  label). On a computer it shows a QR code to open the page on your phone. Camera access needs
+  Home Assistant to be reached over **HTTPS**; without it, enter the text instead.
+- **Text:** type or paste the QR code text (for example read with your phone's camera app).
+  Only two parts are needed: the address after `30S` (12 characters) and the security key after
+  `+Z` (32 characters), for example `30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF`. The
+  other parts (`+30P…` product, `+2P…` revision, `+S…` serial number) are not used and can be
+  left out.
+
+Before the switch is added, the integration checks that:
+- the text is an EnOcean module QR code,
+- its address is the address of the discovered switch,
+- its key verifies a telegram received from that switch (MIC check). If the switch was
+  reconfigured (for example by another system), the key no longer matches and the switch is not
+  added.
+
+Treat the QR code like a password: anyone with the key can create valid button telegrams for
+that switch.
+
+### Manual commissioning (button sequence)
+
+1. Follow the sequence on button 1:
    - hold for about 7 seconds,
    - press briefly,
    - hold again for about 7 seconds.
-4. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
-5. Click `Submit`.
+2. When the confirmation screen appears, press another button (not button 1) to exit commissioning mode.
+3. Click `Submit`.
 
 Notes:
 - If the switch is already in commissioning mode, progress can complete almost immediately.
 - After success, press another button to ensure the switch exits commissioning mode.
 
-## Events
+## Button modes
 
-The integration creates:
-- 4 event entities: `A0`, `A1`, `B0`, `B1`
-- 4 sensor entities: `A0 event`, `A1 event`, `B0 event`, `B1 event`
+Each switch has a **button mode**. You choose it when you add the switch, and you can change it
+later with the `Configure` button of the switch.
 
-### Event types
-
-The integration exposes three layers of events:
-
-| Layer | Events | When to use |
-|---|---|---|
-| **RAW** | `press`, `release`, `orphan_release`, `release_timeout` | Advanced automations requiring full control |
-| **CALCULÉS** (best-effort) | `long_press`, `long_release` | Dimming and hold-to-act patterns |
-| **UX** | `single_press` | Simple on/off — most reliable |
-
-**Definitions:**
-
-- `press` — press telegram received from the device.
-- `release` — release telegram received after a known `press`.
-- `orphan_release` — release telegram received without a prior `press` (press lost in BLE). Fires `single_press` too if the gap is consistent with one lost telegram (reliable for single-button use without counter wrap).
-- `release_timeout` — no release received within 8 seconds of a press. Technical fallback, not a real release.
-- `long_press` — press held for more than 1.2 s without a release (best-effort).
-- `long_release` — release received after a `long_press` (best-effort).
-- `single_press` — fires immediately on the first valid signal of an interaction:
-  - on `press`, or
-  - on a coherent `orphan_release` (press lost, sequence gap == 2)
-
-  Fires once per interaction, including long press cycles — use in simple mode only (see Usage rules below).
-
-**Implicit cycle end rule:** any new event received for a button cancels the pending `release_timeout` timer and resets that button's state. In practice, starting a new press while the previous one is still "open" (release was lost) is handled automatically.
-
-### Usage rules
-
-Choose **one mode per button** — do not mix `single_press` with advanced events on the same button.
-
-| Mode | Triggers to use | Reliability | Typical use |
+| Mode | Actions per button | When the action runs | If a telegram is lost |
 |---|---|---|---|
-| **Simple** | `single_press` only | Guaranteed | Toggle, scene, one-shot |
-| **Advanced** | `press`, `release`, `long_press`, `long_release`, `release_timeout` | Best-effort | On/off by gesture, dimming |
+| **Simple** | `single_press` | as soon as you press | still works (most reliable) |
+| **Short + long** | `short_press`, `long_press` | when you release: under 1 s → short, 1 s or more → long | the action is lost, never a wrong one |
+| **Short + hold** | `short_press`, `hold_press`, `hold_release` | short: on release before 1 s. hold: at 1 s, while held. hold_release: on release | the action is lost, or a hold runs for up to 8 s |
 
-> **Do not** use `single_press` on a button that also uses advanced events.
->
-> **Why:** `single_press` fires immediately on press, before the press duration is known.
-> If the button also uses advanced event triggers (`long_press`, `long_release`, etc.),
-> `single_press` fires on **every** press — including long ones — creating unintended triggers
-> alongside `long_press`.
->
-> **Reliability:** `single_press` is robust to both telegram losses:
-> - **Lost press** → fires via `orphan_release` coherence (sequence gap == 2)
-> - **Lost release** → already fired on press; the lost release has no effect
+This page uses the English mode names. Home Assistant shows them in its language:
 
-Event data includes:
-- `mac_address`
-- `rssi`
-- `sequence_counter`
-- `button` (`A0`/`A1`/`B0`/`B1`)
-- `event_type` (the event name)
+| Language | Simple | Short + long | Short + hold | Legacy |
+|---|---|---|---|---|
+| cs | Jednoduchý | Krátký + dlouhý | Krátký + držení | Starý |
+| de | Einfach | Kurz + lang | Kurz + halten | Legacy |
+| en | Simple | Short + long | Short + hold | Legacy |
+| es | Simple | Corto + largo | Corto + mantener | Antiguo |
+| fr | Simple | Court + long | Court + maintien | Ancien |
+| it | Semplice | Breve + lunga | Breve + tenuta | Precedente |
+| nl | Eenvoudig | Kort + lang | Kort + vasthouden | Oud |
+| pl | Prosty | Krótkie + długie | Krótkie + przytrzymanie | Starszy |
+| pt | Simples | Curto + longo | Curto + manter | Antigo |
+| pt-BR | Simples | Curto + longo | Curto + segurar | Antigo |
+| sv | Enkel | Kort + lång | Kort + håll | Äldre |
 
-Home Assistant event trigger:
-- `enocean_ble_button_event` (recommended)
-- `enocean_ble_button_action` (legacy, kept for compatibility)
+- **Simple**: one reliable action per button, for example toggle a light or a scene.
+- **Short + long**: two different actions per button, for example two scenes. A press under 1 s
+  is short, a press of 1 s or more is long.
+- **Short + hold**: a short press (under 1 s) toggles something, holding (1 s or more) adjusts it
+  continuously (brightness, volume…).
 
-## Usage Examples
+The actions of a mode never add up: a long press or a hold never also triggers `short_press`.
 
-### Example 1 — Simple toggle (guaranteed)
+### Why a telegram can be lost
 
-`single_press` fires immediately on the press telegram — robust to a lost release.
-If the press is lost, it fires on a coherent orphan release (sequence gap == 2).
-It fires on every press, including long ones — use in simple mode only
-(do not combine with advanced events on the same button).
+The switch sends one telegram when you press and one when you release, and nothing while you hold
+the button. When the release is lost, Home Assistant cannot tell it from a button still held:
+
+- **Short + long** waits for the release, so the action is lost.
+- **Short + hold** starts a hold after 1 s. It ends at the next telegram of the switch (the press
+  that stops it does nothing else) or after 8 seconds.
+- **Simple** runs on the press, and recovers a lost press from its release.
+
+Losses come from Bluetooth reception, see [Troubleshooting](#troubleshooting). The diagnostic
+sensors show how many telegrams were lost.
+
+### Entities
+
+| Entity | What it is | Default |
+|---|---|---|
+| `A0`, `A1`, `B0`, `B1` | event entity of each button: the actions of the button mode | enabled |
+| `A0 raw` … `B1 raw` | every press and release as received: `raw_press`, `raw_release` (in every mode) | disabled |
+| `Signal` | signal strength of the last telegram (dBm) | disabled |
+| `Last seen` | time of the last telegram | disabled |
+| `Receiver` | Bluetooth adapter or proxy that received the last telegram first | disabled |
+| `Lost messages` | telegrams no receiver got, counted from gaps in the switch's sequence counter | disabled |
+
+Disabled entities can be enabled on the device page of the switch. Their names (`A0 raw`,
+`Signal`, `Last seen`, `Receiver`, `Lost messages`) follow the language of Home Assistant; the
+button entities are always `A0`, `A1`, `B0`, `B1`, like the buttons of the switch.
+
+Event data: `button`, `rssi`, `receiver`, `sequence_counter`, `mac_address`. `hold_release` also has
+`reason` (`release`, `timeout` or `next_telegram`), `raw_release` has `press_lost`.
+
+The same events are also fired on the Home Assistant event bus as `enocean_ble_button_event` (and
+`enocean_ble_button_action`, kept for compatibility).
+
+## Usage examples
+
+Use the **Event received** trigger (Home Assistant 2026.7 and later) on the event entity of the
+button. It fires on every event, even twice the same in a row.
+
+### Toggle a light (any mode)
+
+Use `single_press` in Simple mode, `short_press` in the other modes.
 
 ```yaml
-alias: EnOcean A0 - Toggle light
-mode: single
 triggers:
-  - trigger: state
-    entity_id: sensor.nord_top_a0_event
-    to: single_press
+  - trigger: event.received
+    target: {entity_id: event.living_room_switch_a0}
+    options: {event_type: [single_press]}
 actions:
   - action: light.toggle
-    target:
-      entity_id: light.living_room
+    target: {entity_id: light.living_room}
 ```
 
-### Example 2 — Advanced on/off by gesture (not guaranteed)
-
-Trigger on `press`, then wait for the next meaningful signal — first one wins.
-Short press (`release` arrives first) turns the light on.
-Long press (`long_press` arrives first, after 1.2 s) turns it off.
-A new press while waiting cancels and restarts (`mode: restart` — Rule 3).
-`release_timeout` terminates the automation cleanly if the release is lost.
-
-> **Not guaranteed:** if the press telegram is lost, the automation never starts.
-> If the release is lost on a short press, `long_press` fires at 1.2 s and the light
-> turns off instead — accepted limitation in advanced mode.
+### Turn everything off with a long press (Short + long)
 
 ```yaml
-alias: EnOcean A1 - On/Off (advanced)
-mode: restart
 triggers:
-  - trigger: state
-    entity_id: sensor.nord_top_a1_event
-    to: press
+  - trigger: event.received
+    target: {entity_id: event.living_room_switch_a1}
+    options: {event_type: [long_press]}
 actions:
-  - wait_for_trigger:
-      - trigger: state
-        entity_id: sensor.nord_top_a1_event
-        to: release
-        id: short
-      - trigger: state
-        entity_id: sensor.nord_top_a1_event
-        to: long_press
-        id: long
-      - trigger: state
-        entity_id: sensor.nord_top_a1_event
-        to: release_timeout
-        id: timeout
-    timeout: "00:00:15"
-    continue_on_timeout: false
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ wait.trigger is not none and wait.trigger.id == 'short' }}"
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room
-      - conditions:
-          - condition: template
-            value_template: "{{ wait.trigger is not none and wait.trigger.id == 'long' }}"
-        sequence:
-          - action: light.turn_off
-            target:
-              entity_id: light.living_room
+  - action: light.turn_off
+    target: {entity_id: all}
 ```
 
-### Example 3 — Dimming (hold to dim, release to stop, not guaranteed)
+### Dim while the button is held (Short + hold)
 
-Hold B0 to dim up, hold B1 to dim down. Three events can stop the transition:
-- `long_release` — normal release received
-- `release_timeout` — release lost in BLE (fires after 8 s)
-- `press` — any new press on the same button immediately stops the current transition
-  (new interaction starts, `mode: restart` cancels the running sequence)
-
-> **Not guaranteed:** `long_press` requires holding for 1.2 s and receiving the BLE release.
-> `release_timeout` covers the lost-release case but fires after 8 s.
+The brightness goes up by 10 % every 0.5 s until the button is released. Adjust the step and the
+delay to your lights: some do not like commands sent too close together. Copy it on `B1` with
+`brightness_step_pct: -10` to dim down.
 
 ```yaml
-alias: EnOcean B0/B1 - Dimming
 mode: restart
 triggers:
-  - trigger: state
-    entity_id: sensor.nord_top_b0_event
-    to: press
-    id: b0_stop
-  - trigger: state
-    entity_id: sensor.nord_top_b0_event
-    to: long_press
-    id: b0_up
-  - trigger: state
-    entity_id: sensor.nord_top_b0_event
-    to: long_release
-    id: b0_stop
-  - trigger: state
-    entity_id: sensor.nord_top_b0_event
-    to: release_timeout
-    id: b0_stop
-  - trigger: state
-    entity_id: sensor.nord_top_b1_event
-    to: press
-    id: b1_stop
-  - trigger: state
-    entity_id: sensor.nord_top_b1_event
-    to: long_press
-    id: b1_down
-  - trigger: state
-    entity_id: sensor.nord_top_b1_event
-    to: long_release
-    id: b1_stop
-  - trigger: state
-    entity_id: sensor.nord_top_b1_event
-    to: release_timeout
-    id: b1_stop
+  - trigger: event.received
+    target: {entity_id: event.living_room_switch_b0}
+    options: {event_type: [hold_press]}
 actions:
-  - choose:
-      - conditions:
-          - condition: trigger
-            id: b0_up
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room
-            data:
-              brightness_pct: 100
-              transition: 8
-      - conditions:
-          - condition: trigger
-            id: b0_stop
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room
-            data:
-              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
-              transition: 0
-      - conditions:
-          - condition: trigger
-            id: b1_down
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room
-            data:
-              brightness_pct: 1
-              transition: 8
-      - conditions:
-          - condition: trigger
-            id: b1_stop
-        sequence:
-          - action: light.turn_on
-            target:
-              entity_id: light.living_room
-            data:
-              brightness: "{{ state_attr('light.living_room', 'brightness') | int }}"
-              transition: 0
+  - repeat:
+      sequence:
+        - action: light.turn_on
+          target: {entity_id: light.living_room}
+          data: {brightness_step_pct: 10}
+        - wait_for_trigger:
+            - trigger: event.received
+              target: {entity_id: event.living_room_switch_b0}
+              options: {event_type: [hold_release]}
+          timeout: 0.5
+      until: "{{ wait.trigger is not none }}"
 ```
 
-> `long_press` and `long_release` are best-effort: they depend on the BLE release telegram being received. If the release is lost, `release_timeout` fires after 8 seconds instead of `long_release`. The "freeze at current brightness" approach works with most Zigbee/Z-Wave/Hue integrations; behavior during transition depends on whether the light driver reports current or target brightness.
+Before Home Assistant 2026.7, trigger on the state of the event entity and check its
+`event_type` attribute in a condition.
+
+## Legacy mode (switches added before 2026.11)
+
+Switches added before version 2026.11 keep their old events (`press`, `release`,
+`single_press`, `long_press`, `long_release`, `orphan_release`, `release_timeout`) and their
+`A0 event` … `B1 event` sensors, so existing automations keep working. A repair in
+`Settings` → `Repairs` asks you to choose a mode for each of these switches:
+
+- **Legacy is preselected** (marked as default). Leave it selected, or ignore the repair, to keep
+  the Legacy mode for now: the repair then does not come back.
+- The repair lists the **automations and scripts that use the switch**, to help you decide. They
+  are found from their triggers, conditions, actions and targets, and from the text of their
+  configuration (an entity written inside a template). Entity names built dynamically in a
+  template, or reached through a zone or label, cannot be detected. Legacy stays the default
+  even when nothing is found: you choose.
+- Choose Simple, Short + long or Short + hold to switch. You can change the mode of any switch
+  later with its `Configure` button.
+
+Legacy mode will be removed in a future version. What each Legacy event becomes:
+
+| Legacy | Simple | Short + long | Short + hold |
+|---|---|---|---|
+| `single_press` | `single_press` | `short_press` | `short_press` |
+| `long_press` | — | `long_press` | `hold_press` |
+| `long_release` | — | — | `hold_release` |
+| `release_timeout` | — | — | `hold_release` |
+| `press` | `raw_press` | `raw_press` | `raw_press` |
+| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |
+
+In the new modes, the `A0 event` … sensors are removed: trigger on the event entities instead.
+Note that `long_press` now runs on the release in Short + long; to start dimming while the button
+is held, use Short + hold.
 
 ## Troubleshooting
 
@@ -279,10 +253,23 @@ actions:
   verify BLE reception and that commissioning completed successfully.
 - Auto-commissioning sequence never works:
   device may have commissioning mode disabled by prior configuration; try factory reset.
-- Intermittent events:
-  check distance/RSSI/interference.
-- Occasional missed press:
-  can happen on 2.4 GHz BLE in real environments (interference, attenuation, collisions). This is inherent to radio communication and not always a software defect.
+- Lost or missed button presses: the switch sends every telegram; a lost one is always a
+  Bluetooth reception problem. Enable the `Lost messages`, `Receiver` and `Signal` sensors of the
+  switch, then:
+  1. **ESPHome Bluetooth proxies must listen all the time.** By default they listen about 10 % of
+     the time and miss the short bursts of the switch. Set the scan window equal to the interval:
+
+     ```yaml
+     esp32_ble_tracker:
+       scan_parameters:
+         interval: 1100ms
+         window: 1100ms
+     ```
+
+  2. **Use Home Assistant 2026.10 or later.** The integration then listens to every Bluetooth
+     adapter and proxy: a telegram is only lost if all of them missed it. Before 2026.10, Home
+     Assistant only delivers the telegrams of the receiver it selected for the switch.
+  3. **Add a Bluetooth proxy near the switch.** Passive proxies work.
 
 ## Migration / Factory Reset
 
@@ -315,6 +302,9 @@ Practical tip:
 
 Tested with:
 - Feller EDIZIOdue BLE Switch (user-tested in this project)
+- [JUNG BLE LS 995 SWM](https://www.jung-group.com/en-UK/p/Bluetooth-Low-Energy-radio-transmitter-4-channel-matt-graphite-black/BLE-LS-995-SWM),
+  Bluetooth Low Energy radio transmitter, 4-channel (user-tested, including the commissioning
+  procedure, [#1](https://github.com/Superkikim/enocean-ble/issues/1))
 
 Compatibility assumption:
 - In general, PTM 215B/PTM 216B-based BLE switches should work with this integration.
@@ -395,6 +385,23 @@ ruff check .
 mypy custom_components tests
 pytest -q
 ```
+
+## Credits
+
+- [@DOABrain](https://github.com/DOABrain): onboarding from the module label QR code
+  ([#4](https://github.com/Superkikim/enocean-ble/pull/4)). This covers the QR code format
+  parsing and the work on OEM switches whose radio commissioning is disabled
+  (Busch-Jaeger, Jung), tested on real devices.
+- [hass-pronote](https://github.com/delphiki/hass-pronote) by [@delphiki](https://github.com/delphiki):
+  the QR code scan is inspired by its approach: scanning with the phone camera from a config flow
+  through an external step and a page served by the integration
+  ([delphiki/hass-pronote#229](https://github.com/delphiki/hass-pronote/pull/229)).
+- [@lafriks](https://github.com/lafriks): reliability fixes from
+  [#2](https://github.com/Superkikim/enocean-ble/pull/2): passive Bluetooth scanners, lost-press
+  recovery on the switch-wide sequence counter, replay protection kept across restarts, per-switch
+  and per-button event routing, cleanup on unload and constant-time MIC check. The Simple button
+  mode (one action per button) comes from his proposal of a simple event mode. His own continuation
+  of this integration is [lafriks/enocean_ble](https://github.com/lafriks/enocean_ble).
 
 ## References
 

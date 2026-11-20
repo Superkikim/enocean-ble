@@ -1,13 +1,51 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Ajouter un switch EnOcean BLE",
+        "description": "Le switch {name} ({mac}) a été découvert. Comment voulez-vous l'ajouter ?\n\nLe QR code se trouve sur l'étiquette du module EnOcean, derrière la bascule.",
+        "menu_options": {
+          "qr_scan": "Scanner le QR code avec la caméra",
+          "qr_text": "Saisir le texte du QR code",
+          "commissioning": "Mise en service manuelle (séquence de boutons)"
+        }
+      },
+      "qr_text": {
+        "title": "Saisir le texte du QR code",
+        "description": "Tapez ou collez le texte du QR code de l'étiquette du module de {name}. Seules deux parties sont nécessaires : l'adresse après 30S (12 caractères, {mac} sans les deux-points) et la clé après +Z (32 caractères). Le reste du texte est ignoré et peut être omis.",
+        "data": {
+          "qr_code": "Texte du QR code"
+        },
+        "data_description": {
+          "qr_code": "Exemple : 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (seuls 30S… et +Z… sont utilisés)"
+        }
+      },
+      "qr_scan": {
+        "title": "Scanner le QR code",
+        "description": "Ouvrez la page de scan et visez le QR code de l'étiquette du module de {name}. Sur un ordinateur, la page affiche un QR code pour l'ouvrir sur votre téléphone. Cette fenêtre continue toute seule dès que le QR code a été scanné."
+      },
+      "qr_scan_done": {
+        "title": "QR code validé",
+        "description": "Le QR code correspond au switch {name} ({mac}). Cliquez sur Soumettre pour l'ajouter."
+      },
+      "qr_scan_error": {
+        "title": "QR code refusé",
+        "description": "Le QR code scanné ne permet pas d'ajouter le switch {name} ({mac}). Cliquez sur Soumettre pour choisir à nouveau comment l'ajouter, ou fermez cette fenêtre."
+      },
       "commissioning": {
-        "title": "Auto-commissioning EnOcean BLE",
-        "description": "Activez l'auto-commissioning sur {name} :\n\n1. Maintenez le bouton 1 pendant 7 secondes\n2. Appuyez brièvement sur le bouton 1\n3. Maintenez à nouveau le bouton 1 pendant 7 secondes\n\nVous avez 2 minutes. Réessayez si nécessaire."
+        "title": "Mise en service automatique EnOcean BLE",
+        "description": "Activez la mise en service automatique sur {name} :\n\n1. Maintenez le bouton 1 pendant 7 secondes\n2. Appuyez brièvement sur le bouton 1\n3. Maintenez à nouveau le bouton 1 pendant 7 secondes\n\nVous avez 2 minutes. Réessayez si nécessaire."
       },
       "bluetooth_confirm": {
         "title": "Confirmer l'appareil EnOcean BLE",
-        "description": "Le switch EnOcean avec l'adresse {mac} a été commissionné avec succès.\n\n⚠️ Appuyez sur un autre bouton pour désactiver le mode commissioning, puis cliquez sur Soumettre."
+        "description": "Le switch EnOcean avec l'adresse {mac} a été mis en service.\n\n⚠️ Appuyez sur un autre bouton pour quitter le mode mise en service, puis cliquez sur Soumettre."
+      },
+      "button_mode": {
+        "title": "Mode des boutons",
+        "description": "Choisissez comment fonctionnent les boutons de {name}. Vous pourrez le changer plus tard avec le bouton Configurer.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "data": {
+          "button_mode": "Mode des boutons"
+        }
       }
     },
     "progress": {
@@ -15,11 +53,97 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Cette configuration doit être lancée depuis un appareil Bluetooth détecté.",
-      "not_enocean_prefix": "L'appareil détecté n'utilise pas le préfixe MAC EnOcean BLE (E2:15)."
+      "not_enocean_prefix": "L'appareil détecté n'utilise pas le préfixe MAC EnOcean BLE (E2:15).",
+      "already_configured": "Ce switch est déjà configuré.",
+      "discovery_required": "Appuyez sur n'importe quel bouton du switch : il apparaît alors comme appareil découvert dans Paramètres → Appareils et services, d'où vous pouvez l'ajouter."
     },
     "error": {
-      "commissioning_not_detected": "Aucune trame de commissioning n'a été reçue dans les 2 minutes. Réessayez. Si cela ne fonctionne toujours pas après plusieurs tentatives, vous pouvez essayer un reset usine. Merci de lire d'abord le disclaimer de reset dans la documentation.",
-      "invalid_commissioning": "Une trame de commissioning a été reçue mais n'a pas pu être validée. Réessayez. Si cela continue d'échouer, consultez le disclaimer de reset dans la documentation avant de réinitialiser."
+      "commissioning_not_detected": "Aucun télégramme de mise en service n'a été reçu dans les 2 minutes. Réessayez. Si cela ne fonctionne toujours pas après plusieurs tentatives, vous pouvez essayer une réinitialisation d'usine. Lisez d'abord l'avertissement sur la réinitialisation dans la documentation.",
+      "invalid_commissioning": "Un télégramme de mise en service a été reçu mais n'a pas pu être validé. Réessayez. Si cela continue d'échouer, lisez l'avertissement sur la réinitialisation dans la documentation avant de réinitialiser.",
+      "invalid_qr": "Aucune adresse de switch EnOcean (30SE215…) ni clé de sécurité de 32 caractères (+Z…) n'a été trouvée dans ce texte.",
+      "qr_mac_mismatch": "Ce QR code correspond à un autre switch que celui qui a été découvert.",
+      "qr_key_invalid": "La clé de ce QR code ne correspond pas aux télégrammes reçus de ce switch. Il a peut-être été reconfiguré (par exemple par un autre système).",
+      "qr_no_telegram": "Aucun télégramme n'a encore été reçu de ce switch. Appuyez sur un de ses boutons, puis réessayez.",
+      "scan_https_required": "Le scan par caméra nécessite que Home Assistant soit accessible en HTTPS. Saisissez plutôt le texte du QR code."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Mode des boutons",
+        "description": "Choisissez comment fonctionnent les boutons de ce switch. Les automatisations qui utilisent ses événements devront peut-être être adaptées.\n\nCourt + long et Court + maintien ont besoin de recevoir le relâchement. S'il est perdu, l'action est perdue, et avec Court + maintien un maintien peut durer jusqu'à 8 secondes. Plus de récepteurs Bluetooth près du switch rendent ce cas rare (voir Dépannage dans la documentation).",
+        "data": {
+          "button_mode": "Mode des boutons"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name} : choisissez un mode de boutons",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Choisir un mode de boutons pour {name}",
+            "description": "{name} utilise le mode **Ancien** des versions précédentes. Vos automatisations continuent de fonctionner, mais ce mode sera supprimé dans une version future. Choisissez un nouveau mode, puis adaptez les automatisations qui utilisent ce switch :\n\n| Ancien | Simple | Court + long | Court + maintien |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nDans les nouveaux modes, déclenchez les automatisations avec **Un événement a été reçu** sur les entités des boutons (A0, A1, B0, B1). Les capteurs « A0 événement » sont supprimés. raw_press et raw_release sont sur les entités « A0 brut », désactivées par défaut. Pour garder le mode Ancien pour l'instant, laissez **Ancien** sélectionné.\n\nAutomatisations et scripts qui utilisent ce switch :\n\n{usage}\n\nNon détectés : les noms d'entités construits dynamiquement dans un template, et les cibles par pièce ou par étiquette. Vérifiez-les vous-même.",
+            "data": {
+              "button_mode": "Mode des boutons"
+            }
+          },
+          "confirm_unused": {
+            "title": "Choisir un mode de boutons pour {name}",
+            "description": "{name} utilise le mode **Ancien** des versions précédentes. Vos automatisations continuent de fonctionner, mais ce mode sera supprimé dans une version future. Choisissez un nouveau mode, puis adaptez les automatisations qui utilisent ce switch :\n\n| Ancien | Simple | Court + long | Court + maintien |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nDans les nouveaux modes, déclenchez les automatisations avec **Un événement a été reçu** sur les entités des boutons (A0, A1, B0, B1). Les capteurs « A0 événement » sont supprimés. raw_press et raw_release sont sur les entités « A0 brut », désactivées par défaut. Pour garder le mode Ancien pour l'instant, laissez **Ancien** sélectionné.\n\nAucune automatisation ni aucun script utilisant ce switch n'a été trouvé. Non détectés : les noms d'entités construits dynamiquement dans un template, et les cibles par pièce ou par étiquette. Vérifiez-les vous-même.",
+            "data": {
+              "button_mode": "Mode des boutons"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Ce switch n'existe plus."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Simple : une action par bouton, déclenchée à l'appui. Le plus fiable.",
+        "short_long": "Court + long : appui court (<1 s) ou long (>1 s), déclenché au relâchement.",
+        "short_hold": "Court + maintien : appui court (<1 s), ou maintien (>1 s) pour régler en continu.",
+        "legacy": "Ancien : événements des versions précédentes, supprimé dans une version future."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Simple : une action par bouton, déclenchée à l'appui. Le plus fiable.",
+        "short_long": "Court + long : appui court (<1 s) ou long (>1 s), déclenché au relâchement.",
+        "short_hold": "Court + maintien : appui court (<1 s), ou maintien (>1 s) pour régler en continu.",
+        "legacy": "Ancien (défaut) : événements des versions précédentes, supprimé dans une version future."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} brut"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Dernier contact"
+      },
+      "receiver": {
+        "name": "Récepteur"
+      },
+      "lost_messages": {
+        "name": "Messages perdus"
+      },
+      "button_event": {
+        "name": "{button} événement"
+      }
     }
   }
 }

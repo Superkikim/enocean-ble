@@ -1,0 +1,599 @@
+<!doctype html>
+<!--
+  EnOcean BLE: scan the module label QR code from the config flow (external step).
+  Adapted from hass-pronote (https://github.com/delphiki/hass-pronote, PR #229).
+  Copyright (c) 2023 delphiki, MIT License.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EnOcean BLE - QR code</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #111; color: #eee; text-align: center; }
+  h1 { font-size: 1.2em; font-weight: 600; margin: 8px 0 16px; }
+  #viewport { max-width: 480px; margin: 0 auto; overflow: hidden; border-radius: 12px; background: #000; }
+  video { display: block; width: 100%; transform-origin: center; }
+  #controls { margin: 12px auto 0; max-width: 480px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #zoom-wrap { display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; }
+  #zoom { flex: 1; }
+  button[aria-pressed="true"] { background: #8ab4f8; color: #111; }
+  #status { margin: 16px auto; font-size: 1.05em; max-width: 480px; line-height: 1.4; }
+  .ok { color: #7ddc7d; } .err { color: #ff8a80; }
+  button { font: inherit; border: 1px solid #8ab4f8; color: #8ab4f8; background: transparent; border-radius: 8px; padding: 10px 16px; margin: 6px; cursor: pointer; }
+  #handoff p { max-width: 420px; margin: 16px auto; line-height: 1.4; }
+  #qr { display: inline-block; background: #fff; padding: 8px; border-radius: 12px; line-height: 0; }
+  #qr svg { width: 240px; height: 240px; }
+</style>
+</head>
+<body>
+<h1 id="title"></h1>
+<div id="handoff" hidden>
+  <p id="handoff-text"></p>
+  <div id="qr"></div>
+  <p><button id="use-here" type="button"></button></p>
+</div>
+<div id="viewport"><video id="video" playsinline muted hidden></video></div>
+<div id="controls" hidden>
+  <button id="torch" type="button" aria-pressed="false" hidden>🔦</button>
+  <label id="zoom-wrap" hidden><span aria-hidden="true">🔍</span><input id="zoom" type="range"></label>
+</div>
+<div id="status"></div>
+<div>
+  <button id="photo" type="button" hidden></button>
+  <input id="file" type="file" accept="image/*" capture="environment" hidden>
+</div>
+<canvas id="canvas" hidden></canvas>
+<script>
+const JSQR_URL = "__STATIC_URL__/jsQR.js";
+const QRCODE_URL = "__STATIC_URL__/qrcode.js";
+
+const I18N = {
+  en: {
+    title: "Add the EnOcean switch from its QR code",
+    aim: "Aim at the QR code on the switch module label (remove the rocker).",
+    handoff: "Scan this QR code with your phone to open the scan page.",
+    useHere: "Use this device's camera",
+    photo: "Take a photo of the QR code",
+    torch: "Light",
+    zoom: "Zoom",
+    checking: "Checking with Home Assistant…",
+    added: "✅ QR code accepted. Go back to Home Assistant and confirm to add the switch.",
+    goBack: "Go back to Home Assistant to start again.",
+    stepDone: "✅ Step done. You can close this tab and go back to Home Assistant.",
+    notEnocean: "This is not an EnOcean module QR code.",
+    noQrInPhoto: "No EnOcean QR code found in this photo.",
+    expired: "This request has expired. Start again from Home Assistant.",
+    network: "Network error, aim at the QR code again.",
+    https: "Scanning needs Home Assistant to be accessed over HTTPS.",
+    camera: "Cannot open the camera: ",
+    read: "Read error: ",
+    qr_mac_mismatch: "This QR code belongs to another switch.",
+    qr_key_invalid: "The key in this QR code does not match this switch. It may have been reconfigured (for example by another system).",
+    qr_no_telegram: "No telegram received from this switch yet. Press a button on it, then scan again.",
+    invalid_qr: "This is not an EnOcean module QR code."
+  },
+  fr: {
+    title: "Ajouter le switch EnOcean depuis son QR code",
+    aim: "Visez le QR code sur l'étiquette du module (retirez la bascule).",
+    handoff: "Scannez ce QR code avec votre téléphone pour ouvrir la page de scan.",
+    useHere: "Utiliser la caméra de cet appareil",
+    photo: "Prendre une photo du QR code",
+    torch: "Lampe",
+    zoom: "Zoom",
+    checking: "Vérification avec Home Assistant…",
+    added: "✅ QR code accepté. Revenez dans Home Assistant et confirmez pour ajouter le switch.",
+    goBack: "Revenez dans Home Assistant pour recommencer.",
+    stepDone: "✅ Étape terminée. Vous pouvez fermer cet onglet et revenir à Home Assistant.",
+    notEnocean: "Ce n'est pas un QR code de module EnOcean.",
+    noQrInPhoto: "Aucun QR code EnOcean trouvé sur cette photo.",
+    expired: "Cette demande a expiré. Relancez l'ajout depuis Home Assistant.",
+    network: "Erreur réseau, visez à nouveau le QR code.",
+    https: "Le scan nécessite d'accéder à Home Assistant en HTTPS.",
+    camera: "Impossible d'ouvrir la caméra : ",
+    read: "Erreur de lecture : ",
+    qr_mac_mismatch: "Ce QR code correspond à un autre switch.",
+    qr_key_invalid: "La clé de ce QR code ne correspond pas à ce switch. Il a peut-être été reconfiguré (par exemple par un autre système).",
+    qr_no_telegram: "Aucun télégramme reçu de ce switch pour l'instant. Appuyez sur un de ses boutons, puis scannez à nouveau.",
+    invalid_qr: "Ce n'est pas un QR code de module EnOcean."
+  },
+  de: {
+    title: "EnOcean-Schalter über seinen QR-Code hinzufügen",
+    aim: "Richte die Kamera auf den QR-Code auf dem Modul-Etikett (Wippe abnehmen).",
+    handoff: "Scanne diesen QR-Code mit deinem Smartphone, um die Scan-Seite zu öffnen.",
+    useHere: "Kamera dieses Geräts verwenden",
+    photo: "Foto vom QR-Code aufnehmen",
+    torch: "Licht",
+    zoom: "Zoom",
+    checking: "Prüfung mit Home Assistant…",
+    added: "✅ QR-Code akzeptiert. Kehre zu Home Assistant zurück und bestätige, um den Schalter hinzuzufügen.",
+    goBack: "Kehre zu Home Assistant zurück, um neu zu beginnen.",
+    stepDone: "✅ Schritt abgeschlossen. Du kannst diesen Tab schließen und zu Home Assistant zurückkehren.",
+    notEnocean: "Das ist kein QR-Code eines EnOcean-Moduls.",
+    noQrInPhoto: "Kein EnOcean-QR-Code auf diesem Foto gefunden.",
+    expired: "Diese Anfrage ist abgelaufen. Starte erneut in Home Assistant.",
+    network: "Netzwerkfehler, richte die Kamera erneut auf den QR-Code.",
+    https: "Zum Scannen muss Home Assistant über HTTPS aufgerufen werden.",
+    camera: "Kamera kann nicht geöffnet werden: ",
+    read: "Lesefehler: ",
+    qr_mac_mismatch: "Dieser QR-Code gehört zu einem anderen Schalter.",
+    qr_key_invalid: "Der Schlüssel in diesem QR-Code passt nicht zu diesem Schalter. Er wurde möglicherweise neu konfiguriert (z. B. von einem anderen System).",
+    qr_no_telegram: "Von diesem Schalter wurde noch kein Telegramm empfangen. Drücke eine Taste und scanne erneut.",
+    invalid_qr: "Das ist kein QR-Code eines EnOcean-Moduls."
+  },
+  es: {
+    title: "Añadir el interruptor EnOcean desde su código QR",
+    aim: "Apunta al código QR de la etiqueta del módulo (retira la tecla).",
+    handoff: "Escanea este código QR con tu teléfono para abrir la página de escaneo.",
+    useHere: "Usar la cámara de este dispositivo",
+    photo: "Hacer una foto del código QR",
+    torch: "Linterna",
+    zoom: "Zoom",
+    checking: "Comprobando con Home Assistant…",
+    added: "✅ Código QR aceptado. Vuelve a Home Assistant y confirma para añadir el interruptor.",
+    goBack: "Vuelve a Home Assistant para empezar de nuevo.",
+    stepDone: "✅ Paso completado. Puedes cerrar esta pestaña y volver a Home Assistant.",
+    notEnocean: "No es el código QR de un módulo EnOcean.",
+    noQrInPhoto: "No se encontró ningún código QR EnOcean en esta foto.",
+    expired: "Esta solicitud ha caducado. Vuelve a empezar desde Home Assistant.",
+    network: "Error de red, apunta de nuevo al código QR.",
+    https: "El escaneo requiere acceder a Home Assistant por HTTPS.",
+    camera: "No se puede abrir la cámara: ",
+    read: "Error de lectura: ",
+    qr_mac_mismatch: "Este código QR pertenece a otro interruptor.",
+    qr_key_invalid: "La clave de este código QR no coincide con este interruptor. Puede que se haya reconfigurado (por ejemplo, con otro sistema).",
+    qr_no_telegram: "Aún no se ha recibido ningún telegrama de este interruptor. Pulsa uno de sus botones y vuelve a escanear.",
+    invalid_qr: "No es el código QR de un módulo EnOcean."
+  },
+  it: {
+    title: "Aggiungi l'interruttore EnOcean dal suo codice QR",
+    aim: "Inquadra il codice QR sull'etichetta del modulo (rimuovi il bilanciere).",
+    handoff: "Scansiona questo codice QR con il telefono per aprire la pagina di scansione.",
+    useHere: "Usa la fotocamera di questo dispositivo",
+    photo: "Scatta una foto del codice QR",
+    torch: "Torcia",
+    zoom: "Zoom",
+    checking: "Verifica con Home Assistant…",
+    added: "✅ Codice QR accettato. Torna a Home Assistant e conferma per aggiungere l'interruttore.",
+    goBack: "Torna a Home Assistant per ricominciare.",
+    stepDone: "✅ Passaggio completato. Puoi chiudere questa scheda e tornare a Home Assistant.",
+    notEnocean: "Questo non è il codice QR di un modulo EnOcean.",
+    noQrInPhoto: "Nessun codice QR EnOcean trovato in questa foto.",
+    expired: "Questa richiesta è scaduta. Ricomincia da Home Assistant.",
+    network: "Errore di rete, inquadra di nuovo il codice QR.",
+    https: "La scansione richiede l'accesso a Home Assistant tramite HTTPS.",
+    camera: "Impossibile aprire la fotocamera: ",
+    read: "Errore di lettura: ",
+    qr_mac_mismatch: "Questo codice QR appartiene a un altro interruttore.",
+    qr_key_invalid: "La chiave di questo codice QR non corrisponde a questo interruttore. Potrebbe essere stato riconfigurato (ad esempio da un altro sistema).",
+    qr_no_telegram: "Nessun telegramma ricevuto finora da questo interruttore. Premi uno dei suoi tasti, poi scansiona di nuovo.",
+    invalid_qr: "Questo non è il codice QR di un modulo EnOcean."
+  },
+  nl: {
+    title: "EnOcean-schakelaar toevoegen via de QR-code",
+    aim: "Richt op de QR-code op het label van de module (verwijder de wip).",
+    handoff: "Scan deze QR-code met je telefoon om de scanpagina te openen.",
+    useHere: "De camera van dit apparaat gebruiken",
+    photo: "Maak een foto van de QR-code",
+    torch: "Lamp",
+    zoom: "Zoom",
+    checking: "Controleren met Home Assistant…",
+    added: "✅ QR-code geaccepteerd. Ga terug naar Home Assistant en bevestig om de schakelaar toe te voegen.",
+    goBack: "Ga terug naar Home Assistant om opnieuw te beginnen.",
+    stepDone: "✅ Stap voltooid. Je kunt dit tabblad sluiten en teruggaan naar Home Assistant.",
+    notEnocean: "Dit is geen QR-code van een EnOcean-module.",
+    noQrInPhoto: "Geen EnOcean-QR-code gevonden op deze foto.",
+    expired: "Dit verzoek is verlopen. Begin opnieuw vanuit Home Assistant.",
+    network: "Netwerkfout, richt opnieuw op de QR-code.",
+    https: "Voor scannen moet Home Assistant via HTTPS worden geopend.",
+    camera: "Kan de camera niet openen: ",
+    read: "Leesfout: ",
+    qr_mac_mismatch: "Deze QR-code hoort bij een andere schakelaar.",
+    qr_key_invalid: "De sleutel in deze QR-code past niet bij deze schakelaar. Mogelijk is hij opnieuw geconfigureerd (bijvoorbeeld door een ander systeem).",
+    qr_no_telegram: "Nog geen telegram van deze schakelaar ontvangen. Druk op een van de knoppen en scan opnieuw.",
+    invalid_qr: "Dit is geen QR-code van een EnOcean-module."
+  },
+  pl: {
+    title: "Dodaj przełącznik EnOcean z jego kodu QR",
+    aim: "Skieruj aparat na kod QR na etykiecie modułu (zdejmij klawisz).",
+    handoff: "Zeskanuj ten kod QR telefonem, aby otworzyć stronę skanowania.",
+    useHere: "Użyj aparatu tego urządzenia",
+    photo: "Zrób zdjęcie kodu QR",
+    torch: "Latarka",
+    zoom: "Powiększenie",
+    checking: "Sprawdzanie w Home Assistant…",
+    added: "✅ Kod QR zaakceptowany. Wróć do Home Assistant i potwierdź, aby dodać przełącznik.",
+    goBack: "Wróć do Home Assistant, aby zacząć od nowa.",
+    stepDone: "✅ Krok zakończony. Możesz zamknąć tę kartę i wrócić do Home Assistant.",
+    notEnocean: "To nie jest kod QR modułu EnOcean.",
+    noQrInPhoto: "Na tym zdjęciu nie znaleziono kodu QR EnOcean.",
+    expired: "To żądanie wygasło. Zacznij ponownie w Home Assistant.",
+    network: "Błąd sieci, skieruj aparat ponownie na kod QR.",
+    https: "Skanowanie wymaga dostępu do Home Assistant przez HTTPS.",
+    camera: "Nie można otworzyć aparatu: ",
+    read: "Błąd odczytu: ",
+    qr_mac_mismatch: "Ten kod QR należy do innego przełącznika.",
+    qr_key_invalid: "Klucz w tym kodzie QR nie pasuje do tego przełącznika. Mógł zostać ponownie skonfigurowany (na przykład przez inny system).",
+    qr_no_telegram: "Nie odebrano jeszcze żadnego telegramu z tego przełącznika. Naciśnij jeden z jego przycisków i zeskanuj ponownie.",
+    invalid_qr: "To nie jest kod QR modułu EnOcean."
+  },
+  "pt-BR": {
+    title: "Adicionar o interruptor EnOcean pelo código QR",
+    aim: "Aponte para o código QR na etiqueta do módulo (remova a tecla).",
+    handoff: "Escaneie este código QR com o celular para abrir a página de escaneamento.",
+    useHere: "Usar a câmera deste dispositivo",
+    photo: "Tirar uma foto do código QR",
+    torch: "Lanterna",
+    zoom: "Zoom",
+    checking: "Verificando com o Home Assistant…",
+    added: "✅ Código QR aceito. Volte ao Home Assistant e confirme para adicionar o interruptor.",
+    goBack: "Volte ao Home Assistant para começar de novo.",
+    stepDone: "✅ Etapa concluída. Você pode fechar esta aba e voltar ao Home Assistant.",
+    notEnocean: "Este não é o código QR de um módulo EnOcean.",
+    noQrInPhoto: "Nenhum código QR EnOcean encontrado nesta foto.",
+    expired: "Esta solicitação expirou. Comece novamente pelo Home Assistant.",
+    network: "Erro de rede, aponte novamente para o código QR.",
+    https: "O escaneamento exige acessar o Home Assistant por HTTPS.",
+    camera: "Não foi possível abrir a câmera: ",
+    read: "Erro de leitura: ",
+    qr_mac_mismatch: "Este código QR pertence a outro interruptor.",
+    qr_key_invalid: "A chave deste código QR não corresponde a este interruptor. Ele pode ter sido reconfigurado (por exemplo, por outro sistema).",
+    qr_no_telegram: "Nenhum telegrama recebido deste interruptor ainda. Pressione um dos botões e escaneie novamente.",
+    invalid_qr: "Este não é o código QR de um módulo EnOcean."
+  },
+  cs: {
+    title: "Přidat spínač EnOcean pomocí jeho QR kódu",
+    aim: "Namiřte na QR kód na štítku modulu (sejměte kolébku).",
+    handoff: "Naskenujte tento QR kód telefonem a otevřete stránku pro skenování.",
+    useHere: "Použít kameru tohoto zařízení",
+    photo: "Vyfotit QR kód",
+    torch: "Svítilna",
+    zoom: "Přiblížení",
+    checking: "Ověřování v Home Assistant…",
+    added: "✅ QR kód přijat. Vraťte se do Home Assistant a potvrďte přidání spínače.",
+    goBack: "Vraťte se do Home Assistant a začněte znovu.",
+    stepDone: "✅ Krok dokončen. Můžete zavřít tuto kartu a vrátit se do Home Assistant.",
+    notEnocean: "Toto není QR kód modulu EnOcean.",
+    noQrInPhoto: "Na této fotografii nebyl nalezen žádný QR kód EnOcean.",
+    expired: "Platnost tohoto požadavku vypršela. Začněte znovu v Home Assistant.",
+    network: "Chyba sítě, namiřte znovu na QR kód.",
+    https: "Skenování vyžaduje přístup k Home Assistant přes HTTPS.",
+    camera: "Kameru nelze otevřít: ",
+    read: "Chyba čtení: ",
+    qr_mac_mismatch: "Tento QR kód patří jinému spínači.",
+    qr_key_invalid: "Klíč v tomto QR kódu neodpovídá tomuto spínači. Mohl být překonfigurován (například jiným systémem).",
+    qr_no_telegram: "Od tohoto spínače zatím nebyl přijat žádný telegram. Stiskněte některé z jeho tlačítek a naskenujte znovu.",
+    invalid_qr: "Toto není QR kód modulu EnOcean."
+  },
+  sv: {
+    title: "Lägg till EnOcean-brytaren via dess QR-kod",
+    aim: "Rikta kameran mot QR-koden på modulens etikett (ta bort vippan).",
+    handoff: "Skanna den här QR-koden med telefonen för att öppna skanningssidan.",
+    useHere: "Använd den här enhetens kamera",
+    photo: "Ta ett foto av QR-koden",
+    torch: "Lampa",
+    zoom: "Zoom",
+    checking: "Kontrollerar med Home Assistant…",
+    added: "✅ QR-koden godkänd. Gå tillbaka till Home Assistant och bekräfta för att lägga till brytaren.",
+    goBack: "Gå tillbaka till Home Assistant för att börja om.",
+    stepDone: "✅ Steget är klart. Du kan stänga den här fliken och gå tillbaka till Home Assistant.",
+    notEnocean: "Det här är inte en QR-kod för en EnOcean-modul.",
+    noQrInPhoto: "Ingen EnOcean-QR-kod hittades på det här fotot.",
+    expired: "Den här begäran har gått ut. Börja om från Home Assistant.",
+    network: "Nätverksfel, rikta kameran mot QR-koden igen.",
+    https: "Skanning kräver att Home Assistant nås via HTTPS.",
+    camera: "Kan inte öppna kameran: ",
+    read: "Läsfel: ",
+    qr_mac_mismatch: "Den här QR-koden tillhör en annan brytare.",
+    qr_key_invalid: "Nyckeln i den här QR-koden matchar inte den här brytaren. Den kan ha konfigurerats om (till exempel av ett annat system).",
+    qr_no_telegram: "Inget telegram har tagits emot från den här brytaren än. Tryck på en av dess knappar och skanna igen.",
+    invalid_qr: "Det här är inte en QR-kod för en EnOcean-modul."
+  }
+};
+
+function pickLanguage() {
+  for (const lang of navigator.languages || [navigator.language || "en"]) {
+    if (I18N[lang]) return lang;
+    if (lang.toLowerCase().startsWith("pt")) return "pt-BR";
+    const base = lang.split("-")[0];
+    if (I18N[base]) return base;
+  }
+  return "en";
+}
+const LANG = pickLanguage();
+const T = I18N[LANG];
+document.documentElement.lang = LANG;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const status = document.getElementById("status");
+const photoButton = document.getElementById("photo");
+const controls = document.getElementById("controls");
+const torchButton = document.getElementById("torch");
+const zoomWrap = document.getElementById("zoom-wrap");
+const zoomInput = document.getElementById("zoom");
+const fileInput = document.getElementById("file");
+document.getElementById("title").textContent = T.title;
+document.getElementById("handoff-text").textContent = T.handoff;
+document.getElementById("use-here").textContent = T.useHere;
+photoButton.textContent = T.photo;
+torchButton.setAttribute("aria-label", T.torch);
+torchButton.title = T.torch;
+zoomInput.setAttribute("aria-label", T.zoom);
+
+const say = (text, cls) => { status.textContent = text; status.className = cls || ""; };
+const looksLikeEnoceanQr = (text) => /30S[0-9A-Fa-f]{12}/.test(text) && /\+Z[0-9A-Fa-f]{32}/.test(text);
+
+let detector = null;
+let jsQrLoaded = false;
+let done = false;
+// Digital zoom factor: the video is enlarged and only its centre is decoded.
+let digitalZoom = 1;
+
+const loadScript = (src) => new Promise((resolve, reject) => {
+  const script = document.createElement("script");
+  script.src = src;
+  script.onload = resolve;
+  script.onerror = () => reject(new Error(src.split("/").pop()));
+  document.head.appendChild(script);
+});
+
+async function setupDecoder() {
+  // BarcodeDetector may exist without QR support (e.g. Android without Google Play services).
+  try {
+    if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
+      detector = new BarcodeDetector({ formats: ["qr_code"] });
+      return;
+    }
+  } catch (e) {
+    // fall back on jsQR
+  }
+  detector = null;
+  await ensureJsQr();
+}
+
+async function ensureJsQr() {
+  if (!jsQrLoaded) {
+    await loadScript(JSQR_URL);
+    jsQrLoaded = true;
+  }
+}
+
+// Draw the centre of the source (1/zoom of each side) on the canvas.
+function drawCentre(source, width, height, zoom) {
+  const sw = Math.round(width / zoom);
+  const sh = Math.round(height / zoom);
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  canvas.width = sw;
+  canvas.height = sh;
+  ctx.drawImage(source, Math.round((width - sw) / 2), Math.round((height - sh) / 2), sw, sh, 0, 0, sw, sh);
+  return ctx;
+}
+
+// Decode a video frame or an image with BarcodeDetector, else jsQR.
+async function decode(source, width, height, zoom = 1) {
+  if (detector) {
+    try {
+      const target = zoom > 1 ? (drawCentre(source, width, height, zoom), canvas) : source;
+      return (await detector.detect(target))[0]?.rawValue;
+    } catch (e) {
+      detector = null; // native detector failed: switch to jsQR
+    }
+  }
+  await ensureJsQr();
+  const ctx = drawCentre(source, width, height, zoom);
+  return jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)?.data;
+}
+
+// Light and zoom. The camera's own zoom and light are used when the browser offers
+// them (Chrome on Android); otherwise the zoom is digital and there is no light.
+function setupControls(track) {
+  let caps = {};
+  try {
+    caps = (track.getCapabilities && track.getCapabilities()) || {};
+  } catch (e) {
+    caps = {};
+  }
+  if ((caps.focusMode || []).includes("continuous")) {
+    track.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(() => {});
+  }
+
+  torchButton.hidden = !caps.torch;
+  if (caps.torch) {
+    let on = false;
+    torchButton.setAttribute("aria-pressed", "false");
+    torchButton.onclick = async () => {
+      try {
+        await track.applyConstraints({ advanced: [{ torch: !on }] });
+        on = !on;
+        torchButton.setAttribute("aria-pressed", String(on));
+      } catch (e) {
+        torchButton.hidden = true;
+      }
+    };
+  }
+
+  let cameraZoom = caps.zoom && caps.zoom.max > caps.zoom.min ? caps.zoom : null;
+  const useDigitalZoom = () => {
+    cameraZoom = null;
+    zoomInput.min = 1;
+    zoomInput.max = 4;
+    zoomInput.step = 0.1;
+    zoomInput.value = 1;
+  };
+  if (cameraZoom) {
+    zoomInput.min = cameraZoom.min;
+    zoomInput.max = cameraZoom.max;
+    zoomInput.step = cameraZoom.step || 0.1;
+    zoomInput.value = track.getSettings().zoom || cameraZoom.min;
+  } else {
+    useDigitalZoom();
+  }
+  digitalZoom = 1;
+  video.style.transform = "";
+  zoomInput.oninput = () => {
+    const value = Number(zoomInput.value);
+    if (cameraZoom) {
+      track.applyConstraints({ advanced: [{ zoom: value }] }).catch(() => useDigitalZoom());
+      return;
+    }
+    digitalZoom = value;
+    video.style.transform = value > 1 ? `scale(${value})` : "";
+  };
+  zoomWrap.hidden = false;
+  controls.hidden = false;
+}
+
+function stopCamera() {
+  controls.hidden = true;
+  digitalZoom = 1;
+  video.style.transform = "";
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach((track) => track.stop());
+    video.srcObject = null;
+  }
+  video.hidden = true;
+}
+
+// Send the QR code to Home Assistant, which checks it against the discovered switch.
+async function send(text) {
+  done = true;
+  say(T.checking);
+  let resp;
+  try {
+    resp = await fetch(location.pathname, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qr: text }),
+    });
+  } catch (e) {
+    done = false; // network hiccup: keep the camera on and scan again
+    say(T.network, "err");
+    return;
+  }
+  stopCamera();
+  photoButton.hidden = true;
+  if (resp.ok) {
+    say(T.added, "ok");
+    return;
+  }
+  if (resp.status === 404) {
+    say(T.expired, "err");
+    return;
+  }
+  let code = null;
+  try { code = (await resp.json()).code; } catch (e) { /* no body */ }
+  // The flow now shows the error in Home Assistant: the user starts again from there.
+  say(`${T[code] || T.notEnocean} ${T.goBack}`, "err");
+}
+
+async function tick() {
+  if (done) return;
+  try {
+    const text = video.readyState >= 2 ? await decode(video, video.videoWidth, video.videoHeight, digitalZoom) : null;
+    if (text) {
+      if (looksLikeEnoceanQr(text)) {
+        await send(text);
+        if (done) return;
+      } else {
+        say(T.notEnocean, "err");
+      }
+    }
+  } catch (e) {
+    say(T.read + e.message, "err");
+  }
+  setTimeout(tick, 250);
+}
+
+async function startCamera() {
+  done = false;
+  photoButton.hidden = false;
+  if (!window.isSecureContext || !navigator.mediaDevices) {
+    return say(T.https, "err");
+  }
+  video.hidden = false;
+  try {
+    await setupDecoder();
+    // Ask for a high resolution: browsers often default to 640x480, too low for a small QR code.
+    video.srcObject = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false,
+    });
+    await video.play();
+    setupControls(video.srcObject.getVideoTracks()[0]);
+    say(T.aim);
+    tick();
+  } catch (e) {
+    video.hidden = true;
+    say(T.camera + e.message, "err");
+  }
+}
+
+async function scanPhoto(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const text = await decode(bitmap, bitmap.width, bitmap.height);
+    if (text && looksLikeEnoceanQr(text)) {
+      await send(text);
+    } else {
+      say(T.noQrInPhoto, "err");
+    }
+  } catch (e) {
+    say(T.read + e.message, "err");
+  }
+}
+
+photoButton.onclick = () => fileInput.click();
+fileInput.onchange = () => {
+  const file = fileInput.files && fileInput.files[0];
+  fileInput.value = "";
+  if (file) {
+    done = true;
+    stopCamera();
+    scanPhoto(file);
+  }
+};
+
+// Touch screen + mobile browser (iPadOS reports itself as a Mac with touch points).
+function isPhone() {
+  const ua = navigator.userAgent;
+  const mobile = navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
+    || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  return mobile && matchMedia("(pointer: coarse)").matches;
+}
+
+// On a computer: show this page as a QR code for the phone, until the flow moves on.
+async function showHandoff() {
+  const handoff = document.getElementById("handoff");
+  handoff.hidden = false;
+  try {
+    await loadScript(QRCODE_URL);
+    const qr = qrcode(0, "M");
+    qr.addData(location.href);
+    qr.make();
+    document.getElementById("qr").innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  } catch (e) {
+    handoff.hidden = true;
+    return startCamera();
+  }
+  const poll = setInterval(async () => {
+    try {
+      if ((await fetch(location.pathname, { cache: "no-store" })).status !== 404) return;
+    } catch (e) {
+      return;
+    }
+    clearInterval(poll);
+    handoff.hidden = true;
+    say(T.stepDone, "ok");
+  }, 3000);
+  document.getElementById("use-here").onclick = () => {
+    clearInterval(poll);
+    handoff.hidden = true;
+    startCamera();
+  };
+}
+
+isPhone() ? startCamera() : showHandoff();
+</script>
+</body>
+</html>

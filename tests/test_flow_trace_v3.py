@@ -12,7 +12,7 @@ from custom_components.enocean_ble.config_flow import EnOceanBleConfigFlow
 def _build_flow() -> EnOceanBleConfigFlow:
     flow = EnOceanBleConfigFlow()
     loop = SimpleNamespace(time=lambda: 0.0)
-    flow.hass = SimpleNamespace(loop=loop)
+    flow.hass = SimpleNamespace(loop=loop)  # type: ignore[assignment]
     flow.flow_id = "flow-trace-v3-test"
     flow._pending_mac = "AA:BB:CC:DD:EE:FF"
     return flow

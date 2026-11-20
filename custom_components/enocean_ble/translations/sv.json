@@ -1,13 +1,51 @@
 {
   "config": {
     "step": {
+      "bluetooth_method": {
+        "title": "Lägg till EnOcean BLE-brytare",
+        "description": "Brytaren {name} ({mac}) har upptäckts. Hur vill du lägga till den?\n\nQR-koden sitter på EnOcean-modulens etikett, bakom vippan.",
+        "menu_options": {
+          "qr_scan": "Skanna QR-koden med kameran",
+          "qr_text": "Ange QR-kodens text",
+          "commissioning": "Manuell driftsättning (knappsekvens)"
+        }
+      },
+      "qr_text": {
+        "title": "Ange QR-kodens text",
+        "description": "Skriv eller klistra in texten från QR-koden på modulens etikett för {name}. Bara två delar behövs: adressen efter 30S (12 tecken, {mac} utan kolon) och nyckeln efter +Z (32 tecken). Resten av texten ignoreras och kan utelämnas.",
+        "data": {
+          "qr_code": "QR-kodens text"
+        },
+        "data_description": {
+          "qr_code": "Exempel: 30SE21500001234+Z0123456789ABCDEF0123456789ABCDEF (bara 30S… och +Z… används)"
+        }
+      },
+      "qr_scan": {
+        "title": "Skanna QR-koden",
+        "description": "Öppna skanningssidan och rikta kameran mot QR-koden på modulens etikett för {name}. På en dator visar sidan en QR-kod för att öppna den på telefonen. Den här dialogen fortsätter av sig själv när QR-koden har skannats."
+      },
+      "qr_scan_done": {
+        "title": "QR-koden validerad",
+        "description": "QR-koden hör till brytaren {name} ({mac}). Klicka på Skicka för att lägga till den."
+      },
+      "qr_scan_error": {
+        "title": "QR-koden avvisad",
+        "description": "Den skannade QR-koden kan inte användas för att lägga till brytaren {name} ({mac}). Klicka på Skicka för att välja igen hur den ska läggas till, eller stäng dialogen."
+      },
       "commissioning": {
-        "title": "EnOcean BLE automatisk provisionering",
-        "description": "Aktivera automatisk provisionering på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
+        "title": "Automatisk driftsättning av EnOcean BLE",
+        "description": "Aktivera automatisk driftsättning på {name}:\n\n1. Håll knapp 1 intryckt i 7 sekunder\n2. Tryck kort på knapp 1\n3. Håll knapp 1 intryckt igen i 7 sekunder\n\nDu har 2 minuter. Försök igen vid behov."
       },
       "bluetooth_confirm": {
         "title": "Bekräfta EnOcean BLE-enhet",
-        "description": "EnOcean-brytaren med adress {mac} har provisionerats.\n\n⚠️ Tryck på en annan knapp för att stänga av commissioning-läget och klicka sedan på Skicka."
+        "description": "EnOcean-brytaren med adress {mac} har driftsatts.\n\n⚠️ Tryck på en annan knapp för att stänga av driftsättningsläget och klicka sedan på Skicka."
+      },
+      "button_mode": {
+        "title": "Knappläge",
+        "description": "Välj hur knapparna på {name} fungerar. Du kan ändra det senare med knappen Konfigurera.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan knappen räknas som nedhållen i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "data": {
+          "button_mode": "Knappläge"
+        }
       }
     },
     "progress": {
@@ -15,11 +53,97 @@
     },
     "abort": {
       "no_bluetooth_discovery": "Denna konfiguration måste startas från en upptäckt Bluetooth-enhet.",
-      "not_enocean_prefix": "Den upptäckta enheten använder inte EnOcean BLE MAC-prefix (E2:15)."
+      "not_enocean_prefix": "Den upptäckta enheten använder inte EnOcean BLE MAC-prefix (E2:15).",
+      "already_configured": "Den här brytaren är redan konfigurerad.",
+      "discovery_required": "Tryck på valfri knapp på brytaren: den visas då som en upptäckt enhet under Inställningar → Enheter och tjänster, där du kan lägga till den."
     },
     "error": {
-      "commissioning_not_detected": "Ingen commissioning-telegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först reset-varningen i dokumentationen.",
-      "invalid_commissioning": "Ett commissioning-telegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs reset-varningen i dokumentationen innan du återställer."
+      "commissioning_not_detected": "Inget driftsättningstelegram togs emot inom 2 minuter. Försök igen. Om det fortfarande inte fungerar efter flera försök kan du prova en fabriksåterställning. Läs först varningen om återställning i dokumentationen.",
+      "invalid_commissioning": "Ett driftsättningstelegram togs emot men kunde inte valideras. Försök igen. Om detta fortsätter att misslyckas, läs varningen om återställning i dokumentationen innan du återställer.",
+      "invalid_qr": "Ingen EnOcean-brytaradress (30SE215…) och säkerhetsnyckel på 32 tecken (+Z…) hittades i den här texten.",
+      "qr_mac_mismatch": "Den här QR-koden tillhör en annan brytare än den som upptäcktes.",
+      "qr_key_invalid": "Nyckeln i den här QR-koden matchar inte de telegram som tagits emot från brytaren. Den kan ha konfigurerats om (till exempel av ett annat system).",
+      "qr_no_telegram": "Inget telegram har tagits emot från den här brytaren än. Tryck på en av dess knappar och försök igen.",
+      "scan_https_required": "Skanning med kameran kräver att Home Assistant nås via HTTPS. Ange QR-kodens text i stället."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Knappläge",
+        "description": "Välj hur knapparna på den här brytaren fungerar. Automatiseringar som använder dess händelser kan behöva anpassas.\n\nKort + lång och Kort + håll måste ta emot släppet. Om det går förlorat går åtgärden förlorad, och med Kort + håll kan knappen räknas som nedhållen i upp till 8 sekunder. Fler Bluetooth-mottagare nära brytaren gör det ovanligt (se Felsökning i dokumentationen).",
+        "data": {
+          "button_mode": "Knappläge"
+        }
+      }
+    }
+  },
+  "issues": {
+    "legacy_button_mode": {
+      "title": "{name}: välj ett knappläge",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Välj ett knappläge för {name}",
+            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 händelse\" tas bort. raw_press och raw_release finns på entiteterna \"A0 rå\", inaktiverade som standard. Låt **Äldre** vara valt för att behålla det äldre läget tills vidare.\n\nAutomatiseringar och skript som använder den här brytaren:\n\n{usage}\n\nUpptäcks inte: entitetsnamn som byggs dynamiskt i en mall, och mål via område eller etikett. Kontrollera dem själv.",
+            "data": {
+              "button_mode": "Knappläge"
+            }
+          },
+          "confirm_unused": {
+            "title": "Välj ett knappläge för {name}",
+            "description": "{name} använder det **Äldre** läget från tidigare versioner. Dina automatiseringar fortsätter att fungera, men det här läget tas bort i en framtida version. Välj ett nytt läge och anpassa sedan automatiseringarna som använder den här brytaren:\n\n| Äldre | Enkel | Kort + lång | Kort + håll |\n|---|---|---|---|\n| `single_press` | `single_press` | `short_press` | `short_press` |\n| `long_press` | — | `long_press` | `hold_press` |\n| `long_release` | — | — | `hold_release` |\n| `release_timeout` | — | — | `hold_release` |\n| `press` | `raw_press` | `raw_press` | `raw_press` |\n| `release`, `orphan_release` | `raw_release` | `raw_release` | `raw_release` |\n\nI de nya lägena startar du automatiseringar med **Händelse mottagen** på knappentiteterna (A0, A1, B0, B1). Sensorerna \"A0 händelse\" tas bort. raw_press och raw_release finns på entiteterna \"A0 rå\", inaktiverade som standard. Låt **Äldre** vara valt för att behålla det äldre läget tills vidare.\n\nIngen automatisering eller skript som använder den här brytaren hittades. Upptäcks inte: entitetsnamn som byggs dynamiskt i en mall, och mål via område eller etikett. Kontrollera dem själv.",
+            "data": {
+              "button_mode": "Knappläge"
+            }
+          }
+        },
+        "abort": {
+          "entry_not_found": "Den här brytaren finns inte längre."
+        }
+      }
+    }
+  },
+  "selector": {
+    "button_mode": {
+      "options": {
+        "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
+        "short_long": "Kort + lång: kort (<1 s) eller långt tryck (>1 s), vid släpp.",
+        "short_hold": "Kort + håll: kort tryck (<1 s), eller håll (>1 s) för att justera kontinuerligt.",
+        "legacy": "Äldre: händelser från tidigare versioner, tas bort i en framtida version."
+      }
+    },
+    "button_mode_repair": {
+      "options": {
+        "simple": "Enkel: en åtgärd per knapp, vid tryck. Mest tillförlitlig.",
+        "short_long": "Kort + lång: kort (<1 s) eller långt tryck (>1 s), vid släpp.",
+        "short_hold": "Kort + håll: kort tryck (<1 s), eller håll (>1 s) för att justera kontinuerligt.",
+        "legacy": "Äldre (standard): händelser från tidigare versioner, tas bort i en framtida version."
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "raw": {
+        "name": "{button} rå"
+      }
+    },
+    "sensor": {
+      "signal": {
+        "name": "Signal"
+      },
+      "last_seen": {
+        "name": "Senast sedd"
+      },
+      "receiver": {
+        "name": "Mottagare"
+      },
+      "lost_messages": {
+        "name": "Förlorade meddelanden"
+      },
+      "button_event": {
+        "name": "{button} händelse"
+      }
     }
   }
 }

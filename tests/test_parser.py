@@ -9,6 +9,7 @@ from custom_components.enocean_ble.parser import (
     parse_commissioning_telegram,
     parse_data_telegram,
     parse_onboarding_blob,
+    parse_qr_code,
 )
 
 
@@ -30,6 +31,45 @@ def test_parse_onboarding_blob_ok() -> None:
 def test_parse_onboarding_blob_invalid(raw: str) -> None:
     with pytest.raises(ValueError):
         parse_onboarding_blob(raw)
+
+
+def test_parse_qr_code_module_label() -> None:
+    # Label QR format with the PTM 215B manual example address/key (not a real device key).
+    raw = "30SE215000019B8+Z3DDA31AD44767AE3CE56DCE2B3CE2ABB+30PS3221-A215+2PDD07+S01546701167343"
+    parsed = parse_qr_code(raw)
+    assert parsed.mac_address == "E2:15:00:00:19:B8"
+    assert parsed.security_key_hex == "3dda31ad44767ae3ce56dce2b3ce2abb"
+
+
+def test_parse_qr_code_key_decodes_manual_telegram() -> None:
+    # PTM 215B User Manual v2.2, Appendix C.3.1, entered via its label QR format.
+    parsed = parse_qr_code("  30SE215000019B8+Z3DDA31AD44767AE3CE56DCE2B3CE2ABB+30PS3221-A215\n")
+    telegram = bytes.fromhex("5D04000011B2FA88FF")
+    result = parse_data_telegram(
+        telegram, mac_address=parsed.mac_address, security_key_hex=parsed.security_key_hex
+    )
+    assert result.buttons == ("B1",)
+
+
+def test_parse_qr_code_falls_back_to_free_text() -> None:
+    parsed = parse_qr_code("MAC=E2:15:AA:BB:CC:DD KEY=00112233445566778899AABBCCDDEEFF")
+    assert parsed.mac_address == "E2:15:AA:BB:CC:DD"
+    assert parsed.security_key_hex == "00112233445566778899aabbccddeeff"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "",
+        "30SE215000019B8+30PS3221-A215",
+        "30S112233445566+Z3DDA31AD44767AE3CE56DCE2B3CE2ABB",
+        "30SE215000019B8+Z3DDA31AD44767AE3",
+        "https://example.com/not-an-enocean-code",
+    ],
+)
+def test_parse_qr_code_invalid(raw: str) -> None:
+    with pytest.raises(ValueError):
+        parse_qr_code(raw)
 
 
 def test_parse_data_telegram_ok_press() -> None:
